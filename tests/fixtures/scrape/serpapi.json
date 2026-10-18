@@ -1,0 +1,67 @@
+{
+ "search_metadata": {
+  "id": "66b21cfa10a07127b90afedd",
+  "status": "Success",
+  "json_endpoint": "https://serpapi.com/searches/997a66feb1ae28d8/66b21cfa10a07127b90afedd.json"
+ },
+ "search_parameters": {
+  "q": "barista new york",
+  "engine": "google_jobs",
+  "google_domain": "google.com"
+ },
+ "jobs_results": [
+  {
+   "title": "Barista",
+   "company_name": "Caffe Vita",
+   "location": "New York, NY",
+   "via": "ZipRecruiter",
+   "share_link": "https://www.google.com/search?ibp=htl;jobs&q=barista+new+york&htidocid=FdIH6D7mKzgme_L4AAAAAA%3D%3D",
+   "extensions": [
+    "25 days ago",
+    "Full-time",
+    "No degree mentioned"
+   ],
+   "detected_extensions": {
+    "paid_time_off": true,
+    "posted_at": "25 days ago",
+    "schedule_type": "Full-time"
+   },
+   "description": "Caffe Vita baristas are passionate about coffee.",
+   "apply_options": [
+    {
+     "title": "ZipRecruiter",
+     "link": "https://www.ziprecruiter.com/c/Caffe-Vita/Job/Barista/-in-New-York,NY?jid=56ca50d47b5e5dae"
+    },
+    {
+     "title": "BeBee",
+     "link": "https://us.bebee.com/job/6757b6ab30d5a9f7534dab2d16173d7a"
+    }
+   ],
+   "job_id": "eyJqb2JfdGl0bGUiOiJCYXJpc3RhIn0="
+  },
+  {
+   "title": "Frontend Engineer",
+   "company_name": "Globex",
+   "location": "Bengaluru, Karnataka, India",
+   "via": "via LinkedIn",
+   "detected_extensions": {
+    "posted_at": "3 days ago",
+    "schedule_type": "Full-time",
+    "work_from_home": true,
+    "salary": "₹25L–₹40L a year"
+   },
+   "description": "Build our React app.",
+   "apply_options": [
+    {
+     "title": "LinkedIn",
+     "link": "https://www.linkedin.com/jobs/view/4300000002"
+    },
+    {
+     "title": "Globex Careers",
+     "link": "https://boards.greenhouse.io/globex/jobs/123"
+    }
+   ],
+   "job_id": "eyJqb2JfdGl0bGUiOiJGRSJ9"
+  }
+ ]
+}

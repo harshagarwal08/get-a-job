@@ -1,0 +1,172 @@
+{
+ "id": 49922569,
+ "title": "Ask HN: Who is hiring? (October 2026)",
+ "created_at": "2026-10-01T15:02:07.000Z",
+ "children": [
+  {
+   "id": 101,
+   "author": "u101",
+   "created_at": "2026-10-01T15:01:00.000Z",
+   "text": "Acme AI (YC W24) | Senior Frontend Engineer | Bengaluru, India | ONSITE | Full-time | ₹40L - ₹60L<p>We build agents. Apply at jobs@acme.example</p>",
+   "children": [
+    {
+     "id": 1010,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 102,
+   "author": "u102",
+   "created_at": "2026-10-01T15:02:00.000Z",
+   "text": "Globex | Forward Deployed Engineer, Solutions Engineer | REMOTE (Worldwide) | VISA | $150k-$190k + equity<p>Work with customers.</p>",
+   "children": [
+    {
+     "id": 1020,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 103,
+   "author": "u103",
+   "created_at": "2026-10-01T15:03:00.000Z",
+   "text": "Initech | Software Engineer - Frontend | San Francisco, CA | ONSITE | No visa sponsorship<p>React and TypeScript.</p>",
+   "children": [
+    {
+     "id": 1030,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 104,
+   "author": "u104",
+   "created_at": "2026-10-01T15:04:00.000Z",
+   "text": "Hooli — Full-Stack Engineer — Remote (US only) — <a href=\"https:&#x2F;&#x2F;hooli.example\" rel=\"nofollow\">https:&#x2F;&#x2F;hooli.example</a><p>Postgres, React.</p>",
+   "children": [
+    {
+     "id": 1040,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 105,
+   "author": "u105",
+   "created_at": "2026-10-01T15:05:00.000Z",
+   "text": "Umbrella | Multiple roles | London, UK | HYBRID | VISA<p>We are hiring a Frontend Engineer and a Data Engineer.</p>",
+   "children": [
+    {
+     "id": 1050,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 106,
+   "author": "u106",
+   "created_at": "2026-10-01T15:06:00.000Z",
+   "text": "Stark Labs | Backend Engineer (Go) | REMOTE (EU timezones) | Full-time<p>Go, Kafka.</p>",
+   "children": [
+    {
+     "id": 1060,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 107,
+   "author": "u107",
+   "created_at": "2026-10-01T15:07:00.000Z",
+   "text": "Wayne Corp | UI Engineer, Design Engineer | Remote (APAC) | INTERNS welcome<p>Design systems.</p>",
+   "children": [
+    {
+     "id": 1070,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 108,
+   "author": "u108",
+   "created_at": "2026-10-01T15:08:00.000Z",
+   "text": "Cyberdyne|<a href=\"http:&#x2F;&#x2F;cyberdyne.example&#x2F;\" rel=\"nofollow\">http:&#x2F;&#x2F;cyberdyne.example&#x2F;</a>| ML Engineer | Remote | Full Time\nCyberdyne builds robots.<p>More.</p>",
+   "children": [
+    {
+     "id": 1080,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 109,
+   "author": "u109",
+   "created_at": "2026-10-01T15:09:00.000Z",
+   "text": "Soylent (Remote, India) | Senior Front End Developer &amp; Engineering Manager | Full-time<p>Next.js.</p>",
+   "children": [
+    {
+     "id": 1090,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 110,
+   "author": "u110",
+   "created_at": "2026-10-01T15:10:00.000Z",
+   "text": "Tyrell | Berlin, Germany (or remote, CET&#x2F;CEST overlap) | Full-time <a href=\"https:&#x2F;&#x2F;tyrell.example\">https:&#x2F;&#x2F;tyrell.example</a>\nWe are hiring frontend engineers.<p>React.</p>",
+   "children": [
+    {
+     "id": 1100,
+     "text": "reply, not a posting",
+     "children": []
+    }
+   ]
+  },
+  {
+   "id": 111,
+   "author": null,
+   "created_at": "2026-10-01T16:00:00.000Z",
+   "text": null,
+   "children": []
+  },
+  {
+   "id": 201,
+   "author": "x201",
+   "created_at": "2026-10-02T10:00:00.000Z",
+   "text": "Location: Bengaluru, India<p>Remote: Yes<p>Willing to relocate: No<p>Technologies: React, TypeScript<p>Résumé: https://example.com/cv",
+   "children": []
+  },
+  {
+   "id": 202,
+   "author": "x202",
+   "created_at": "2026-10-02T10:00:00.000Z",
+   "text": "Role: UX/UI Designer<p>Company: Somewhere<p>Location: Remote",
+   "children": []
+  },
+  {
+   "id": 203,
+   "author": "x203",
+   "created_at": "2026-10-02T10:00:00.000Z",
+   "text": "Is anyone else seeing fewer remote roles this month? Curious what others think.",
+   "children": []
+  },
+  {
+   "id": 204,
+   "author": "x204",
+   "created_at": "2026-10-02T10:00:00.000Z",
+   "text": "This is a really long sentence pretending to be a company name because someone wrote a paragraph | React<p>body</p>",
+   "children": []
+  }
+ ]
+}

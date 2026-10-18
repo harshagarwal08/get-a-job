@@ -1,0 +1,10 @@
+{ "offers": [
+  { "id": 2786321, "slug": "senior-frontend-developer-3", "title": "Senior Frontend Developer", "company_name": "Channel Co",
+    "location": "Utrecht, Utrecht, Netherlands", "country_code": "NL", "remote": false, "hybrid": true, "on_site": false,
+    "department": "Engineering", "status": "published", "published_at": "2026-10-16 11:35:00 UTC",
+    "careers_url": "https://jobs.channel.example/o/senior-frontend-developer-3",
+    "careers_apply_url": "https://jobs.channel.example/o/senior-frontend-developer-3/c/new",
+    "description": "<p>We build <strong>feeds</strong>.</p>", "requirements": "<ul><li>Vue or React</li></ul>",
+    "salary": { "min": "3650", "max": "5000", "period": "month", "currency": "EUR" },
+    "locations": [{ "city": "Utrecht", "state": "Utrecht", "country": "Netherlands", "country_code": "NL" }] },
+  { "id": 2, "slug": "draft", "title": "Draft Role", "status": "draft", "location": "Remote" } ] }

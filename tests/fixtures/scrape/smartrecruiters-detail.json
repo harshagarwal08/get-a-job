@@ -1,0 +1,10 @@
+{ "id": "744000156077279", "name": "Senior Frontend Engineer", "company": { "identifier": "Acme1", "name": "Acme" },
+  "releasedDate": "2026-10-16T20:30:55.811Z",
+  "location": { "city": "Chennai", "country": "in", "hybrid": true, "fullLocation": "Chennai, Tamil Nadu, India" },
+  "postingUrl": "https://jobs.smartrecruiters.com/Acme1/744000156077279-senior-frontend-engineer",
+  "applyUrl": "https://jobs.smartrecruiters.com/Acme1/744000156077279-senior-frontend-engineer?oga=true",
+  "compensation": { "min": 3000000, "max": 4200000, "currency": "INR", "period": "YEARLY" },
+  "jobAd": { "sections": {
+    "companyDescription": { "title": "Company Description", "text": "<p>Acme builds CRM software.</p>" },
+    "jobDescription": { "title": "Job Description", "text": "<ul><li>Own the React app</li><li>Mentor engineers</li></ul>" },
+    "qualifications": { "title": "Qualifications", "text": "<p>5+ years TypeScript&#xa0;experience.</p>" } } } }

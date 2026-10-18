@@ -1,0 +1,40 @@
+{
+  "jobs": [
+    {
+      "id": 4970001,
+      "title": "Senior Frontend Engineer",
+      "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/4970001",
+      "location": { "name": "Bengaluru, India" },
+      "first_published": "2026-10-10T09:00:00-04:00",
+      "updated_at": "2026-10-12T09:00:00-04:00",
+      "company_name": "Acme",
+      "content": "&lt;div&gt;&lt;strong&gt;About Acme&lt;/strong&gt;&lt;/div&gt;\n&lt;p&gt;We build payments &amp;amp; cards.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;React &amp;amp; TypeScript&lt;/li&gt;&lt;li&gt;Design systems&lt;/li&gt;&lt;/ul&gt;",
+      "departments": [{ "id": 1, "name": "Engineering" }],
+      "offices": [{ "id": 11, "name": "Bengaluru", "location": "Bengaluru, India" }]
+    },
+    {
+      "id": 4970002,
+      "title": "Software Engineer, Frontend",
+      "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/4970002",
+      "location": { "name": "San Francisco, CA" },
+      "first_published": "2026-10-01T09:00:00Z",
+      "company_name": "Acme",
+      "content": "&lt;p&gt;Hybrid role. We are unable to sponsor visas.&lt;/p&gt;",
+      "departments": [{ "id": 1, "name": "Engineering" }],
+      "offices": [{ "id": 12, "name": "San Francisco", "location": "San Francisco, CA" }, { "id": 13, "name": "New York", "location": "New York, NY" }],
+      "pay_input_ranges": [{ "min_cents": 18000000, "max_cents": 24000000, "currency_type": "USD", "title": "Annual base salary" }]
+    },
+    {
+      "id": 4970003,
+      "title": "Engineering Manager, Frontend",
+      "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/4970003",
+      "location": { "name": "Remote - India" },
+      "first_published": "2026-10-11T09:00:00Z",
+      "company_name": "Acme",
+      "content": "&lt;p&gt;Lead the team.&lt;/p&gt;",
+      "departments": [],
+      "offices": []
+    }
+  ],
+  "meta": { "total": 3 }
+}

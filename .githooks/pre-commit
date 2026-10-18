@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Blocks commits that would add personal data (profile/, data/, inbox/, config/companies.json, ...).
+# Enable once per clone:  git config core.hooksPath .githooks
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+
+if ! bash "$root/.github/scripts/privacy-guard.sh" --staged; then
+  cat >&2 <<'MSG'
+
+Commit blocked by get-a-job privacy guard.
+Your resume, profile, job data and company list must never be committed.
+  - Unstage the files listed above:  git rm --cached <file>
+  - Don't use "git add -f" on profile/, data/, inbox/ or config/companies.json.
+  - Keep the required lines in .gitignore.
+MSG
+  exit 1
+fi

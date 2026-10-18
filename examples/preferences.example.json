@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "name": "Jane Doe",
+  "tracks": [
+    {
+      "id": "fe",
+      "name": "Frontend Engineer",
+      "titles": [
+        "Frontend",
+        "UI Engineer",
+        "UI Developer",
+        "React Developer",
+        "React Engineer",
+        "Software Engineer, Web",
+        "Web Engineer"
+      ],
+      "excludeTitles": [
+        "Intern",
+        "Principal",
+        "Manager",
+        "Director"
+      ],
+      "keywords": [
+        "React",
+        "TypeScript",
+        "Next.js",
+        "design systems"
+      ],
+      "resume": "profile/resume.md"
+    },
+    {
+      "id": "fde",
+      "name": "Forward Deployed Engineer",
+      "titles": [
+        "Forward Deployed Engineer",
+        "Solutions Engineer",
+        "Deployment Engineer",
+        "Customer Engineer"
+      ],
+      "excludeTitles": [
+        "Intern",
+        "Manager",
+        "Director"
+      ],
+      "keywords": [
+        "customer-facing",
+        "integrations",
+        "LLM",
+        "APIs"
+      ],
+      "resume": "profile/resume.md"
+    }
+  ],
+  "seniority": [
+    "mid",
+    "senior"
+  ],
+  "location": {
+    "based": "Bengaluru, India",
+    "countryCode": "IN",
+    "acceptableLocations": [
+      "Bengaluru",
+      "Bangalore",
+      "India"
+    ],
+    "workModes": [
+      "remote",
+      "hybrid",
+      "onsite"
+    ],
+    "remoteScope": [
+      "apac",
+      "global"
+    ],
+    "workAuthorization": [
+      "IN"
+    ],
+    "needsSponsorship": false,
+    "openToRelocation": false
+  },
+  "compensation": {
+    "currency": "INR",
+    "min": 0,
+    "unit": "year",
+    "note": "Set a real floor during /onboard"
+  },
+  "noticePeriodDays": 60,
+  "companyStage": [
+    "seed",
+    "series-a",
+    "series-b",
+    "series-c",
+    "growth"
+  ],
+  "companySize": [
+    "2-10",
+    "11-50",
+    "51-200",
+    "201-500"
+  ],
+  "industries": [
+    "fintech",
+    "ai",
+    "devtools"
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "level": "professional"
+    }
+  ],
+  "dealBreakers": [],
+  "sources": {
+    "ats": true,
+    "linkedin": false,
+    "hn": true,
+    "arbeitnow": false,
+    "remotive": true,
+    "remoteok": false,
+    "careersPages": true,
+    "googleJobs": {
+      "enabled": false,
+      "provider": "jsearch",
+      "maxQueries": 6,
+      "country": "in",
+      "datePosted": "week",
+      "maxRequestsPerMonth": 100
+    },
+    "apify": {
+      "enabled": false,
+      "actors": [],
+      "maxItems": 100,
+      "maxChargeUsd": 0.5,
+      "maxUsdPerMonth": 5
+    },
+    "jobspy": {
+      "enabled": false,
+      "sites": [
+        "indeed",
+        "naukri",
+        "glassdoor",
+        "google"
+      ],
+      "resultsWanted": 40,
+      "hoursOld": 168,
+      "maxQueries": 3
+    },
+    "maxAgeDays": 14
+  }
+}

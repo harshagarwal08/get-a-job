@@ -1,0 +1,24 @@
+# --- Personal data: NEVER commit (CI enforces these lines) ---
+profile/*
+!profile/.gitkeep
+data/
+inbox/*
+!inbox/.gitkeep
+config/companies.json
+.env
+.env.*
+!.env.example
+
+# --- Build / deps ---
+node_modules/
+*.log
+.DS_Store
+coverage/
+
+# --- Claude Code local files (may contain absolute paths / personal notes) ---
+.claude/settings.local.json
+CLAUDE.local.md
+
+# --- Build artifacts ---
+examples/*.pdf
+examples/*.html

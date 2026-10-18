@@ -1,0 +1,30 @@
+[
+  {
+    "id": "aa98a938-af3a-45f5-851d-966b2b5bad33",
+    "text": "Forward Deployed Engineer",
+    "categories": { "commitment": "Full-time", "department": "Engineering", "team": "Solutions", "location": "Bangalore", "allLocations": ["Bangalore", "Mumbai"] },
+    "country": "IN",
+    "workplaceType": "hybrid",
+    "createdAt": 1791000000000,
+    "description": "<div><p>Work directly with customers.</p></div>",
+    "descriptionPlain": "Work directly with customers.",
+    "lists": [{ "text": "What you'll do", "content": "<li>Ship integrations</li><li>Own LLM deployments</li>" }],
+    "additional": "<p>We offer relocation support.</p>",
+    "additionalPlain": "We offer relocation support.",
+    "salaryRange": { "currency": "INR", "interval": "per-year-salary", "min": 3000000, "max": 4500000 },
+    "hostedUrl": "https://jobs.lever.co/acme/aa98a938-af3a-45f5-851d-966b2b5bad33",
+    "applyUrl": "https://jobs.lever.co/acme/aa98a938-af3a-45f5-851d-966b2b5bad33/apply"
+  },
+  {
+    "id": "bb11",
+    "text": "Accounts Payable Manager",
+    "categories": { "location": "Hyderabad", "allLocations": ["Hyderabad"] },
+    "country": "IN",
+    "workplaceType": "unspecified",
+    "createdAt": 1791000000000,
+    "descriptionPlain": "Finance role.",
+    "lists": [],
+    "hostedUrl": "https://jobs.lever.co/acme/bb11",
+    "applyUrl": "https://jobs.lever.co/acme/bb11/apply"
+  }
+]

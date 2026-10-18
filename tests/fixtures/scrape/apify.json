@@ -1,0 +1,26 @@
+[
+ {
+  "positionName": "Frontend Developer",
+  "company": "Initech",
+  "location": "Bengaluru, Karnataka",
+  "url": "https://in.indeed.com/viewjob?jk=abc123",
+  "description": "React role",
+  "postedAt": "2 days ago",
+  "salary": "₹12,00,000 - ₹18,00,000 a year",
+  "id": "abc123",
+  "externalApplyLink": "https://initech.example/careers/fe"
+ },
+ {
+  "title": "UI Engineer",
+  "companyName": "Hooli",
+  "location": "Remote",
+  "jobUrl": "https://www.linkedin.com/jobs/view/4300000003",
+  "descriptionHtml": "<p>Design systems.</p>",
+  "publishedAt": "2026-10-10",
+  "workplaceType": "Remote"
+ },
+ {
+  "title": "No company row",
+  "url": "https://x.example/1"
+ }
+]

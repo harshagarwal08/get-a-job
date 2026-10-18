@@ -1,0 +1,740 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-16T10:00:00.000Z",
+  "jobs": {
+    "mirelune-travel--frontend-platform-engineer--7b4b14": {
+      "key": "mirelune-travel--frontend-platform-engineer--7b4b14",
+      "title": "Frontend Platform Engineer",
+      "company": "Mirelune Travel",
+      "location": "Remote",
+      "countries": [
+        "IN",
+        "SG"
+      ],
+      "workMode": "remote",
+      "url": "https://jobs.example.com/mirelune-travel-frontend-platform-engineer",
+      "applyUrl": null,
+      "source": "ashby",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-10T10:00:00.000Z",
+      "firstSeen": "2026-10-10T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Mirelune Travel is hiring a Frontend Platform Engineer (Remote).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "green",
+      "eligibilityReason": "Remote, India allowed",
+      "quickFit": "high",
+      "status": "tracked",
+      "rank": {
+        "score": 80,
+        "verdict": "Strong",
+        "dimensions": {
+          "technical": 86,
+          "experience": 76,
+          "culture": 72,
+          "career": 83
+        },
+        "gates": {
+          "eligibility": "pass",
+          "compensation": "unknown",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Design systems at scale",
+          "React + TS depth"
+        ],
+        "gaps": [
+          "No Vue experience"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-11T10:00:00.000Z"
+      }
+    },
+    "tavrik-robotics--forward-deployed-engineer--d38070": {
+      "key": "tavrik-robotics--forward-deployed-engineer--d38070",
+      "title": "Forward Deployed Engineer",
+      "company": "Tavrik Robotics",
+      "location": "Bengaluru, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "onsite",
+      "url": "https://jobs.example.com/tavrik-robotics-forward-deployed-engineer",
+      "applyUrl": null,
+      "source": "greenhouse",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-12T10:00:00.000Z",
+      "firstSeen": "2026-10-12T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Tavrik Robotics is hiring a Forward Deployed Engineer (Bengaluru, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production integrations and APIs\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fde",
+      "eligibility": "green",
+      "eligibilityReason": "Based in Bengaluru",
+      "quickFit": "medium",
+      "status": "tracked",
+      "rank": {
+        "score": 63,
+        "verdict": "Good",
+        "dimensions": {
+          "technical": 69,
+          "experience": 59,
+          "culture": 55,
+          "career": 66
+        },
+        "gates": {
+          "eligibility": "pass",
+          "compensation": "unknown",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Customer-facing integrations"
+        ],
+        "gaps": [
+          "Robotics domain is new",
+          "Onsite 5 days"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-13T10:00:00.000Z"
+      }
+    },
+    "kelvaro-data--deployment-engineer--e7bfac": {
+      "key": "kelvaro-data--deployment-engineer--e7bfac",
+      "title": "Deployment Engineer",
+      "company": "Kelvaro Data",
+      "location": "Bengaluru, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "hybrid",
+      "url": "https://jobs.example.com/kelvaro-data-deployment-engineer",
+      "applyUrl": null,
+      "source": "lever",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-07T10:00:00.000Z",
+      "firstSeen": "2026-10-07T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Kelvaro Data is hiring a Deployment Engineer (Bengaluru, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production integrations and APIs\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fde",
+      "eligibility": "green",
+      "eligibilityReason": "Based in Bengaluru",
+      "quickFit": "high",
+      "status": "tracked",
+      "rank": {
+        "score": 74,
+        "verdict": "Good",
+        "dimensions": {
+          "technical": 80,
+          "experience": 70,
+          "culture": 66,
+          "career": 77
+        },
+        "gates": {
+          "eligibility": "pass",
+          "compensation": "unknown",
+          "notice": "pass"
+        },
+        "strengths": [
+          "APIs + LLM tooling"
+        ],
+        "gaps": [
+          "Python-heavy stack"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-08T10:00:00.000Z"
+      }
+    },
+    "ostrovia-pay--frontend-engineer--49a9e7": {
+      "key": "ostrovia-pay--frontend-engineer--49a9e7",
+      "title": "Frontend Engineer",
+      "company": "Ostrovia Pay",
+      "location": "Bengaluru, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "onsite",
+      "url": "https://jobs.example.com/ostrovia-pay-frontend-engineer",
+      "applyUrl": null,
+      "source": "greenhouse",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-09T10:00:00.000Z",
+      "firstSeen": "2026-10-09T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Ostrovia Pay is hiring a Frontend Engineer (Bengaluru, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "green",
+      "eligibilityReason": "Based in Bengaluru",
+      "quickFit": "high",
+      "status": "tracked",
+      "rank": {
+        "score": 69,
+        "verdict": "Good",
+        "dimensions": {
+          "technical": 75,
+          "experience": 65,
+          "culture": 61,
+          "career": 72
+        },
+        "gates": {
+          "eligibility": "pass",
+          "compensation": "unknown",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Fintech product experience"
+        ],
+        "gaps": [
+          "Angular codebase"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-10T10:00:00.000Z"
+      }
+    },
+    "cindrel-analytics--senior-frontend-engineer--18c4bc": {
+      "key": "cindrel-analytics--senior-frontend-engineer--18c4bc",
+      "title": "Senior Frontend Engineer",
+      "company": "Cindrel Analytics",
+      "location": "Bengaluru, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "hybrid",
+      "url": "https://jobs.example.com/cindrel-analytics-senior-frontend-engineer",
+      "applyUrl": null,
+      "source": "greenhouse",
+      "department": "Engineering",
+      "salary": {
+        "min": 4000000,
+        "max": 5500000,
+        "currency": "INR",
+        "unit": "year"
+      },
+      "postedAt": "2026-10-14T10:00:00.000Z",
+      "firstSeen": "2026-10-14T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Cindrel Analytics is hiring a Senior Frontend Engineer (Bengaluru, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "green",
+      "eligibilityReason": "Based in Bengaluru",
+      "quickFit": "high",
+      "status": "ranked",
+      "rank": {
+        "score": 82,
+        "verdict": "Strong",
+        "dimensions": {
+          "technical": 88,
+          "experience": 78,
+          "culture": 74,
+          "career": 85
+        },
+        "gates": {
+          "eligibility": "pass",
+          "compensation": "pass",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Data-viz heavy dashboards",
+          "Founding-team ownership",
+          "TypeScript migration experience"
+        ],
+        "gaps": [
+          "D3 depth unproven"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-15T10:00:00.000Z"
+      }
+    },
+    "tidevarn--forward-deployed-engineer--6be0a0": {
+      "key": "tidevarn--forward-deployed-engineer--6be0a0",
+      "title": "Forward Deployed Engineer",
+      "company": "Tidevarn",
+      "location": "Remote (APAC)",
+      "countries": [
+        "IN",
+        "SG",
+        "AU"
+      ],
+      "workMode": "remote",
+      "url": "https://jobs.example.com/tidevarn-forward-deployed-engineer",
+      "applyUrl": null,
+      "source": "ashby",
+      "department": "Engineering",
+      "salary": {
+        "min": 80000,
+        "max": 110000,
+        "currency": "USD",
+        "unit": "year"
+      },
+      "postedAt": "2026-10-13T10:00:00.000Z",
+      "firstSeen": "2026-10-13T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Tidevarn is hiring a Forward Deployed Engineer (Remote (APAC)).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production integrations and APIs\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fde",
+      "eligibility": "green",
+      "eligibilityReason": "Remote within APAC",
+      "quickFit": "high",
+      "status": "ranked",
+      "rank": {
+        "score": 77,
+        "verdict": "Strong",
+        "dimensions": {
+          "technical": 83,
+          "experience": 73,
+          "culture": 69,
+          "career": 80
+        },
+        "gates": {
+          "eligibility": "pass",
+          "compensation": "pass",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Shipped a RAG agent for customers",
+          "Startup speed"
+        ],
+        "gaps": [
+          "Healthcare compliance gap"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-14T10:00:00.000Z"
+      }
+    },
+    "latticore--frontend-engineer-growth--3772ee": {
+      "key": "latticore--frontend-engineer-growth--3772ee",
+      "title": "Frontend Engineer, Growth",
+      "company": "Latticore",
+      "location": "Remote",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "remote",
+      "url": "https://jobs.example.com/latticore-frontend-engineer-growth",
+      "applyUrl": null,
+      "source": "lever",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-11T10:00:00.000Z",
+      "firstSeen": "2026-10-11T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Latticore is hiring a Frontend Engineer, Growth (Remote).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "green",
+      "eligibilityReason": "Remote, India allowed",
+      "quickFit": "medium",
+      "status": "ranked",
+      "rank": {
+        "score": 64,
+        "verdict": "Good",
+        "dimensions": {
+          "technical": 70,
+          "experience": 60,
+          "culture": 56,
+          "career": 67
+        },
+        "gates": {
+          "eligibility": "pass",
+          "compensation": "unknown",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Experimentation, analytics"
+        ],
+        "gaps": [
+          "No SEO experience"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-12T10:00:00.000Z"
+      }
+    },
+    "arkenvale-systems--ui-engineer--05a246": {
+      "key": "arkenvale-systems--ui-engineer--05a246",
+      "title": "UI Engineer",
+      "company": "Arkenvale Systems",
+      "location": "Hyderabad, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "onsite",
+      "url": "https://jobs.example.com/arkenvale-systems-ui-engineer",
+      "applyUrl": null,
+      "source": "workable",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-08T10:00:00.000Z",
+      "firstSeen": "2026-10-08T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Arkenvale Systems is hiring a UI Engineer (Hyderabad, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "orange",
+      "eligibilityReason": "Hyderabad: relocation needed",
+      "quickFit": "medium",
+      "status": "ranked",
+      "rank": {
+        "score": 57,
+        "verdict": "Moderate",
+        "dimensions": {
+          "technical": 63,
+          "experience": 53,
+          "culture": 49,
+          "career": 60
+        },
+        "gates": {
+          "eligibility": "flag",
+          "compensation": "unknown",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Component library work"
+        ],
+        "gaps": [
+          "Relocation",
+          "Embedded UI (Qt) in stack"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-09T10:00:00.000Z"
+      }
+    },
+    "polvarra-health--solutions-engineer--55b1fe": {
+      "key": "polvarra-health--solutions-engineer--55b1fe",
+      "title": "Solutions Engineer",
+      "company": "Polvarra Health",
+      "location": "Remote (US)",
+      "countries": [
+        "US"
+      ],
+      "workMode": "remote",
+      "url": "https://jobs.example.com/polvarra-health-solutions-engineer",
+      "applyUrl": null,
+      "source": "greenhouse",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-05T10:00:00.000Z",
+      "firstSeen": "2026-10-05T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Polvarra Health is hiring a Solutions Engineer (Remote (US)).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production integrations and APIs\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fde",
+      "eligibility": "orange",
+      "eligibilityReason": "US work authorization required",
+      "quickFit": "medium",
+      "status": "ranked",
+      "rank": {
+        "score": 48,
+        "verdict": "Moderate",
+        "dimensions": {
+          "technical": 54,
+          "experience": 44,
+          "culture": 40,
+          "career": 51
+        },
+        "gates": {
+          "eligibility": "flag",
+          "compensation": "unknown",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Integrations depth"
+        ],
+        "gaps": [
+          "US-only remote",
+          "HIPAA background expected"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-06T10:00:00.000Z"
+      }
+    },
+    "mozelle-hq--senior-frontend-engineer--5565b6": {
+      "key": "mozelle-hq--senior-frontend-engineer--5565b6",
+      "title": "Senior Frontend Engineer",
+      "company": "Mozelle HQ",
+      "location": "London, UK",
+      "countries": [
+        "GB"
+      ],
+      "workMode": "hybrid",
+      "url": "https://jobs.example.com/mozelle-hq-senior-frontend-engineer",
+      "applyUrl": null,
+      "source": "ashby",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-10T10:00:00.000Z",
+      "firstSeen": "2026-10-10T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Mozelle HQ is hiring a Senior Frontend Engineer (London, UK).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "orange",
+      "eligibilityReason": "London: visa sponsorship unclear",
+      "quickFit": "high",
+      "status": "ranked",
+      "rank": {
+        "score": 71,
+        "verdict": "Good",
+        "dimensions": {
+          "technical": 77,
+          "experience": 67,
+          "culture": 63,
+          "career": 74
+        },
+        "gates": {
+          "eligibility": "flag",
+          "compensation": "unknown",
+          "notice": "pass"
+        },
+        "strengths": [
+          "Design system ownership"
+        ],
+        "gaps": [
+          "Visa sponsorship unknown"
+        ],
+        "note": "",
+        "rankedAt": "2026-10-11T10:00:00.000Z"
+      }
+    },
+    "driftlume--frontend-engineer--26a42d": {
+      "key": "driftlume--frontend-engineer--26a42d",
+      "title": "Frontend Engineer",
+      "company": "Driftlume",
+      "location": "Bengaluru, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "hybrid",
+      "url": "https://jobs.example.com/driftlume-frontend-engineer",
+      "applyUrl": null,
+      "source": "lever",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-15T10:00:00.000Z",
+      "firstSeen": "2026-10-15T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Driftlume is hiring a Frontend Engineer (Bengaluru, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "green",
+      "eligibilityReason": "Based in Bengaluru",
+      "quickFit": "high",
+      "status": "new",
+      "rank": null
+    },
+    "sabrine-security--forward-deployed-engineer--32f288": {
+      "key": "sabrine-security--forward-deployed-engineer--32f288",
+      "title": "Forward Deployed Engineer",
+      "company": "Sabrine Security",
+      "location": "Bengaluru, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "hybrid",
+      "url": "https://jobs.example.com/sabrine-security-forward-deployed-engineer",
+      "applyUrl": null,
+      "source": "greenhouse",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-16T10:00:00.000Z",
+      "firstSeen": "2026-10-16T10:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Sabrine Security is hiring a Forward Deployed Engineer (Bengaluru, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production integrations and APIs\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fde",
+      "eligibility": "green",
+      "eligibilityReason": "Based in Bengaluru",
+      "quickFit": "medium",
+      "status": "new",
+      "rank": null
+    },
+    "quazilo-learning--frontend-developer--51e0de": {
+      "key": "quazilo-learning--frontend-developer--51e0de",
+      "title": "Frontend Developer",
+      "company": "Quazilo Learning",
+      "location": "Remote",
+      "countries": [],
+      "workMode": "remote",
+      "url": "https://jobs.example.com/quazilo-learning-frontend-developer",
+      "applyUrl": null,
+      "source": "linkedin",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-14T10:00:00.000Z",
+      "firstSeen": "2026-10-14T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Quazilo Learning is hiring a Frontend Developer (Remote).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "unknown",
+      "eligibilityReason": "Remote scope not stated",
+      "quickFit": "medium",
+      "status": "new",
+      "rank": null
+    },
+    "nimvora-ops--customer-engineer--1a0e34": {
+      "key": "nimvora-ops--customer-engineer--1a0e34",
+      "title": "Customer Engineer",
+      "company": "Nimvora Ops",
+      "location": "Singapore",
+      "countries": [
+        "SG"
+      ],
+      "workMode": "onsite",
+      "url": "https://jobs.example.com/nimvora-ops-customer-engineer",
+      "applyUrl": null,
+      "source": "workable",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-12T10:00:00.000Z",
+      "firstSeen": "2026-10-12T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Nimvora Ops is hiring a Customer Engineer (Singapore).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production integrations and APIs\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fde",
+      "eligibility": "orange",
+      "eligibilityReason": "Singapore onsite: relocation + EP needed",
+      "quickFit": "low",
+      "status": "new",
+      "rank": null
+    },
+    "bramvik--software-engineer-frontend--e23aeb": {
+      "key": "bramvik--software-engineer-frontend--e23aeb",
+      "title": "Software Engineer, Frontend",
+      "company": "Bramvik",
+      "location": "Remote (India)",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "remote",
+      "url": "https://jobs.example.com/bramvik-software-engineer-frontend",
+      "applyUrl": null,
+      "source": "ashby",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-13T10:00:00.000Z",
+      "firstSeen": "2026-10-13T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Bramvik is hiring a Software Engineer, Frontend (Remote (India)).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "green",
+      "eligibilityReason": "Remote within India",
+      "quickFit": "medium",
+      "status": "new",
+      "rank": null
+    },
+    "junevra-grid--frontend-engineer--e0e56c": {
+      "key": "junevra-grid--frontend-engineer--e0e56c",
+      "title": "Frontend Engineer",
+      "company": "Junevra Grid",
+      "location": "Remote",
+      "countries": [],
+      "workMode": "remote",
+      "url": "https://jobs.example.com/junevra-grid-frontend-engineer",
+      "applyUrl": null,
+      "source": "linkedin",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-04T10:00:00.000Z",
+      "firstSeen": "2026-10-04T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Junevra Grid is hiring a Frontend Engineer (Remote).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "unknown",
+      "eligibilityReason": "Location not specified in posting",
+      "quickFit": "low",
+      "status": "new",
+      "rank": null
+    },
+    "opalvane--senior-ui-engineer--c3f71e": {
+      "key": "opalvane--senior-ui-engineer--c3f71e",
+      "title": "Senior UI Engineer",
+      "company": "Opalvane",
+      "location": "Berlin, Germany",
+      "countries": [
+        "DE"
+      ],
+      "workMode": "onsite",
+      "url": "https://jobs.example.com/opalvane-senior-ui-engineer",
+      "applyUrl": null,
+      "source": "greenhouse",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-10-01T10:00:00.000Z",
+      "firstSeen": "2026-10-01T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Opalvane is hiring a Senior UI Engineer (Berlin, Germany).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "orange",
+      "eligibilityReason": "Berlin onsite: EU work permit",
+      "quickFit": "medium",
+      "status": "skipped",
+      "rank": null
+    },
+    "rivelstok-bank--frontend-engineer-angular--0b1edb": {
+      "key": "rivelstok-bank--frontend-engineer-angular--0b1edb",
+      "title": "Frontend Engineer (Angular)",
+      "company": "Rivelstok Bank",
+      "location": "Chennai, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "onsite",
+      "url": "https://jobs.example.com/rivelstok-bank-frontend-engineer-angular",
+      "applyUrl": null,
+      "source": "workable",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-09-26T10:00:00.000Z",
+      "firstSeen": "2026-09-26T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Rivelstok Bank is hiring a Frontend Engineer (Angular) (Chennai, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "green",
+      "eligibilityReason": "India onsite",
+      "quickFit": "low",
+      "status": "skipped",
+      "rank": null
+    },
+    "wavendra--deployment-strategist--a03f97": {
+      "key": "wavendra--deployment-strategist--a03f97",
+      "title": "Deployment Strategist",
+      "company": "Wavendra",
+      "location": "Remote (Global)",
+      "countries": [],
+      "workMode": "remote",
+      "url": "https://jobs.example.com/wavendra-deployment-strategist",
+      "applyUrl": null,
+      "source": "ashby",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-09-11T10:00:00.000Z",
+      "firstSeen": "2026-09-11T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Wavendra is hiring a Deployment Strategist (Remote (Global)).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production integrations and APIs\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fde",
+      "eligibility": "unknown",
+      "eligibilityReason": "Global remote, timezone unclear",
+      "quickFit": "medium",
+      "status": "new",
+      "rank": null
+    },
+    "copperlyn--frontend-engineer--c1c430": {
+      "key": "copperlyn--frontend-engineer--c1c430",
+      "title": "Frontend Engineer",
+      "company": "Copperlyn",
+      "location": "Bengaluru, India",
+      "countries": [
+        "IN"
+      ],
+      "workMode": "hybrid",
+      "url": "https://jobs.example.com/copperlyn-frontend-engineer",
+      "applyUrl": null,
+      "source": "greenhouse",
+      "department": "Engineering",
+      "salary": null,
+      "postedAt": "2026-09-06T10:00:00.000Z",
+      "firstSeen": "2026-09-06T22:00:00.000Z",
+      "lastSeen": "2026-10-16T10:00:00.000Z",
+      "description": "Copperlyn is hiring a Frontend Engineer (Bengaluru, India).\n\nWhat you'll do:\n- Build and own product surfaces end to end\n- Work closely with design and customers\n- Raise the quality bar with tests, reviews and docs\n\nWhat we look for:\n- 3+ years shipping production React + TypeScript\n- Clear written communication\n- Comfort with ambiguity\n\n(Sample posting used for the get-a-job demo.)",
+      "track": "fe",
+      "eligibility": "green",
+      "eligibilityReason": "Based in Bengaluru",
+      "quickFit": "medium",
+      "status": "expired",
+      "rank": null
+    }
+  }
+}

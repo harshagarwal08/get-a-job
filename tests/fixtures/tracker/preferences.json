@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "name": "Demo User",
+  "tracks": [
+    {
+      "id": "fe",
+      "name": "Frontend Engineer"
+    },
+    {
+      "id": "fde",
+      "name": "Forward Deployed Engineer"
+    }
+  ]
+}

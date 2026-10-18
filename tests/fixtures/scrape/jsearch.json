@@ -1,0 +1,74 @@
+{
+ "status": "OK",
+ "request_id": "8a1c2d",
+ "parameters": {
+  "query": "frontend engineer in bengaluru",
+  "page": 1,
+  "num_pages": 1,
+  "country": "in",
+  "date_posted": "week"
+ },
+ "data": [
+  {
+   "job_id": "Ab12Cd34Ef==",
+   "job_title": "Enterprise Solutions Engineer (API & FinTech Infrastructure)",
+   "employer_name": "Ikuto",
+   "employer_website": "https://ikuto.co.uk",
+   "job_publisher": "LinkedIn",
+   "job_employment_type": "Full-time",
+   "job_apply_link": "https://www.linkedin.com/jobs/view/enterprise-solutions-engineer-api-4300000001",
+   "job_apply_is_direct": false,
+   "apply_options": [
+    {
+     "apply_link": "https://www.linkedin.com/jobs/view/enterprise-solutions-engineer-api-4300000001",
+     "is_direct": false,
+     "publisher": "LinkedIn"
+    },
+    {
+     "apply_link": "https://bebee.com/us/jobs/founding-solutions-engineer",
+     "is_direct": false,
+     "publisher": "BeBee"
+    },
+    {
+     "apply_link": "https://jobs.ashbyhq.com/ikuto/1b2c3d4e-0000-0000-0000-000000000001",
+     "is_direct": true,
+     "publisher": "Ikuto Careers"
+    }
+   ],
+   "job_description": "Enterprise Solutions Engineer (API & FinTech Infrastructure)\n\nLocation: San Francisco",
+   "job_is_remote": false,
+   "job_posted_at": "6 days ago",
+   "job_posted_at_timestamp": 1789344000,
+   "job_posted_at_datetime_utc": "2026-09-14T00:00:00.000Z",
+   "job_location": "San Francisco, CA",
+   "job_city": "San Francisco",
+   "job_state": "CA",
+   "job_country": "US",
+   "job_google_link": "https://www.google.com/search?q=jobs&gl=us&hl=en&udm=8#vhid=x",
+   "job_salary_string": "180K–314K a year",
+   "job_min_salary": 180000,
+   "job_max_salary": 314000,
+   "job_salary_period": "YEAR",
+   "work_arrangement": "hybrid"
+  },
+  {
+   "job_id": "Zz99==",
+   "job_title": "Senior Frontend Engineer",
+   "employer_name": "Acme Robotics Pvt Ltd",
+   "job_publisher": "Naukri",
+   "job_apply_link": "https://www.naukri.com/job-listings-senior-frontend-engineer-acme-1",
+   "job_apply_is_direct": false,
+   "apply_options": [],
+   "job_description": "React, TypeScript.",
+   "job_is_remote": true,
+   "job_posted_at_datetime_utc": "2026-10-15T00:00:00.000Z",
+   "job_location": "India",
+   "job_city": null,
+   "job_state": null,
+   "job_country": "IN",
+   "job_min_salary": null,
+   "job_max_salary": null,
+   "job_salary_period": null
+  }
+ ]
+}

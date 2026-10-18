@@ -1,0 +1,11 @@
+[
+  { "title": "Senior Frontend Engineer", "company": "Globex", "url": "https://in.linkedin.com/jobs/view/senior-frontend-engineer-at-globex-4300000009?trk=eml-email_job_alert", "location": "Bengaluru, Karnataka, India", "postedAt": "2026-10-16T00:00:00Z" },
+  { "title": "Senior Frontend Engineer", "company": "Globex", "url": "https://www.linkedin.com/jobs/view/4300000009/" },
+  { "title": "Forward Deployed Engineer", "company": "Initech", "url": "https://initech.example/jobs/fde", "location": "Remote (APAC)", "workMode": "remote", "salary": "$90k-$120k" },
+  { "title": "Barista", "company": "Caffe", "url": "https://caffe.example/jobs/1" },
+  { "title": "", "company": "NoTitle", "url": "https://x.example/1" },
+  { "title": "No company", "url": "https://x.example/2" },
+  { "title": "Bad URL", "company": "Evil", "url": "javascript:alert(1)" },
+  { "title": "Bad date", "company": "Evil", "url": "https://x.example/3", "postedAt": "yesterday-ish" },
+  "not an object"
+]

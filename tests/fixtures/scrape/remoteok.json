@@ -1,0 +1,37 @@
+[
+ {
+  "last_updated": 1792224050,
+  "legal": "Please link back to Remote OK"
+ },
+ {
+  "slug": "remote-frontend-engineer-acme-1",
+  "id": "1137531",
+  "epoch": 1792108856,
+  "date": "2026-10-16T00:00:56+00:00",
+  "company": "Acme",
+  "position": "Frontend Engineer",
+  "tags": [
+   "react"
+  ],
+  "description": "<p>You donât just ship UI.</p>",
+  "location": "",
+  "apply_url": "https://remoteOK.com/remote-jobs/remote-frontend-engineer-acme-1",
+  "salary_min": 90000,
+  "salary_max": 120000,
+  "url": "https://remoteOK.com/remote-jobs/remote-frontend-engineer-acme-1"
+ },
+ {
+  "slug": "x",
+  "id": "1137532",
+  "epoch": 1792108800,
+  "date": "2026-10-15T00:00:00+00:00",
+  "company": "Globex",
+  "position": "UI Engineer",
+  "tags": [],
+  "description": "<p>US only.</p>",
+  "location": "US only",
+  "url": "https://remoteOK.com/remote-jobs/x",
+  "salary_min": 0,
+  "salary_max": 0
+ }
+]

@@ -1,0 +1,23 @@
+{
+  "name": "get-a-job",
+  "version": "0.1.0",
+  "description": "Local-first, Claude Code-native job search: onboarding, tailorable resume.md, job scraping, JD tailoring, and a local tracker that exports to Google Sheets.",
+  "type": "module",
+  "license": "MIT",
+  "bin": { "gaj": "bin/gaj.js" },
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "gaj": "node bin/gaj.js",
+    "scrape": "node bin/gaj.js scrape",
+    "tracker": "node bin/gaj.js tracker",
+    "render": "node bin/gaj.js render",
+    "doctor": "node bin/gaj.js doctor",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "marked": "^12.0.2",
+    "pdfjs-dist": "^4.10.38",
+    "puppeteer": "^23.11.1"
+  }
+}

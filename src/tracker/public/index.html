@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>get-a-job · Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235b5bd6'/%3E%3Cpath d='M9 17.5l4.5 4.5L23 11' stroke='white' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <div class="topbar-row">
+      <a class="brand" href="#pipeline" aria-label="get-a-job tracker home">
+        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M9 17.5l4.5 4.5L23 11" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="brand-name">get-a-job</span>
+        <span class="demo-badge" id="demo-badge" hidden>Demo data</span>
+      </a>
+      <nav class="tabs" id="tabs" aria-label="Views">
+        <a href="#pipeline" data-view="pipeline"><span>Pipeline</span><kbd>1</kbd></a>
+        <a href="#table" data-view="table"><span>Table</span><kbd>2</kbd></a>
+        <a href="#jobs" data-view="jobs"><span>Jobs</span><span class="tab-count" id="jobs-count"></span><kbd>3</kbd></a>
+        <a href="#stats" data-view="stats"><span>Stats</span><kbd>4</kbd></a>
+      </nav>
+      <div class="actions">
+        <label class="search">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.2 13.2L17 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="search" type="search" placeholder="Search" autocomplete="off" aria-label="Search">
+          <kbd>/</kbd>
+        </label>
+        <div class="menu-wrap">
+          <button class="btn ghost icon-btn" id="export-btn" aria-haspopup="menu" aria-expanded="false" title="Export">
+            <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><path d="M10 3v9m0 0l-3.5-3.5M10 12l3.5-3.5M4 14v1.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="hide-sm">Export</span>
+          </button>
+          <div class="menu" id="export-menu" role="menu" hidden>
+            <button role="menuitem" data-export="sheets"><b>Copy for Google Sheets</b><small>Paste into cell A1</small></button>
+            <button role="menuitem" data-export="csv"><b>CSV</b><small>Universal spreadsheet import</small></button>
+            <button role="menuitem" data-export="xlsx"><b>Excel (.xlsx)</b><small>Styled, filterable</small></button>
+            <button role="menuitem" data-export="json"><b>JSON</b><small>Full data with history</small></button>
+          </div>
+        </div>
+        <button class="btn ghost icon-btn" id="theme-btn" title="Theme" aria-label="Toggle theme"></button>
+        <button class="btn ghost icon-btn hide-sm" id="help-btn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
+          <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true"><rect x="2.5" y="5" width="15" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 8h1M9.5 8h1M13.5 8h1M6 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <button class="btn primary" id="new-btn" title="New application (n)">
+          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="hide-sm">New</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="drawer-title"></aside>
+  <div class="modal" id="help" hidden role="dialog" aria-modal="true" aria-labelledby="help-title"></div>
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+</body>
+</html>

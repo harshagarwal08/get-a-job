@@ -1,0 +1,109 @@
+[
+ {
+  "name": "Bolna AI",
+  "slug": "bolna",
+  "website": "https://www.bolna.ai",
+  "batch": "Fall 2025",
+  "regions": [
+   "India",
+   "South Asia",
+   "Remote",
+   "Fully Remote"
+  ],
+  "industries": [
+   "B2B",
+   "Artificial Intelligence"
+  ],
+  "tags": [
+   "Voice AI"
+  ],
+  "isHiring": true,
+  "status": "Active",
+  "team_size": 12,
+  "launched_at": 1760000000
+ },
+ {
+  "name": "Old Corp",
+  "slug": "oldcorp",
+  "website": "https://old.example",
+  "batch": "Winter 2012",
+  "regions": [
+   "United States of America",
+   "America / Canada"
+  ],
+  "industries": [
+   "Fintech"
+  ],
+  "isHiring": true,
+  "status": "Active",
+  "team_size": 300,
+  "launched_at": 1322045523
+ },
+ {
+  "name": "Public Co",
+  "slug": "publicco",
+  "website": "https://pub.example",
+  "batch": "Summer 2015",
+  "regions": [
+   "India"
+  ],
+  "industries": [
+   "Consumer"
+  ],
+  "isHiring": true,
+  "status": "Public",
+  "team_size": 5000,
+  "launched_at": 1430000000
+ },
+ {
+  "name": "Berlin Dev",
+  "slug": "berlindev",
+  "website": "https://berlindev.example",
+  "batch": "Winter 2024",
+  "regions": [
+   "Germany",
+   "Europe"
+  ],
+  "industries": [
+   "Developer Tools"
+  ],
+  "isHiring": true,
+  "status": "Active",
+  "team_size": 8,
+  "launched_at": 1704000000
+ },
+ {
+  "name": "Not Hiring",
+  "slug": "nh",
+  "website": "https://nh.example",
+  "batch": "Spring 2025",
+  "regions": [
+   "India"
+  ],
+  "industries": [
+   "Healthcare"
+  ],
+  "isHiring": false,
+  "status": "Active",
+  "team_size": 4,
+  "launched_at": 1740000000
+ },
+ {
+  "name": "London Pay",
+  "slug": "londonpay",
+  "website": "london.example",
+  "batch": "Spring 2025",
+  "regions": [
+   "United Kingdom",
+   "Partly Remote"
+  ],
+  "industries": [
+   "Fintech",
+   "Payments"
+  ],
+  "isHiring": true,
+  "status": "Active",
+  "team_size": 40,
+  "launched_at": 1741000000
+ }
+]

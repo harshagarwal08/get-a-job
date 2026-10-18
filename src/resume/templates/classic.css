@@ -1,0 +1,29 @@
+/* classic: serif, centered header, ruled small-caps sections, monochrome. */
+body {
+  font-family: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, "Times New Roman", serif;
+  font-size: 10.25pt; line-height: 1.3; color: #1b1b1b;
+}
+.hd { text-align: center; margin-bottom: 8pt; }
+.hd h1 { font-size: 21pt; font-weight: 700; letter-spacing: 0.015em; line-height: 1.1; color: #111; }
+.hd .headline { margin-top: 2pt; font-style: italic; color: #333; }
+.hd .contact { margin-top: 4pt; font-size: 9.25pt; color: #333; }
+.hd .contact .sep { color: #888; }
+h2 {
+  font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #111;
+  border-bottom: 0.75pt solid #1b1b1b; padding-bottom: 1.5pt; margin: 9pt 0 4.5pt;
+}
+.sec > p { margin-bottom: 2pt; }
+.entry { margin-bottom: 5.5pt; }
+.entry:last-child { margin-bottom: 0; }
+.entry-lead h3 { font-size: 10.25pt; font-weight: 700; color: #111; }
+.entry-lead .org, .entry-lead .org-sep { font-weight: 400; }
+.entry-lead .org { font-style: italic; }
+.entry-lead .loc { color: #444; }
+.dates { color: #222; }
+.entry > p { margin-top: 1pt; }
+ul { padding-left: 13pt; margin-top: 1.5pt; }
+li { margin: 0.9pt 0; padding-left: 1pt; }
+li::marker { color: #555; font-size: 0.85em; }
+ul.kv li { margin: 1pt 0; }
+a { text-decoration: none; }
+.entry-lead .org a { text-decoration: underline; text-decoration-thickness: 0.5pt; text-underline-offset: 1.5pt; text-decoration-color: #999; }

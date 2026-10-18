@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    env:
+      # No Chrome in CI; tests that need it skip themselves.
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # npm install, not npm ci: the lockfile is not guaranteed to be committed.
+      - run: npm install --no-audit --no-fund
+      - name: Syntax check (node --check)
+        run: |
+          find . -name '*.js' -not -path './node_modules/*' -not -path './.git/*' -print0 \
+            | xargs -0 -r -n1 node --check
+      - run: npm test
+
+  privacy-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Personal data is ignored and untracked
+        run: bash .github/scripts/privacy-guard.sh
+      - name: prompt-lint (no unrestricted Bash in .claude/settings.json)
+        run: bash .github/scripts/prompt-lint.sh

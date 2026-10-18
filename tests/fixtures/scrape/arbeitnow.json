@@ -1,0 +1,10 @@
+{ "data": [
+  { "slug": "senior-frontend-engineer-berlin-1", "company_name": "Langdock", "title": "Senior Frontend Engineer (m/f/d)",
+    "description": "<p>Build our UI. We offer visa sponsorship and relocation support.</p>", "remote": false,
+    "url": "https://www.arbeitnow.com/jobs/companies/langdock/senior-frontend-engineer-berlin-1",
+    "tags": ["Software Development"], "job_types": ["full time"], "location": "Berlin", "created_at": 1792220444, "visa_sponsorship": true },
+  { "slug": "frontend-dev-remote-2", "company_name": "Remote GmbH", "title": "Frontend Developer",
+    "description": "<p>Remote within Germany.</p>", "remote": true,
+    "url": "https://www.arbeitnow.com/jobs/companies/remote-gmbh/frontend-dev-remote-2",
+    "tags": [], "job_types": [], "location": "Germany", "created_at": 1792100000 } ],
+  "links": { "next": null }, "meta": { "terms": "..." } }

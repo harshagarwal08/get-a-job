@@ -1,0 +1,8 @@
+{ "offset": 0, "limit": 100, "totalFound": 2, "content": [
+  { "id": "744000156077279", "name": "Senior Frontend Engineer", "company": { "identifier": "Acme1", "name": "Acme" },
+    "releasedDate": "2026-10-16T20:30:55.811Z",
+    "location": { "city": "Chennai", "region": "TN", "country": "in", "remote": false, "hybrid": true, "fullLocation": "Chennai, Tamil Nadu, India" },
+    "department": {}, "function": { "id": "engineering", "label": "Engineering" } },
+  { "id": "744000156077280", "name": "Revenue Accountant", "company": { "identifier": "Acme1", "name": "Acme" },
+    "releasedDate": "2026-10-10T00:00:00.000Z",
+    "location": { "city": "San Mateo", "region": "CA", "country": "us", "remote": true, "hybrid": false } } ] }

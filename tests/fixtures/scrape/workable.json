@@ -1,0 +1,22 @@
+{
+  "name": "Acme",
+  "description": "",
+  "jobs": [
+    {
+      "title": "Front End Developer - EMEA Remote",
+      "shortcode": "81B46579FE",
+      "employment_type": "Full-time",
+      "telecommuting": true,
+      "department": "Engineering",
+      "url": "https://apply.workable.com/j/81B46579FE",
+      "shortlink": "https://apply.workable.com/j/81B46579FE",
+      "application_url": "https://apply.workable.com/j/81B46579FE/apply",
+      "published_on": "2026-10-09",
+      "country": "France",
+      "city": "Paris",
+      "state": "Île-de-France",
+      "locations": [{ "country": "France", "countryCode": "FR", "city": "Paris", "region": "Île-de-France", "hidden": false }],
+      "description": "<p>Join our open-source team.</p>"
+    }
+  ]
+}

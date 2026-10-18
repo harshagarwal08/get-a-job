@@ -1,0 +1,10 @@
+{ "0-legal-notice": "Link back to Remotive", "job-count": 3, "jobs": [
+  { "id": 2069746, "url": "https://remotive.com/remote-jobs/software-development/frontend-engineer-2069746", "title": "Frontend Engineer",
+    "company_name": "Mitre Media", "category": "Software Development", "publication_date": "2026-10-14T20:33:44",
+    "candidate_required_location": "USA, Canada, USA timezones", "salary": "$170k - $200k", "description": "<p>React role.</p>" },
+  { "id": 2069747, "url": "https://remotive.com/remote-jobs/software-development/ui-engineer-2069747", "title": "UI Engineer",
+    "company_name": "Globex", "category": "Software Development", "publication_date": "2026-10-13T10:00:00",
+    "candidate_required_location": "Worldwide", "salary": "", "description": "<p>Anywhere.</p>" },
+  { "id": 2069748, "url": "https://remotive.com/remote-jobs/software-development/fe-2069748", "title": "Senior Front-End Developer",
+    "company_name": "Initech", "category": "Software Development", "publication_date": "2026-10-12T10:00:00",
+    "candidate_required_location": "Europe, USA, Canada, APAC", "salary": "", "description": "<p>Async team.</p>" } ] }

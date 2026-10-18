@@ -1,0 +1,726 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-16T10:00:00.000Z",
+  "applications": [
+    {
+      "id": "app_1a2b3c40",
+      "jobKey": "lumivex-labs--senior-frontend-engineer--ce5680",
+      "company": "Lumivex Labs",
+      "role": "Senior Frontend Engineer",
+      "track": "fe",
+      "url": "https://jobs.example.com/lumivex-labs-senior-frontend-engineer",
+      "location": "Bengaluru, India",
+      "workMode": "hybrid",
+      "status": "offer",
+      "channel": "referral",
+      "fit": {
+        "score": 84,
+        "verdict": "Strong"
+      },
+      "salary": "INR 45-55L",
+      "contact": "Hiring manager (EM), via former colleague",
+      "appDir": "data/applications/lumivex-labs-senior-frontend-engineer",
+      "resumePath": "data/applications/lumivex-labs-senior-frontend-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-09-09T13:00:00.000Z",
+      "nextAction": "Negotiate base + ESOP refresh",
+      "nextActionDate": "2026-10-17",
+      "notes": "Team of 6, owns design system. Ask about on-call.",
+      "createdAt": "2026-09-06T13:00:00.000Z",
+      "updatedAt": "2026-10-13T13:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-09-06T13:00:00.000Z",
+          "status": "saved",
+          "note": "Tracked from jobs inbox"
+        },
+        {
+          "at": "2026-09-08T13:00:00.000Z",
+          "status": "drafted",
+          "note": "Tailored resume, design-systems angle"
+        },
+        {
+          "at": "2026-09-09T13:00:00.000Z",
+          "status": "applied",
+          "note": "Referral submitted by former colleague"
+        },
+        {
+          "at": "2026-09-16T13:00:00.000Z",
+          "status": "screening",
+          "note": "Recruiter call, 30 min"
+        },
+        {
+          "at": "2026-09-24T13:00:00.000Z",
+          "status": "interview",
+          "note": "Tech round 1: React perf deep-dive"
+        },
+        {
+          "at": "2026-10-04T13:00:00.000Z",
+          "status": "interview",
+          "note": "Round 2: system design (design system)"
+        },
+        {
+          "at": "2026-10-13T13:00:00.000Z",
+          "status": "offer",
+          "note": "Verbal offer, written to follow"
+        }
+      ]
+    },
+    {
+      "id": "app_1a2d2fe7",
+      "jobKey": "nordwyn-ai--forward-deployed-engineer--683579",
+      "company": "Nordwyn AI",
+      "role": "Forward Deployed Engineer",
+      "track": "fde",
+      "url": "https://jobs.example.com/nordwyn-ai-forward-deployed-engineer",
+      "location": "Remote (India)",
+      "workMode": "remote",
+      "status": "interview",
+      "channel": "ats",
+      "fit": {
+        "score": 78,
+        "verdict": "Strong"
+      },
+      "salary": "USD 70-90k",
+      "contact": null,
+      "appDir": "data/applications/nordwyn-ai-forward-deployed-engineer",
+      "resumePath": "data/applications/nordwyn-ai-forward-deployed-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-09-14T14:00:00.000Z",
+      "nextAction": "Prep take-home: RAG integration demo",
+      "nextActionDate": "2026-10-15",
+      "notes": "They liked the customer-agent case study. Take-home due Friday.",
+      "createdAt": "2026-09-13T14:00:00.000Z",
+      "updatedAt": "2026-10-07T14:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-09-13T14:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-09-14T14:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        },
+        {
+          "at": "2026-09-22T14:00:00.000Z",
+          "status": "screening",
+          "note": "Hiring manager intro"
+        },
+        {
+          "at": "2026-10-07T14:00:00.000Z",
+          "status": "interview",
+          "note": "Customer case study round"
+        }
+      ]
+    },
+    {
+      "id": "app_1a2f238e",
+      "jobKey": "quillfen--frontend-engineer-editor--7df179",
+      "company": "Quillfen",
+      "role": "Frontend Engineer, Editor",
+      "track": "fe",
+      "url": "https://jobs.example.com/quillfen-frontend-engineer-editor",
+      "location": "Remote",
+      "workMode": "remote",
+      "status": "screening",
+      "channel": "ats",
+      "fit": {
+        "score": 71,
+        "verdict": "Good"
+      },
+      "salary": null,
+      "contact": null,
+      "appDir": "data/applications/quillfen-frontend-engineer-editor",
+      "resumePath": "data/applications/quillfen-frontend-engineer-editor/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-09-20T15:00:00.000Z",
+      "nextAction": "Schedule tech round",
+      "nextActionDate": "2026-10-18",
+      "notes": "",
+      "createdAt": "2026-09-19T15:00:00.000Z",
+      "updatedAt": "2026-10-01T15:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-09-19T15:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-09-20T15:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        },
+        {
+          "at": "2026-10-01T15:00:00.000Z",
+          "status": "screening",
+          "note": "Recruiter screen done"
+        }
+      ]
+    },
+    {
+      "id": "app_1a311735",
+      "jobKey": "parcelquill--solutions-engineer--a42523",
+      "company": "Parcelquill",
+      "role": "Solutions Engineer",
+      "track": "fde",
+      "url": "https://jobs.example.com/parcelquill-solutions-engineer",
+      "location": "Bengaluru, India",
+      "workMode": "onsite",
+      "status": "screening",
+      "channel": "linkedin",
+      "fit": {
+        "score": 66,
+        "verdict": "Good"
+      },
+      "salary": "INR 35-40L",
+      "contact": "Recruiter at TalentQuarry (agency)",
+      "appDir": "data/applications/parcelquill-solutions-engineer",
+      "resumePath": "data/applications/parcelquill-solutions-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-09-27T16:00:00.000Z",
+      "nextAction": "Send follow-up thank-you",
+      "nextActionDate": "2026-10-16",
+      "notes": "",
+      "createdAt": "2026-09-26T16:00:00.000Z",
+      "updatedAt": "2026-10-10T16:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-09-26T16:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-09-27T16:00:00.000Z",
+          "status": "applied",
+          "note": "Easy apply + DM to recruiter"
+        },
+        {
+          "at": "2026-10-10T16:00:00.000Z",
+          "status": "screening",
+          "note": "Phone screen"
+        }
+      ]
+    },
+    {
+      "id": "app_1a330adc",
+      "jobKey": "tesslyn--ui-engineer--885309",
+      "company": "Tesslyn",
+      "role": "UI Engineer",
+      "track": "fe",
+      "url": "https://jobs.example.com/tesslyn-ui-engineer",
+      "location": "Pune, India",
+      "workMode": "hybrid",
+      "status": "applied",
+      "channel": "ats",
+      "fit": {
+        "score": 62,
+        "verdict": "Good"
+      },
+      "salary": null,
+      "contact": null,
+      "appDir": "data/applications/tesslyn-ui-engineer",
+      "resumePath": "data/applications/tesslyn-ui-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-10-01T17:00:00.000Z",
+      "nextAction": "Follow up if no reply",
+      "nextActionDate": "2026-10-14",
+      "notes": "",
+      "createdAt": "2026-09-30T17:00:00.000Z",
+      "updatedAt": "2026-10-01T17:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-09-30T17:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-10-01T17:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "app_1a34fe83",
+      "jobKey": "brivane-health--senior-software-engineer-frontend--2f1d0c",
+      "company": "Brivane Health",
+      "role": "Senior Software Engineer, Frontend",
+      "track": "fe",
+      "url": "https://jobs.example.com/brivane-health-senior-software-engineer-frontend",
+      "location": "Remote (APAC)",
+      "workMode": "remote",
+      "status": "applied",
+      "channel": "email",
+      "fit": {
+        "score": 58,
+        "verdict": "Moderate"
+      },
+      "salary": "USD 60k",
+      "contact": null,
+      "appDir": "data/applications/brivane-health-senior-software-engineer-frontend",
+      "resumePath": "data/applications/brivane-health-senior-software-engineer-frontend/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-10-08T13:00:00.000Z",
+      "nextAction": null,
+      "nextActionDate": null,
+      "notes": "",
+      "createdAt": "2026-10-07T13:00:00.000Z",
+      "updatedAt": "2026-10-08T13:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-10-07T13:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-10-08T13:00:00.000Z",
+          "status": "applied",
+          "note": "Emailed CTO directly"
+        }
+      ]
+    },
+    {
+      "id": "app_1a36f22a",
+      "jobKey": "kelvaro-data--deployment-engineer--e7bfac",
+      "company": "Kelvaro Data",
+      "role": "Deployment Engineer",
+      "track": "fde",
+      "url": "https://jobs.example.com/kelvaro-data-deployment-engineer",
+      "location": "Bengaluru, India",
+      "workMode": "hybrid",
+      "status": "applied",
+      "channel": "ats",
+      "fit": {
+        "score": 74,
+        "verdict": "Good"
+      },
+      "salary": null,
+      "contact": null,
+      "appDir": "data/applications/kelvaro-data-deployment-engineer",
+      "resumePath": "data/applications/kelvaro-data-deployment-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-10-14T14:00:00.000Z",
+      "nextAction": "Ping referral contact",
+      "nextActionDate": "2026-10-20",
+      "notes": "",
+      "createdAt": "2026-10-11T14:00:00.000Z",
+      "updatedAt": "2026-10-14T14:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-10-11T14:00:00.000Z",
+          "status": "saved",
+          "note": "Tracked from jobs inbox"
+        },
+        {
+          "at": "2026-10-13T14:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-10-14T14:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "app_1a38e5d1",
+      "jobKey": "ostrovia-pay--frontend-engineer--49a9e7",
+      "company": "Ostrovia Pay",
+      "role": "Frontend Engineer",
+      "track": "fe",
+      "url": "https://jobs.example.com/ostrovia-pay-frontend-engineer",
+      "location": "Bengaluru, India",
+      "workMode": "onsite",
+      "status": "drafted",
+      "channel": "ats",
+      "fit": {
+        "score": 69,
+        "verdict": "Good"
+      },
+      "salary": "INR 30-38L",
+      "contact": null,
+      "appDir": "data/applications/ostrovia-pay-frontend-engineer",
+      "resumePath": "data/applications/ostrovia-pay-frontend-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": "2026-10-19",
+      "appliedAt": null,
+      "nextAction": "Review cover note and submit",
+      "nextActionDate": "2026-10-17",
+      "notes": "",
+      "createdAt": "2026-10-12T15:00:00.000Z",
+      "updatedAt": "2026-10-12T15:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-10-12T15:00:00.000Z",
+          "status": "drafted",
+          "note": "Resume tailored, ATS 92%"
+        }
+      ]
+    },
+    {
+      "id": "app_1a3ad978",
+      "jobKey": "meridova-cloud--customer-engineer--13bcaa",
+      "company": "Meridova Cloud",
+      "role": "Customer Engineer",
+      "track": "fde",
+      "url": "https://jobs.example.com/meridova-cloud-customer-engineer",
+      "location": "Remote (India)",
+      "workMode": "remote",
+      "status": "drafted",
+      "channel": "recruiter",
+      "fit": {
+        "score": 55,
+        "verdict": "Moderate"
+      },
+      "salary": null,
+      "contact": "Recruiter at TalentBridge (agency)",
+      "appDir": "data/applications/meridova-cloud-customer-engineer",
+      "resumePath": "data/applications/meridova-cloud-customer-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": null,
+      "nextAction": "Answer form questions",
+      "nextActionDate": "2026-10-18",
+      "notes": "",
+      "createdAt": "2026-10-15T16:00:00.000Z",
+      "updatedAt": "2026-10-15T16:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-10-15T16:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        }
+      ]
+    },
+    {
+      "id": "app_1a3ccd1f",
+      "jobKey": "mirelune-travel--frontend-platform-engineer--7b4b14",
+      "company": "Mirelune Travel",
+      "role": "Frontend Platform Engineer",
+      "track": "fe",
+      "url": "https://jobs.example.com/mirelune-travel-frontend-platform-engineer",
+      "location": "Remote",
+      "workMode": "remote",
+      "status": "saved",
+      "channel": "ats",
+      "fit": {
+        "score": 80,
+        "verdict": "Strong"
+      },
+      "salary": null,
+      "contact": null,
+      "appDir": null,
+      "resumePath": null,
+      "coverPath": null,
+      "deadline": "2026-10-22",
+      "appliedAt": null,
+      "nextAction": null,
+      "nextActionDate": null,
+      "notes": "",
+      "createdAt": "2026-10-14T17:00:00.000Z",
+      "updatedAt": "2026-10-14T17:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-10-14T17:00:00.000Z",
+          "status": "saved",
+          "note": "Tracked from jobs inbox"
+        }
+      ]
+    },
+    {
+      "id": "app_1a3ec0c6",
+      "jobKey": "tavrik-robotics--forward-deployed-engineer--d38070",
+      "company": "Tavrik Robotics",
+      "role": "Forward Deployed Engineer",
+      "track": "fde",
+      "url": "https://jobs.example.com/tavrik-robotics-forward-deployed-engineer",
+      "location": "Bengaluru, India",
+      "workMode": "onsite",
+      "status": "saved",
+      "channel": "ats",
+      "fit": {
+        "score": 63,
+        "verdict": "Good"
+      },
+      "salary": null,
+      "contact": null,
+      "appDir": null,
+      "resumePath": null,
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": null,
+      "nextAction": null,
+      "nextActionDate": null,
+      "notes": "",
+      "createdAt": "2026-10-15T13:00:00.000Z",
+      "updatedAt": "2026-10-15T13:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-10-15T13:00:00.000Z",
+          "status": "saved",
+          "note": "Tracked from jobs inbox"
+        }
+      ]
+    },
+    {
+      "id": "app_1a40b46d",
+      "jobKey": "plindro-bank--senior-ui-developer--a7341c",
+      "company": "Plindro Bank",
+      "role": "Senior UI Developer",
+      "track": "fe",
+      "url": "https://jobs.example.com/plindro-bank-senior-ui-developer",
+      "location": "Mumbai, India",
+      "workMode": "hybrid",
+      "status": "rejected",
+      "channel": "ats",
+      "fit": {
+        "score": 47,
+        "verdict": "Moderate"
+      },
+      "salary": null,
+      "contact": null,
+      "appDir": "data/applications/plindro-bank-senior-ui-developer",
+      "resumePath": "data/applications/plindro-bank-senior-ui-developer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-09-02T14:00:00.000Z",
+      "nextAction": null,
+      "nextActionDate": null,
+      "notes": "",
+      "createdAt": "2026-09-01T14:00:00.000Z",
+      "updatedAt": "2026-09-16T14:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-09-01T14:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-09-02T14:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        },
+        {
+          "at": "2026-09-16T14:00:00.000Z",
+          "status": "rejected",
+          "note": "Auto-reject email"
+        }
+      ]
+    },
+    {
+      "id": "app_1a42a814",
+      "jobKey": "stackfern--frontend-engineer--3aaae6",
+      "company": "Stackfern",
+      "role": "Frontend Engineer",
+      "track": "fe",
+      "url": "https://jobs.example.com/stackfern-frontend-engineer",
+      "location": "Remote",
+      "workMode": "remote",
+      "status": "rejected",
+      "channel": "referral",
+      "fit": {
+        "score": 72,
+        "verdict": "Good"
+      },
+      "salary": null,
+      "contact": "Former colleague (referral)",
+      "appDir": "data/applications/stackfern-frontend-engineer",
+      "resumePath": "data/applications/stackfern-frontend-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-08-27T15:00:00.000Z",
+      "nextAction": null,
+      "nextActionDate": null,
+      "notes": "Feedback: strong React, weaker on canvas/WebGL.",
+      "createdAt": "2026-08-25T15:00:00.000Z",
+      "updatedAt": "2026-09-18T15:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-08-25T15:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-08-27T15:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        },
+        {
+          "at": "2026-09-03T15:00:00.000Z",
+          "status": "screening",
+          "note": ""
+        },
+        {
+          "at": "2026-09-11T15:00:00.000Z",
+          "status": "interview",
+          "note": "Live coding"
+        },
+        {
+          "at": "2026-09-18T15:00:00.000Z",
+          "status": "rejected",
+          "note": "Went with someone more senior in WebGL"
+        }
+      ]
+    },
+    {
+      "id": "app_1a449bbb",
+      "jobKey": "vorlane-grid--solutions-engineer--10dd78",
+      "company": "Vorlane Grid",
+      "role": "Solutions Engineer",
+      "track": "fde",
+      "url": "https://jobs.example.com/vorlane-grid-solutions-engineer",
+      "location": "Remote (Global)",
+      "workMode": "remote",
+      "status": "no_response",
+      "channel": "ats",
+      "fit": {
+        "score": 51,
+        "verdict": "Moderate"
+      },
+      "salary": null,
+      "contact": null,
+      "appDir": "data/applications/vorlane-grid-solutions-engineer",
+      "resumePath": "data/applications/vorlane-grid-solutions-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-08-30T16:00:00.000Z",
+      "nextAction": null,
+      "nextActionDate": null,
+      "notes": "",
+      "createdAt": "2026-08-29T16:00:00.000Z",
+      "updatedAt": "2026-09-26T16:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-08-29T16:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-08-30T16:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        },
+        {
+          "at": "2026-09-26T16:00:00.000Z",
+          "status": "no_response",
+          "note": "No reply after 2 follow-ups"
+        }
+      ]
+    },
+    {
+      "id": "app_1a468f62",
+      "jobKey": "vesprit-studio--frontend-engineer--ef6d4f",
+      "company": "Vesprit Studio",
+      "role": "Frontend Engineer",
+      "track": "fe",
+      "url": "https://jobs.example.com/vesprit-studio-frontend-engineer",
+      "location": "Delhi, India",
+      "workMode": "onsite",
+      "status": "withdrawn",
+      "channel": "linkedin",
+      "fit": {
+        "score": 40,
+        "verdict": "Weak"
+      },
+      "salary": null,
+      "contact": null,
+      "appDir": "data/applications/vesprit-studio-frontend-engineer",
+      "resumePath": "data/applications/vesprit-studio-frontend-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-09-22T17:00:00.000Z",
+      "nextAction": null,
+      "nextActionDate": null,
+      "notes": "",
+      "createdAt": "2026-09-21T17:00:00.000Z",
+      "updatedAt": "2026-10-02T17:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-09-21T17:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-09-22T17:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        },
+        {
+          "at": "2026-10-02T17:00:00.000Z",
+          "status": "withdrawn",
+          "note": "Onsite-only, 5 days; not a fit"
+        }
+      ]
+    },
+    {
+      "id": "app_1a488309",
+      "jobKey": "auralyn-commerce--senior-frontend-engineer--b14ea7",
+      "company": "Auralyn Commerce",
+      "role": "Senior Frontend Engineer",
+      "track": "fe",
+      "url": "https://jobs.example.com/auralyn-commerce-senior-frontend-engineer",
+      "location": "Bengaluru, India",
+      "workMode": "hybrid",
+      "status": "offer_declined",
+      "channel": "ats",
+      "fit": {
+        "score": 76,
+        "verdict": "Strong"
+      },
+      "salary": "INR 40L",
+      "contact": null,
+      "appDir": "data/applications/auralyn-commerce-senior-frontend-engineer",
+      "resumePath": "data/applications/auralyn-commerce-senior-frontend-engineer/resume.pdf",
+      "coverPath": null,
+      "deadline": null,
+      "appliedAt": "2026-08-08T13:00:00.000Z",
+      "nextAction": null,
+      "nextActionDate": null,
+      "notes": "",
+      "createdAt": "2026-08-07T13:00:00.000Z",
+      "updatedAt": "2026-09-08T13:00:00.000Z",
+      "history": [
+        {
+          "at": "2026-08-07T13:00:00.000Z",
+          "status": "drafted",
+          "note": "Created"
+        },
+        {
+          "at": "2026-08-08T13:00:00.000Z",
+          "status": "applied",
+          "note": ""
+        },
+        {
+          "at": "2026-08-17T13:00:00.000Z",
+          "status": "screening",
+          "note": ""
+        },
+        {
+          "at": "2026-08-27T13:00:00.000Z",
+          "status": "interview",
+          "note": ""
+        },
+        {
+          "at": "2026-09-05T13:00:00.000Z",
+          "status": "offer",
+          "note": "Offer: 40L base"
+        },
+        {
+          "at": "2026-09-08T13:00:00.000Z",
+          "status": "offer_declined",
+          "note": "Declined: comp below floor after negotiation"
+        }
+      ]
+    }
+  ]
+}
