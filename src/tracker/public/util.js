@@ -64,6 +64,10 @@ export function icon(name, size = 14) {
     inbox: '<path d="M3 11l2.2-6.5h9.6L17 11v4.5H3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 11h4l1 2h4l1-2h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
     board: '<rect x="3" y="3.5" width="4" height="13" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="8.5" y="3.5" width="4" height="9" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="3.5" width="3" height="6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/>',
     chart: '<path d="M3.5 16.5h13M6 13v-3M10 13V6M14 13V9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    plus: '<path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    search: '<circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M13.2 13.2L17 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+    check: '<circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.8 10.3l2.2 2.2 4.3-4.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+    gear: '<circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
     trash: '<path d="M4 6h12M8 6V4h4v2M6 6l.8 10.5h6.4L14 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>',
   };
   const span = document.createElement('span');

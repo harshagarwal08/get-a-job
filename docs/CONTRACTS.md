@@ -196,6 +196,13 @@ Merge rule on re-scrape:
 - Quiet time (for /followup) is measured from the last `history[].at`, not `updatedAt`.
 - History entries may carry `"undone": true` (UI undo); stats and furthestStage skip undone entries.
 
+### Tracker HTTP API (127.0.0.1 only; mutating routes check Host, Origin and JSON content type)
+- Applications: `GET/POST /api/applications`, `GET/PATCH/DELETE /api/applications/:id`, `POST /api/applications/:id/undo`.
+- Jobs: `GET /api/jobs` (no descriptions), `GET /api/jobs?key=`, `PATCH /api/jobs/:key {status}`, `POST /api/jobs/:key/track`.
+- Preferences: `GET /api/preferences` → `{prefs, exists, errors, warnings, remoteScopes, usage}`; `PUT /api/preferences` validates with `src/lib/preferences.js` (400 on errors), backs up the previous file to `data/backups/preferences-<ISO>.json` (last 10 kept), preserves unknown keys.
+- Search: `POST /api/search {paid?, confirmPaid?, track?, days?}` runs `gaj scrape --json` as a child process (one at a time → 409; `paid` requires `confirmPaid`; killed after 10 min; simulated in `--demo`); `GET /api/search/status`.
+- Stats/export: `GET /api/stats`, `GET /api/export.(csv|tsv|xlsx|json)`; files: `GET /files?path=` (only under `data/applications/`).
+
 ### `data/applications/<slug>/` (written by Claude commands; slug = `[a-z0-9-]` of company-role)
 - `job_posting.md`: the posting text, verbatim
 - `resume.md`, `resume.pdf`, `resume.html`

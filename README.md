@@ -196,6 +196,7 @@ npm run tracker -- --demo        # same UI with sample data; never touches data/
 | `/discover <criteria>` | Find companies matching plain-words criteria (YC directory or web search), detect and verify each one's ATS, show a table, and add only the ones you pick. |
 | `/linkedin-alerts [days]` | Read your LinkedIn job-alert emails through the Gmail connector (read-only) and import the jobs. Nothing touches LinkedIn directly. |
 | `/import-jobs` | Paste search results or job links from any site you browsed; Claude extracts and imports them. |
+| `/preferences [change]` | Change roles, titles, locations, salary floor or sources by describing it; shows a diff, validates, then offers to re-run the search. The tracker's Settings tab does the same. |
 | `/scrape [--track id] [--days N] [--company name]` | Run `gaj scrape` over your companies and enabled boards, tag a quick fit on new jobs, show green-eligibility jobs first (orange collapsed with reasons), suggest LinkedIn people-search links for referrals. |
 | `/rank [--top N] [--limit N] [focus]` | Score jobs in parallel (gates, weighted dimensions, verdict), write results back with `gaj jobs:set`, show a shortlist. |
 | `/tailor <url \| job key \| JD>` | Tailor the resume for one posting, review it, audit grounding, render and verify the PDF, write an ATS report, add a tracker row. |
@@ -360,6 +361,9 @@ By source: Ashby 77, Greenhouse 65, careers pages 17, Lever 12, SmartRecruiters 
 - **Undo**: status changes show an Undo toast. Undo marks the last history entry as undone and restores the previous status; stats ignore undone entries.
 - **Jobs inbox**: scraped and ranked jobs with eligibility chips and a "Track" button.
 - **Stats**: funnel by furthest stage reached, response rate, applications per week, breakdown by track and channel.
+- **Settings**: edit your preferences (tracks, titles, locations, salary floor, sources) and hit **Save & run search** to re-scrape with the new settings. Paid providers need an extra confirmation. Ranking the new jobs still happens in Claude (`/rank`).
+
+<p align="center"><img src="docs/assets/tracker-settings.png" alt="Tracker settings: edit preferences and re-run the search" width="85%"></p>
 
 <p align="center"><img src="docs/assets/tracker-pipeline-dark.png" alt="Tracker pipeline in dark mode" width="85%"></p>
 

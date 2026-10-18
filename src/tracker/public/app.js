@@ -2,8 +2,9 @@
 import { h, icon, label, api, toast, storage, debounce, STATUSES, CHANNELS, WORK_MODES, VERDICTS, statusChip, fitBadge, dateTime, relDue, dueState } from './util.js';
 import { renderPipeline, renderTable } from './views.js';
 import { renderJobs, renderStats } from './views2.js';
+import { renderSettings, settingsDirty, loadSettings, runSearch, pollSearch, searchStatusBox } from './settings.js';
 
-const VIEWS = ['pipeline', 'table', 'jobs', 'stats'];
+const VIEWS = ['pipeline', 'table', 'jobs', 'stats', 'settings'];
 const ui = storage.get('gaj.ui', {});
 
 const ctx = {
@@ -12,6 +13,16 @@ const ctx = {
   filters: ui.filters ?? {}, sort: ui.sort ?? { key: 'updated', dir: 'desc' },
   jobFilters: ui.jobFilters ?? {}, closedOpen: ui.closedOpen ?? false,
   expandedJob: null, dragging: null,
+  settings: null, settingsEl: null, searchState: null, searchOpts: { paid: false, track: null }, searchDismissed: null,
+  runSearch: () => runSearch(ctx), searchStatusBox,
+  async onSearchDone(s) {
+    ctx.lastRaw.jobs = '';
+    await refresh({ force: true }).catch(() => {});
+    if (ctx.view !== 'settings') render();
+    else document.getElementById('jobs-count').textContent = String(ctx.jobs.filter((j) => j.status === 'new' || j.status === 'ranked').length || '');
+    if (s.exitCode === 0) toast(`Search finished: ${s.summary?.new ?? 0} new job${s.summary?.new === 1 ? '' : 's'}`, { sub: s.summary?.new ? 'Ask Claude to /rank them next.' : undefined, action: ctx.view !== 'jobs' ? { label: 'View', run: () => setView('jobs') } : undefined });
+    else toast('Search failed', { error: true, sub: s.error ?? undefined });
+  },
   drawer: { id: null, mode: null, dirty: false },
   lastRaw: { apps: '', jobs: '' },
   saveUi() { storage.set('gaj.ui', { filters: ctx.filters, sort: ctx.sort, jobFilters: ctx.jobFilters, closedOpen: ctx.closedOpen }); },
@@ -58,13 +69,23 @@ function render() {
   $('jobs-count').textContent = openJobs ? String(openJobs) : '';
   $('search').placeholder = ctx.view === 'jobs' ? 'Search jobs' : 'Search applications';
   const scroll = main.querySelector('.board')?.scrollLeft;
-  const views = { pipeline: renderPipeline, table: renderTable, jobs: renderJobs, stats: renderStats };
+  const views = { pipeline: renderPipeline, table: renderTable, jobs: renderJobs, stats: renderStats, settings: renderSettings };
   main.replaceChildren(views[ctx.view](ctx));
   if (scroll) { const b = main.querySelector('.board'); if (b) b.scrollLeft = scroll; }
 }
 
 function setView(v) {
   if (!VIEWS.includes(v)) v = 'pipeline';
+  if (ctx.view === 'settings' && v !== 'settings' && settingsDirty(ctx) && !confirm('You have unsaved settings. Leave without saving?')) {
+    history.replaceState(null, '', '#settings');
+    return;
+  }
+  if (ctx.view === 'settings' && v !== 'settings' && ctx.settings) { ctx.settings.prefs = JSON.parse(JSON.stringify(ctx.settings.saved)); ctx.settingsEl = null; }
+  if (v === 'settings' && ctx.view !== 'settings') {
+    ctx.settingsEl = null;
+    // Pick up edits made outside the UI (e.g. /onboard) when nothing is pending here.
+    if (ctx.settings && !settingsDirty(ctx)) loadSettings(ctx).then(() => { if (ctx.view === 'settings') render(); }).catch(() => {});
+  }
   ctx.view = v;
   if (location.hash !== `#${v}`) history.replaceState(null, '', `#${v}`);
   if (v === 'stats') loadStats().then(render).catch(() => {});
@@ -363,7 +384,7 @@ function showHelp(show = helpEl.hidden) {
     h('dl', { class: 'shortcuts' },
       k('/'), h('dd', null, 'Search'),
       k('n'), h('dd', null, 'New application'),
-      k('1'), h('dd', null, 'Pipeline'), k('2'), h('dd', null, 'Table'), k('3'), h('dd', null, 'Jobs inbox'), k('4'), h('dd', null, 'Stats'),
+      k('1'), h('dd', null, 'Pipeline'), k('2'), h('dd', null, 'Table'), k('3'), h('dd', null, 'Jobs inbox'), k('4'), h('dd', null, 'Stats'), k('5'), h('dd', null, 'Settings and search'),
       k('Shift', '←', '→'), h('dd', null, 'Move focused card to previous / next stage'),
       k('Enter'), h('dd', null, 'Open focused card or row'),
       k('Esc'), h('dd', null, 'Close drawer or dialog'),
@@ -387,10 +408,11 @@ document.addEventListener('keydown', (e) => {
   if (e.key === '/') { e.preventDefault(); searchEl.focus(); searchEl.select(); }
   else if (e.key === 'n') { e.preventDefault(); openNew(); }
   else if (e.key === '?') { e.preventDefault(); showHelp(true); }
-  else if (['1', '2', '3', '4'].includes(e.key)) setView(VIEWS[Number(e.key) - 1]);
+  else if (['1', '2', '3', '4', '5'].includes(e.key)) setView(VIEWS[Number(e.key) - 1]);
 });
 
 window.addEventListener('hashchange', () => setView(location.hash.slice(1)));
+window.addEventListener('beforeunload', (e) => { if (settingsDirty(ctx) || ctx.drawer.dirty) { e.preventDefault(); e.returnValue = ''; } });
 
 // ---------------- polling: pick up CLI edits without clobbering open edits ----------------
 async function poll() {
@@ -413,6 +435,8 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
     ctx.meta = await api('/api/meta');
     $('demo-badge').hidden = !ctx.meta.demo;
     await refresh({ force: true });
+    loadSettings(ctx).then(() => { if (ctx.view === 'jobs') render(); }).catch(() => {});
+    pollSearch(ctx);
   } catch (e) {
     toast('Could not reach the tracker server', { error: true, sub: 'Is `gaj tracker` still running?' });
   }

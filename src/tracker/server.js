@@ -6,7 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { createStore } from './store.js';
 import { computeStats } from './stats.js';
 import { FORMATS, exportApplications } from './export.js';
-import { readJSON } from '../lib/store.js';
+import { readJSON, writeJSON } from '../lib/store.js';
+import { validatePreferences, REMOTE_SCOPES } from '../lib/preferences.js';
+import { createSearchRunner } from './search.js';
+
+const EXAMPLE_PREFS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'examples', 'preferences.example.json');
+const MAX_BACKUPS = 10;
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 const MAX_BODY = 1024 * 1024;
@@ -66,8 +71,74 @@ function splitBody(body) {
   return { note, fields };
 }
 
-export function createTrackerServer({ store = createStore(), port = 4317, meta = {} } = {}) {
+export function createTrackerServer({ store = createStore(), port = 4317, meta = {}, search } = {}) {
   const applicationsDir = path.join(store.root, 'data', 'applications');
+  const prefsFile = path.join(store.root, 'profile', 'preferences.json');
+  const backupsDir = path.join(store.root, 'data', 'backups');
+  const runner = search ?? createSearchRunner({ root: store.root, demo: !!meta.demo, jobsFile: store.jobsFile });
+
+  // Read-only view of this month's paid-provider usage (data/usage.json is written by scrape).
+  function usageView(prefs) {
+    const month = new Date().toISOString().slice(0, 7);
+    let all = {};
+    try { all = readJSON(path.join(store.root, 'data', 'usage.json'), {}) ?? {}; } catch { all = {}; }
+    const m = all[month] ?? {};
+    const src = prefs?.sources ?? {};
+    return {
+      month,
+      googleJobs: { requests: m.googleJobs?.requests ?? 0, limit: src.googleJobs?.maxRequestsPerMonth ?? 100 },
+      apify: { usd: m.apify?.usdCap ?? 0, limit: src.apify?.maxUsdPerMonth ?? 5 },
+    };
+  }
+
+  function getPreferences() {
+    let prefs = readJSON(prefsFile, null);
+    const exists = prefs !== null;
+    if (!exists) prefs = readJSON(EXAMPLE_PREFS, null) ?? { version: 1, tracks: [] };
+    const { errors, warnings } = validatePreferences(prefs);
+    return { prefs, exists, errors, warnings, remoteScopes: REMOTE_SCOPES, usage: usageView(prefs) };
+  }
+
+  function backupPreferences() {
+    if (!fs.existsSync(prefsFile)) return null;
+    fs.mkdirSync(backupsDir, { recursive: true });
+    const name = `preferences-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    fs.copyFileSync(prefsFile, path.join(backupsDir, name));
+    const old = fs.readdirSync(backupsDir).filter((f) => /^preferences-.*\.json$/.test(f)).sort();
+    for (const f of old.slice(0, Math.max(0, old.length - MAX_BACKUPS))) fs.rmSync(path.join(backupsDir, f), { force: true });
+    return name;
+  }
+
+  function putPreferences(body) {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new HttpError(400, 'body must be the preferences object');
+    // Keep top-level keys the client didn't send (forward-compat with fields this UI doesn't know).
+    const current = readJSON(prefsFile, null) ?? {};
+    const prefs = { ...current, ...body, version: body.version ?? current.version ?? 1 };
+    const { errors, warnings } = validatePreferences(prefs);
+    if (errors.length) { const e = new HttpError(400, 'preferences are invalid'); e.data = { errors, warnings }; throw e; }
+    backupPreferences();
+    writeJSON(prefsFile, prefs);
+    return { prefs, warnings, usage: usageView(prefs) };
+  }
+
+  function startSearch(body) {
+    const b = body ?? {};
+    if (b.paid !== undefined && typeof b.paid !== 'boolean') throw new HttpError(400, 'paid must be true or false');
+    if (b.paid && b.confirmPaid !== true) throw new HttpError(400, 'paid providers need confirmPaid: true');
+    const prefs = readJSON(prefsFile, null);
+    if (!prefs) throw new HttpError(400, 'no profile/preferences.json yet: save your settings (or run /onboard) first');
+    let track;
+    if (b.track !== undefined && b.track !== null && b.track !== '') {
+      if (typeof b.track !== 'string' || !(prefs.tracks ?? []).some((t) => t.id === b.track)) throw new HttpError(400, `unknown track "${b.track}"`);
+      track = b.track;
+    }
+    let days;
+    if (b.days !== undefined && b.days !== null && b.days !== '') {
+      days = Number(b.days);
+      if (!Number.isInteger(days) || days < 1 || days > 365) throw new HttpError(400, 'days must be an integer 1-365');
+    }
+    return runner.start({ paid: !!b.paid, track, days });
+  }
   let boundPort = port;
 
   const allowedHost = (host) => {
@@ -132,6 +203,18 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
     const body = ['POST', 'PATCH', 'PUT'].includes(method) ? await readBody(req) : null;
 
     if (resource === 'meta' && method === 'GET') return send(res, 200, trackMeta());
+
+    if (resource === 'preferences' && !id) {
+      if (method === 'GET') return send(res, 200, getPreferences());
+      if (method === 'PUT') return send(res, 200, putPreferences(body));
+      throw new HttpError(405, 'method not allowed');
+    }
+
+    if (resource === 'search') {
+      if (!id && method === 'POST') return send(res, 202, startSearch(body));
+      if (id === 'status' && method === 'GET') return send(res, 200, runner.status());
+      throw new HttpError(405, 'method not allowed');
+    }
 
     if (resource === 'applications') {
       if (!id) {
@@ -210,7 +293,8 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
       const status = err instanceof URIError ? 400 : err.status ?? 500;
       if (err instanceof URIError) err.message = 'malformed URL encoding';
       if (status === 500) console.error(err);
-      if (!res.headersSent) send(res, status, { error: err.message, ...(err.data ? { existing: err.data } : {}) });
+      const extra = err.data ? (err instanceof HttpError ? err.data : { existing: err.data }) : {};
+      if (!res.headersSent) send(res, status, { error: err.message, ...extra });
       else res.end();
     }
   });

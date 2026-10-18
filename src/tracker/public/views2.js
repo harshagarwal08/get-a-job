@@ -114,10 +114,16 @@ async function trackJob(ctx, j) {
 }
 
 export function renderJobs(ctx) {
+  const running = !!ctx.searchState?.running;
+  const runBtn = h('button', { class: 'btn primary run-btn', type: 'button', disabled: running, onclick: () => ctx.runSearch() }, icon('search', 14), 'Run search');
   const wrap = h('section', null, h('div', { class: 'view-head' }, h('div', null, h('h1', null, 'Jobs inbox'),
-    h('p', null, 'Scraped postings, best fit first. Track the good ones, skip the rest.'))));
+    h('p', null, 'Scraped postings, best fit first. Track the good ones, skip the rest.')),
+    h('span', { class: 'spacer' }),
+    h('a', { class: 'btn ghost', href: '#settings', title: 'Edit tracks, locations and sources' }, icon('gear', 14), h('span', { class: 'hide-sm' }, 'Search settings')),
+    runBtn),
+  ctx.searchStatusBox(ctx));
   if (!ctx.jobs.length) {
-    wrap.append(emptyState({ iconName: 'inbox', title: 'No scraped jobs yet', body: 'Run /scrape in Claude Code (or gaj scrape) to pull fresh postings from your target companies, then /rank to score them.', cmds: ['/onboard', '/scrape', '/rank'] }));
+    wrap.append(emptyState({ iconName: 'inbox', title: 'No scraped jobs yet', body: 'Run a search here, or /scrape in Claude Code, to pull fresh postings from your target companies. Then ask Claude to /rank them.', cmds: ['/onboard', '/scrape', '/rank'] }));
     return wrap;
   }
   const tracks = [...new Set(ctx.jobs.map((j) => j.track).filter(Boolean))];

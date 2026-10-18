@@ -4,11 +4,147 @@
   "tracks": [
     {
       "id": "fe",
-      "name": "Frontend Engineer"
+      "name": "Frontend Engineer",
+      "titles": [
+        "Frontend Engineer",
+        "Front End Developer",
+        "UI Engineer",
+        "Software Engineer, Frontend"
+      ],
+      "excludeTitles": [
+        "Intern",
+        "Principal",
+        "Manager",
+        "Director"
+      ],
+      "keywords": [
+        "React",
+        "TypeScript",
+        "Next.js",
+        "design systems"
+      ],
+      "resume": "profile/resume.md"
     },
     {
       "id": "fde",
-      "name": "Forward Deployed Engineer"
+      "name": "Forward Deployed Engineer",
+      "titles": [
+        "Forward Deployed Engineer",
+        "Solutions Engineer",
+        "Deployment Engineer",
+        "Customer Engineer"
+      ],
+      "excludeTitles": [
+        "Intern",
+        "Manager",
+        "Director"
+      ],
+      "keywords": [
+        "customer-facing",
+        "integrations",
+        "LLM",
+        "APIs"
+      ],
+      "resume": "profile/resume.md"
     }
-  ]
+  ],
+  "seniority": [
+    "mid",
+    "senior"
+  ],
+  "location": {
+    "based": "Bengaluru, India",
+    "countryCode": "IN",
+    "acceptableLocations": [
+      "Bengaluru",
+      "Bangalore",
+      "India"
+    ],
+    "workModes": [
+      "remote",
+      "hybrid",
+      "onsite"
+    ],
+    "remoteScope": [
+      "apac",
+      "global"
+    ],
+    "workAuthorization": [
+      "IN"
+    ],
+    "needsSponsorship": false,
+    "openToRelocation": false
+  },
+  "compensation": {
+    "currency": "INR",
+    "min": 3500000,
+    "unit": "year",
+    "note": ""
+  },
+  "noticePeriodDays": 60,
+  "companyStage": [
+    "seed",
+    "series-a",
+    "series-b",
+    "series-c",
+    "growth"
+  ],
+  "companySize": [
+    "2-10",
+    "11-50",
+    "51-200",
+    "201-500"
+  ],
+  "industries": [
+    "fintech",
+    "devtools",
+    "ai"
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "level": "professional"
+    }
+  ],
+  "dealBreakers": [
+    "Unpaid take-homes over 4 hours",
+    "5 days onsite outside Bengaluru"
+  ],
+  "sources": {
+    "ats": true,
+    "linkedin": false,
+    "hn": true,
+    "arbeitnow": false,
+    "remotive": true,
+    "remoteok": false,
+    "careersPages": true,
+    "googleJobs": {
+      "enabled": true,
+      "provider": "jsearch",
+      "maxQueries": 6,
+      "country": "in",
+      "datePosted": "week",
+      "maxRequestsPerMonth": 100
+    },
+    "apify": {
+      "enabled": false,
+      "actors": [],
+      "maxItems": 100,
+      "maxChargeUsd": 0.5,
+      "maxUsdPerMonth": 5
+    },
+    "jobspy": {
+      "enabled": false,
+      "sites": [
+        "indeed",
+        "naukri",
+        "glassdoor",
+        "google"
+      ],
+      "resultsWanted": 40,
+      "hoursOld": 168,
+      "maxQueries": 3
+    },
+    "maxAgeDays": 14
+  }
 }
