@@ -27,10 +27,8 @@ For each job: `title`, `company`, `location` (if shown), `url`, and if visible
 `salary` (as `{min, max, currency, unit}` only if stated unambiguously),
 `description` (only if the user pasted a full posting).
 
-URL normalisation:
-- LinkedIn: `https://www.linkedin.com/jobs/view/<numeric id>/`, no query params.
-- Other sites: keep scheme + host + path; drop tracking params (`utm_*`,
-  `trk`, `refId`, `trackingId`, `src`, `ref`).
+URLs: pass each link exactly as pasted (full, with query string);
+`jobs:import` normalises it (removes tracking, keeps identifying params).
 - No URL for an entry → ask once whether to skip such entries or let the user
   supply links. `jobs:import` needs a `url`.
 

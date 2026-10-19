@@ -10,6 +10,10 @@ Drafts only; never send. Load `.claude/skills/get-a-job/SKILL.md`, read
 
 ## 1. Find candidates
 
+If statuses may be stale (the user is not sure who replied), run or suggest
+`/gmail-sync` first so replies already received are not followed up.
+
+
 ```bash
 node bin/gaj.js track list --json
 ```

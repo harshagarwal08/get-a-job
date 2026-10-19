@@ -18,13 +18,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22]
+        node: [20, 22, 24]
     env:
       # No Chrome in CI; tests that need it skip themselves.
       PUPPETEER_SKIP_DOWNLOAD: 'true'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
       # npm install, not npm ci: the lockfile is not guaranteed to be committed.
@@ -38,8 +38,8 @@ jobs:
   privacy-guard:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Personal data is ignored and untracked

@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parse, out, fail } from '../lib/args.js';
 import { paths } from '../lib/paths.js';
-import { readJSON, writeJSON, nowISO } from '../lib/store.js';
+import { readJSON, writeJSON, nowISO, withLock } from '../lib/store.js';
 import { mapLimit } from './http.js';
 import { classify, eligibility, matchJobTrack } from './filter.js';
-import { consolidate, mergeJobs } from './merge.js';
+import { consolidate, mergeJobs, SEARCH_SOURCES } from './merge.js';
 import { recognizeUrl, hostClass } from './urls.js';
 import { fetchGeneric } from './generic.js';
 import * as greenhouse from './sources/greenhouse.js';
@@ -19,17 +19,19 @@ import * as hn from './boards/hn.js';
 import * as arbeitnow from './boards/arbeitnow.js';
 import * as remotive from './boards/remotive.js';
 import * as remoteok from './boards/remoteok.js';
-import { detectCompany, ATS_LIST } from './detect.js';
+import { detectCompany, ATS_LIST, probe } from './detect.js';
 import * as googlejobs from './providers/googlejobs.js';
 import * as apify from './providers/apify.js';
 import * as jobspy from './providers/jobspy.js';
 import { isOn } from './providers/common.js';
 import { importJobs, importPathAllowed } from './importer.js';
 import { recordCareersCheck, recentCareersCheck } from './careersChecks.js';
+import { URL_ATS, URL_ATS_LIST, validateAtsUrl, classifyAtsUrl } from './urlAts.js';
+import { detectEmbeddedAts } from './careers/extract.js';
 import { validateCompany, loadCompaniesFile, saveCompaniesFile, addCompanies, filterCompanies, COMPANY_ATS } from './companies.js';
 import { loadYc, filterYc, mapRegions, batchCode, stageFor, tagsFor, websiteLabel } from './yc.js';
 
-const SOURCES = { greenhouse, lever, ashby, workable, smartrecruiters, recruitee, linkedin };
+const SOURCES = { greenhouse, lever, ashby, workable, smartrecruiters, recruitee, linkedin, ...URL_ATS };
 // [source, preferences key, module, paid]
 const PROVIDERS = [['google-jobs', 'googleJobs', googlejobs, true], ['apify', 'apify', apify, true], ['jobspy', 'jobspy', jobspy, false]];
 
@@ -111,17 +113,29 @@ const listView = ({ description, missCount, sourceIds, ...rest }) => rest;
 
 // ---------- scrape ----------
 
+/** Track titles interleaved across tracks (t1[0], t2[0], t1[1], ...), used as server-side search terms. */
+export function searchTermsFor(prefs, trackId) {
+  const tracks = (prefs.tracks ?? []).filter((t) => !trackId || t.id === trackId);
+  const out = [];
+  const max = Math.max(0, ...tracks.map((t) => (t.titles ?? []).length));
+  for (let i = 0; i < max; i++) for (const t of tracks) if (t.titles?.[i] && !out.includes(t.titles[i])) out.push(t.titles[i]);
+  return out;
+}
+
 async function scrapeCompany(c, prefs, opts, acc) {
   const src = await sourceFor(c.ats);
   if (!src || c.ats === 'linkedin') throw new Error(`unknown ats "${c.ats}"`);
-  const onEmbeddedAts = ({ ats, slug }) => acc.warnings.push(`${c.name}: careers page embeds ${ats}/${slug}; switch the entry with companies:add --name "${c.name}" --ats ${ats} --slug ${slug} --merge`);
+  const onEmbeddedAts = ({ ats, slug, url }) => acc.warnings.push(`${c.name}: careers page embeds ${ats}/${slug}; switch the entry with companies:add --name "${c.name}" --ats ${ats} --slug ${slug}${url ? ` --url ${url}` : ''} --merge`);
   // A throwing fetchJobs (careers crawl failure included) is a failed company: no expiry bookkeeping.
-  const raw = await src.fetchJobs(c, { wantDetail: (j) => !!matchJobTrack(j, prefs.tracks ?? []), onEmbeddedAts });
+  const raw = await src.fetchJobs(c, { wantDetail: (j) => !!matchJobTrack(j, prefs.tracks ?? []), onEmbeddedAts, searchTerms: searchTermsFor(prefs, opts.trackId) });
   const jobs = consolidate(raw, prefs);
   // Expiry is keyed on each job's actual source (the entry's own ATS is always marked as scraped).
   const bySrc = new Map([[c.ats, new Set()]]);
   for (const j of jobs) { if (!bySrc.has(j.source)) bySrc.set(j.source, new Set()); bySrc.get(j.source).add(j.key); }
-  for (const [source, seenKeys] of bySrc) acc.scraped.push({ company: c.name, source, seenKeys });
+  // Search-based results (workday/successfactors, or a careers page delegating to one) are partial:
+  // they only refresh lastSeen and never count as misses; those jobs expire by age.
+  const partial = SEARCH_SOURCES.has(c.ats) || SEARCH_SOURCES.has(raw.meta?.delegatedTo?.ats);
+  for (const [source, seenKeys] of bySrc) acc.scraped.push({ company: c.name, source, seenKeys, ...(partial ? { missExpiry: false } : {}) });
   acc.bySource[c.ats] ??= { companies: 0, jobs: 0 };
   acc.bySource[c.ats].companies++;
   acc.bySource[c.ats].jobs += raw.length;
@@ -259,7 +273,7 @@ async function scrape(argv) {
   }
 
   const acc = { kept: [], scraped: [], bySource: {}, filtered: {}, errors: [], noLongerMatching: new Set(), usage: [], warnings: [] };
-  await mapLimit(companies, intOpt(a.concurrency, 'concurrency') || 4, async (c) => {
+  await mapLimit(companies, Math.min(8, intOpt(a.concurrency, 'concurrency') || 4), async (c) => {
     try { await scrapeCompany(c, prefs, opts, acc); } catch (err) { acc.errors.push({ company: c.name, source: c.ats, error: err.message }); }
   });
   if (!a.company) await scrapeBoards(prefs, opts, acc);
@@ -273,11 +287,15 @@ async function scrape(argv) {
 
   const now = nowISO();
   const maxAge = prefs.sources?.maxAgeDays;
-  const { store, stats } = mergeJobs(loadStore(), kept, {
-    now, scraped: acc.scraped, noLongerMatching: acc.noLongerMatching,
-    boardExpireDays: maxAge ? maxAge * 2 : 30,
+  // Read-modify-write under the jobs.json lock (scheduled scrape, tracker and CLI can overlap).
+  const { store, stats } = await withLock(paths.jobs, async () => {
+    const r = mergeJobs(loadStore(), kept, {
+      now, scraped: acc.scraped, noLongerMatching: acc.noLongerMatching,
+      boardExpireDays: maxAge ? maxAge * 2 : 30,
+    });
+    writeJSON(paths.jobs, r.store);
+    return r;
   });
-  writeJSON(paths.jobs, store);
 
   const topNew = sortJobs(stats.newKeys.map((k) => store.jobs[k]).filter((j) => j.eligibility === 'green')).slice(0, 10)
     .map((j) => ({ key: j.key, title: j.title, company: j.company, location: j.location, track: j.track }));
@@ -404,7 +422,11 @@ function quickFitBatch(store, file, asJson) {
 
 async function jobsSet(argv) {
   const a = parse(argv, { status: { type: 'string' }, 'quick-fit': { type: 'string' }, 'rank-file': { type: 'string' }, 'quick-fit-file': { type: 'string' } });
-  const store = loadStore();
+  return withLock(paths.jobs, () => jobsSetLocked(a));
+}
+
+function jobsSetLocked(a) {
+  const store = loadStore(); // re-read inside the lock
   if (a['quick-fit-file']) {
     if (a._.length || a.status || a['quick-fit'] || a['rank-file']) fail('--quick-fit-file is a batch mode; pass it alone');
     return quickFitBatch(store, a['quick-fit-file'], a.json);
@@ -458,7 +480,9 @@ export async function fetchPosting(url, { allowLinkedIn = false, ...opts } = {})
       const src = SOURCES[rec.source];
       const j = rec.source === 'linkedin'
         ? await src.fetchOne(rec.id)
-        : await src.fetchOne(rec.slug, rec.id, { companyName: companyNameForSlug(rec.slug) });
+        : URL_ATS[rec.source]
+          ? await src.fetchOne(url, { companyName: companyNameForSlug(rec.slug) })
+          : await src.fetchOne(rec.slug, rec.id, { companyName: companyNameForSlug(rec.slug) });
       return { url, host, hostClass: hostClass(url), title: j.title, company: j.company, location: j.location, workMode: j.workMode, salary: j.salary, text: j.description };
     } catch (err) {
       if (rec.source === 'linkedin') throw err;
@@ -510,7 +534,7 @@ async function careersCheck(argv) {
 // ---------- jobs:import ----------
 
 async function jobsImport(argv) {
-  const a = parse(argv, { source: { type: 'string' } });
+  const a = parse(argv, { source: { type: 'string' }, via: { type: 'string' } });
   const file = a._[0];
   if (!file) fail(`usage: ${commands['jobs:import'].usage}`);
   const prefs = loadPrefs();
@@ -522,7 +546,7 @@ async function jobsImport(argv) {
   // Never echo file contents: JSON.parse messages quote the offending text.
   try { data = JSON.parse(text); } catch { fail(`${path.basename(file)} is not valid JSON`); }
   let res;
-  try { res = importJobs(data, { source: a.source ?? 'manual' }); } catch (e) { fail(e.message); }
+  try { res = importJobs(data, { source: a.source ?? 'manual', via: a.via ?? null }); } catch (e) { fail(e.message); }
   const now = nowISO();
   const kept = [];
   let tooOld = 0;
@@ -536,8 +560,11 @@ async function jobsImport(argv) {
     kept.push({ ...j, track: track ?? null, ...eligibility(j, prefs) });
   }
   const maxAge = prefs.sources?.maxAgeDays;
-  const { store, stats } = mergeJobs(loadStore(), kept, { now, boardExpireDays: maxAge ? maxAge * 2 : 30 });
-  writeJSON(paths.jobs, store);
+  const { stats } = await withLock(paths.jobs, async () => {
+    const r = mergeJobs(loadStore(), kept, { now, boardExpireDays: maxAge ? maxAge * 2 : 30 });
+    writeJSON(paths.jobs, r.store);
+    return r;
+  });
   const summary = {
     file: path.basename(file), source: a.source ?? 'manual', read: Array.isArray(data) ? data.length : (data?.jobs?.length ?? 0),
     imported: kept.length, new: stats.new, updated: stats.updated, alreadyKnown: stats.crossSource,
@@ -557,21 +584,52 @@ async function jobsImport(argv) {
 const listOpt = (v) => String(v ?? '').split(',').map((x) => x.trim()).filter(Boolean);
 
 function detectHuman(r) {
-  if (!r.found.length) return `No ATS board found for "${r.name}" (tried ${r.tried} URLs). Pass --slug if you know the careers URL slug.`;
+  if (!r.found.length) return r.url ? `No supported ATS found at ${r.url}${r.error ? ` (${r.error})` : ''}. ${r.hint ?? `Try: gaj careers:check ${r.url}`}` : `No ATS board found for "${r.name}" (tried ${r.tried} URLs). Pass --slug or --url if you know the careers URL.`;
   return [`${r.name}: found ${r.found.length} board${r.found.length === 1 ? '' : 's'}`,
-    ...r.found.map((f) => `  ${f.ats.padEnd(16)} ${f.slug.padEnd(28)} ${String(f.jobs).padStart(4)} job${f.jobs === 1 ? ' ' : 's'}  ${f.confidence === 'high' ? `✓ "${f.boardName}"` : f.confidence === 'low' ? `⚠ board is "${f.boardName}" (probably another company)` : f.boardName ? `? board "${f.boardName}" only matches the slug; check it` : '? name not exposed by this ATS'}`),
+    ...r.found.map((f) => `  ${f.ats.padEnd(16)} ${f.slug.padEnd(28)} ${String(f.jobs).padStart(4)} job${f.jobs === 1 ? ' ' : 's'}  ${f.confidence === 'high' ? (f.boardName ? `✓ "${f.boardName}"` : f.url ? '✓ from the URL you gave' : '✓') : f.confidence === 'low' ? `⚠ board is "${f.boardName}" (probably another company)` : f.boardName ? `? board "${f.boardName}" only matches the slug; check it` : '? name not exposed by this ATS'}`),
     r.rateLimited ? `(rate-limited by ${r.rateLimited.join(', ')}; results may be incomplete, retry later)` : null,
     ...(() => {
       const best = r.found.find((f) => f.confidence !== 'low');
-      return best ? [`Add with: gaj companies:add --name "${r.name}" --ats ${best.ats} --slug ${best.slug}`] : ['No board clearly belongs to this company; pass --slug if you know it.'];
+      return best ? [`Add with: gaj companies:add --name "${r.name}" --ats ${best.ats} --slug ${best.slug}${best.url ? ` --url ${best.url}` : ''}`] : [r.hint ?? 'No board clearly belongs to this company; pass --slug if you know it.'];
     })()].filter(Boolean).join('\n');
 }
 
+/**
+ * Classify a careers URL: url-based ATS by host (workday/keka/zohorecruit), slug-based ATS
+ * board links (greenhouse/lever/…), else try it as a SuccessFactors career site.
+ * @param {string} name
+ * @param {string} url
+ * @param {{sources?: object, probeSlug?: Function}} [deps] injectable for tests
+ */
+export async function classifyCareersUrl(name, url, { sources = SOURCES, probeSlug = probe } = {}) {
+  const found = [];
+  const byHost = classifyAtsUrl(url);
+  if (byHost) {
+    const mod = typeof sources[byHost.ats]?.check === 'function' ? sources[byHost.ats] : URL_ATS[byHost.ats];
+    const r = await mod.check(byHost.url);
+    if (r.ok) found.push({ ats: byHost.ats, slug: byHost.slug, url: byHost.url, jobs: r.jobs, confidence: 'high' });
+    return { name, url, found, tried: 1, ...(r.ok ? {} : { error: r.error }) };
+  }
+  const boards = detectEmbeddedAts(url).slice(0, 2);
+  for (const b of boards) {
+    const p = await probeSlug(b.ats, b.slug);
+    if (p.jobs !== null) found.push({ ats: b.ats, slug: b.slug, jobs: p.jobs, boardName: p.boardName ?? null, confidence: 'high' });
+  }
+  if (found.length || boards.length) return { name, url, found, tried: boards.length };
+  const v = validateAtsUrl('successfactors', url);
+  if (!v.error) {
+    const r = await (typeof sources.successfactors?.check === 'function' ? sources.successfactors : URL_ATS.successfactors).check(v.url);
+    if (r.ok) found.push({ ats: 'successfactors', slug: v.slug, url: v.url, jobs: r.jobs, confidence: 'unknown' });
+  }
+  return { name, url, found, tried: 1, ...(found.length ? {} : { hint: `not a recognised ATS URL; try: gaj careers:check ${url}` }) };
+}
+
 async function companyDetect(argv) {
-  const a = parse(argv, { slug: { type: 'string' } });
+  const a = parse(argv, { slug: { type: 'string' }, url: { type: 'string' } });
   const name = a._.join(' ').trim();
-  if (!name) fail('usage: gaj company:detect <name> [--slug s]');
-  const r = await detectCompany(name, { slugs: listOpt(a.slug) });
+  if (!name) fail('usage: gaj company:detect <name> [--slug s] [--url https://careers-url]');
+  if (a.url && !/^https:\/\//i.test(a.url)) fail('--url must be an https URL');
+  const r = a.url ? await classifyCareersUrl(name, a.url) : await detectCompany(name, { slugs: listOpt(a.slug) });
   out(r, a.json, detectHuman);
   if (!r.found.length) process.exitCode = 1;
 }
@@ -598,11 +656,14 @@ async function companiesAdd(argv) {
   const check = await checkCompany(entry.ats, entry.slug, { url: entry.url });
   if (!check.ok && !a.force) fail(`${entry.ats}/${entry.slug} didn't verify: ${check.error}. Try: gaj company:detect "${entry.name}" (or --force to add anyway)`);
   if (!check.ok) warn(`adding unverified ${entry.ats}/${entry.slug} (--force): ${check.error}`);
-  const { cfg, created } = loadCompaniesFile({ create: true });
-  const res = addCompanies(cfg, [entry], { merge: !!a.merge });
+  const { res, created } = await withLock(paths.companies, async () => {
+    const { cfg, created: made } = loadCompaniesFile({ create: true });
+    const r = addCompanies(cfg, [entry], { merge: !!a.merge });
+    if (r.added.length || r.duplicates[0]?.changed.length) saveCompaniesFile(r.cfg);
+    return { res: r, created: made };
+  });
   for (const w of res.warnings) warn(w);
   const dup = res.duplicates[0];
-  if (res.added.length || dup?.changed.length) saveCompaniesFile(res.cfg);
   const result = {
     added: res.added.length === 1, duplicate: !!dup, changed: dup?.changed ?? [], created,
     company: dup ? dup.stored : entry, jobs: check.jobs, verified: check.ok, warnings: res.warnings,
@@ -660,9 +721,12 @@ async function discover(argv) {
   if (a.add) {
     // Only boards with open jobs: an empty board on a generic slug is often a different company.
     const entries = rows.filter((r) => r.ats && r.jobs > 0).map((r) => validateCompany({ name: r.name, ats: r.ats, slug: r.slug, tags: r.tags, region: r.region, stage: r.stage, source: 'yc' }).entry).filter(Boolean);
-    const { cfg, created } = loadCompaniesFile({ create: true });
-    const res = addCompanies(cfg, entries);
-    saveCompaniesFile(res.cfg);
+    const { res, created } = await withLock(paths.companies, async () => {
+      const { cfg, created: made } = loadCompaniesFile({ create: true });
+      const r = addCompanies(cfg, entries);
+      saveCompaniesFile(r.cfg);
+      return { res: r, created: made };
+    });
     addResult = { added: res.added.length, duplicates: res.duplicates.length, created };
     for (const w of res.warnings) warn(w);
   }
@@ -680,6 +744,12 @@ async function discover(argv) {
  * @returns {Promise<{ok: boolean, ats: string, slug: string, jobs: number, sample: string[], error?: string}>}
  */
 export async function checkCompany(ats, slug, { sources = SOURCES, url } = {}) {
+  if (URL_ATS[ats]) {
+    const v = validateAtsUrl(ats, url);
+    if (v.error) return { ok: false, ats, slug, url: url ?? null, jobs: 0, sample: [], error: v.error };
+    const r = await (sources[ats] ?? URL_ATS[ats]).check(v.url);
+    return { ok: r.ok, ats, slug, url: v.url, jobs: r.jobs, sample: r.sample ?? [], ...(r.ok ? {} : { error: r.error }) };
+  }
   if (!sources[ats] && ats !== 'careers') return { ok: false, ats, slug, jobs: 0, sample: [], error: `unknown ats "${ats}"` };
   if (ats === 'careers') {
     // Never crawls: relies on a recent successful `careers:check` of the same URL.
@@ -705,7 +775,7 @@ async function companyCheck(argv) {
   const [ats, slug] = a._;
   if (!COMPANY_ATS.includes(ats)) fail(`usage: ${commands['company:check'].usage}`);
   if (!slug || !/^[A-Za-z0-9._-]{1,100}$/.test(slug)) fail('slug must be the board name from the careers URL (letters, digits, . _ -)');
-  if (ats === 'careers' && !/^https:\/\//i.test(a.url ?? '')) fail('careers needs --url <https careers listing page>');
+  if ((ats === 'careers' || URL_ATS[ats]) && !/^https:\/\//i.test(a.url ?? '')) fail(`${ats} needs --url <https careers URL>`);
   const r = await checkCompany(ats, slug, { url: a.url });
   out(r, a.json, () => (r.ok
     ? `✓ ${ats}/${slug}: ${r.jobs} open job${r.jobs === 1 ? '' : 's'}${r.sample.length ? `\n  e.g. ${r.sample.join(' · ')}` : ''}`
@@ -718,10 +788,10 @@ export const commands = {
   jobs: { summary: 'List scraped jobs (no descriptions)', usage: 'gaj jobs [--status s] [--eligibility green|orange|unknown] [--track id] [--limit N] [--json]', run: jobs },
   job: { summary: 'Show one job including its description', usage: 'gaj job <key> [--json]', run: job },
   'jobs:set': { summary: 'Update a job (status, quick fit, rank)', usage: 'gaj jobs:set <key> [--status s] [--quick-fit f] [--rank-file path.json] | gaj jobs:set --quick-fit-file map.json', run: jobsSet },
-  'company:check': { summary: "Verify a company's public ATS feed", usage: `gaj company:check <${[...ATS_LIST, 'careers'].join('|')}> <slug> [--url https://… (careers)] [--json]`, run: companyCheck },
+  'company:check': { summary: "Verify a company's public ATS feed", usage: `gaj company:check <${COMPANY_ATS.join('|')}> <slug> [--url https://… (careers, ${URL_ATS_LIST.join(', ')})] [--json]`, run: companyCheck },
   'careers:check': { summary: 'Crawl one careers page and report the jobs found (records success for 7 days)', usage: 'gaj careers:check <https url> [--json]', run: careersCheck },
-  'jobs:import': { summary: 'Import jobs from a JSON file (e.g. LinkedIn alert emails)', usage: 'gaj jobs:import <file.json> [--source linkedin-alert|manual] [--json]', run: jobsImport },
-  'company:detect': { summary: 'Find which ATS a company uses (tries slug variants)', usage: 'gaj company:detect <name> [--slug s] [--json]', run: companyDetect },
+  'jobs:import': { summary: 'Import jobs from a JSON file (e.g. LinkedIn alert emails)', usage: 'gaj jobs:import <file.json> [--source linkedin-alert|email-alert|manual] [--via linkedin|naukri|indeed|wellfound|instahyre|cutshort|glassdoor|other] [--json]', run: jobsImport },
+  'company:detect': { summary: 'Find which ATS a company uses (slug variants, or classify --url)', usage: 'gaj company:detect <name> [--slug s] [--url https://careers-url] [--json]', run: companyDetect },
   companies: { summary: 'List your companies (config/companies.json)', usage: 'gaj companies [--tag t] [--region r] [--json]', run: companiesCmd },
   'companies:add': { summary: 'Verify and add a company to config/companies.json', usage: 'gaj companies:add --name N --ats A --slug S [--url https://… (careers)] [--tags a,b] [--region us,eu] [--stage s] [--source seed|yc|discover|manual] [--merge] [--force] [--json]', run: companiesAdd },
   discover: { summary: 'Discover hiring YC companies and detect their ATS', usage: 'gaj discover yc [--region india,us,eu,uk,apac,remote-global] [--industry x] [--batch W24] [--limit N (default 20)] [--add] [--json]', run: discover },

@@ -158,29 +158,38 @@ const ATS_PATTERNS = [
   ['smartrecruiters', new RegExp(`(?:jobs|careers)\\.smartrecruiters\\.com/${SLUG_RE}`, 'gi')],
   ['smartrecruiters', new RegExp(`api\\.smartrecruiters\\.com/v1/companies/${SLUG_RE}`, 'gi')],
   ['recruitee', /\b([a-z0-9][a-z0-9-]{0,62})\.recruitee\.com/gi],
+  // URL-based ATSs (scrape module): slug = tenant, plus a canonical `url` for the entry.
+  ['workday', /\b([a-z0-9][a-z0-9-]{0,62})\.(wd\d{1,3})\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([A-Za-z0-9_-]{1,100})/g,
+    (m) => (m[3] === 'wday' ? null : `https://${m[1].toLowerCase()}.${m[2]}.myworkdayjobs.com/${m[3]}`)],
+  ['keka', /\b([a-z0-9][a-z0-9-]{0,62})\.keka\.com\/careers/gi, (m) => `https://${m[1].toLowerCase()}.keka.com/careers/`],
+  ['zohorecruit', /\b([a-z0-9][a-z0-9-]{0,62})\.zohorecruit\.(com|in|eu|com\.au)/gi, (m) => `https://${m[1].toLowerCase()}.zohorecruit.${m[2].toLowerCase()}/jobs/Careers`],
 ];
 const SUBDOMAIN_STOP = new Set(['apply', 'www', 'jobs', 'api', 'careers', 'app', 'help', 'resources', 'blog', 'cdn', 'static']);
 
 /**
  * Find supported ATS boards referenced anywhere in the page (links, iframes, scripts, inline JSON).
  * @param {string} html
- * @returns {{ats: string, slug: string, hits: number}[]} most-referenced first
+ * @returns {{ats: string, slug: string, hits: number, url?: string}[]} most-referenced first (`url` for url-based ATSs)
  */
 export function detectEmbeddedAts(html) {
   const s = String(html ?? '').replace(/\\\//g, '/');
   const counts = new Map();
-  for (const [ats, re] of ATS_PATTERNS) {
+  const urls = new Map();
+  for (const [ats, re, toUrl] of ATS_PATTERNS) {
     for (const m of s.matchAll(re)) {
+      const url = toUrl ? toUrl(m) : null;
+      if (toUrl && !url) continue;
       let slug = m[1].replace(/[._-]+$/, '');
-      const sub = ats === 'recruitee' || (ats === 'workable' && /\.workable\.com/i.test(m[0]) && !/apply\.workable/i.test(m[0]));
+      const sub = ats === 'recruitee' || ats === 'keka' || ats === 'zohorecruit' || (ats === 'workable' && /\.workable\.com/i.test(m[0]) && !/apply\.workable/i.test(m[0]));
       if (sub && SUBDOMAIN_STOP.has(slug.toLowerCase())) continue;
       if (!slug || SLUG_STOP.has(slug.toLowerCase())) continue;
       if (ats === 'lever' || ats === 'ashby' || ats === 'smartrecruiters') slug = slug.replace(/\.$/, '');
       const key = `${ats}\u0000${ats === 'smartrecruiters' ? slug : slug.toLowerCase()}`;
       counts.set(key, (counts.get(key) ?? 0) + 1);
+      if (url && !urls.has(key)) urls.set(key, url);
     }
   }
-  return [...counts].map(([k, hits]) => { const [ats, slug] = k.split('\u0000'); return { ats, slug, hits }; })
+  return [...counts].map(([k, hits]) => { const [ats, slug] = k.split('\u0000'); return { ats, slug, hits, ...(urls.has(k) ? { url: urls.get(k) } : {}) }; })
     .sort((a, b) => b.hits - a.hits);
 }
 

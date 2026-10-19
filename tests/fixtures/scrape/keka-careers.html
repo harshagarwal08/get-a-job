@@ -1,0 +1,48 @@
+    <!DOCTYPE html>
+    <html>
+    <head><link rel="preconnect" href="https://cdn.keka.com/careers/v/2026/" />
+        <meta charset="utf-8" />
+        		<link rel="icon" type="image/png" href="https://cdn.keka.com/careers/v/2026/content/images/favicon.ico" />
+	<title>Careers at Acme Money</title>
+	<meta name="description" content="Join forces with our company to reshape the future. Your talents can change the world. Explore opportunities and be part of a transformative team today!">
+	<meta property="og:type" content="webpage" />
+	<meta property="og:title" content="Careers at Acme Money" />
+	<meta property="og:description" content="Join forces with our company to reshape the future. Your talents can change the world. Explore opportunities and be part of a transformative team today!" />
+		<meta property="og:image" content="https://jupiter.keka.com/careers/content/images/linkedin-thumbnail.png" />
+
+        
+
+
+        <script>
+            window.isCareersPage = true;
+        </script>
+    </head>
+    <body>
+        <div id="content-container"></div>
+        <script>
+            fetch('/ats/documents/b5279857-cf81-4dde-a215-fc48957ee2b5/careerportal/18096d20247d4ecfa4efcf04875cbda6.html')
+                .then(response => response.text())
+                .then(data => {
+                    var parser = new DOMParser();
+                    var htmlDoc = parser.parseFromString(data, 'text/html');
+                    var bodyContent = htmlDoc.body.innerHTML;
+                    document.getElementById('content-container').innerHTML = bodyContent;
+
+                    htmlDoc.head.childNodes.forEach(node => {
+                        if (node.tagName === 'SCRIPT') {
+                            var script = document.createElement('script');
+                            script.innerHTML = node.innerHTML; // Set the script content
+
+                            for (var i = 0; i < node.attributes.length; i++) {
+                                script.setAttribute(node.attributes[i].name, node.attributes[i].value);
+                            }
+
+                            document.head.appendChild(script);
+                        } else {
+                            document.head.appendChild(node.cloneNode(true));
+                        }
+                    });
+                });
+        </script>
+    </body>
+    </html>

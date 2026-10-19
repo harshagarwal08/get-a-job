@@ -112,10 +112,11 @@ edit that adds an unsupported claim.
 
 ```bash
 node bin/gaj.js render data/applications/<slug>/resume.md --track <track id> --out data/applications/<slug>/resume.pdf --html --json
-node bin/gaj.js verify data/applications/<slug>/resume.pdf --pages 1 --keywords "<comma-separated JD keywords>" --json
+node bin/gaj.js verify data/applications/<slug>/resume.pdf --pages 1 --keywords-file data/tmp/keywords-<slug>.txt --json
 ```
 
-- Keywords: the posting's own terms from the requirement list (required +
+- Keywords go in `data/tmp/keywords-<slug>.txt`, one per line (posting text
+  never goes on the command line; SKILL.md rule 13). They are the posting's own terms from the requirement list (required +
   preferred skills, tools, domain terms), 10-30 items, no generic words.
 - Use `--pages 2` instead of 1 only if the candidate has 8+ years and the user
   agreed.
@@ -160,6 +161,9 @@ recruiter email / form answers? If any → run the `/cover` flow for this slug.
      [--job-key <key>] [--deadline YYYY-MM-DD] [--cover data/applications/<slug>/cover.md] --json
    ```
 
+   Company, role and location come from the posting: reduce them per SKILL.md
+   rule 13 (`[A-Za-z0-9 .,&()+/_-]`, ≤ 100 chars) before quoting; `--url` must
+   be the user-supplied or `jobs.json` URL with no `"`, `$`, backtick or `\`.
    If it exits with `already tracked as <id>`, re-run the same command with `--upsert`.
 3. **Match with a job key** → same command plus `--upsert` (updates that row).
    **Match without a job key** → update it instead:

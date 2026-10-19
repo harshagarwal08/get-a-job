@@ -53,6 +53,31 @@ Rules:
 7. Fixtures: `tests/fixtures/scrape/<name>.json`, a real, trimmed response with personal data removed (recruiter names, emails). Test `normalize()`, the probe parser, and `recognizeUrl()`.
 8. Docs: ATS table in the README, slug-URL pattern and a `curl` fallback in `docs/SETUP.md`.
 
+## Adding a url-based ATS (Workday-style)
+
+For systems where the tenant can't be guessed from a company name, the entry is identified by its careers `url`.
+
+1. Create `src/scrape/sources/<name>.js` exporting:
+   - a URL parser (like `parseWorkdayUrl` / `parseKekaUrl`) that accepts only the real host shape and returns the canonical site URL and tenant
+   - `check(url, opts)` → `{ ok, jobs, sample }` for `company:check` / `companies:add`
+   - `fetchJobs(company, opts)`, `normalize(...)` and `fetchOne(url)`
+2. Register it in `URL_ATS` in `src/scrape/urlAts.js`, and teach `validateAtsUrl()` (and `classifyAtsUrl()`, if the host shape is distinctive) about it. Add its host to `KNOWN_ATS_HOST` so other ATSs can't claim its URLs.
+3. **Hosts**: a fixed multi-tenant host shape goes in the suffix rules in `src/scrape/http.js` (`<labels>.<suffix>` with exact label count and shapes; never an open wildcard). If tenants can use custom domains, don't allowlist; fetch through `safeFetch` (private-address guard, `robots.txt` per URL and redirect hop) instead.
+4. **Load**: search by track titles where the API allows it rather than paging the whole board, cap pages and detail requests per company, keep one request at a time per company with a gap, and check `robots.txt` for the paths you call. Write the limits into CONTRACTS.md.
+5. Teach `recognizeUrl()` in `src/scrape/urls.js` the job URL shape so `/tailor` uses the API.
+6. Fixtures under `tests/fixtures/scrape/` (trimmed, anonymised); test the URL parser (including lookalike hosts), `normalize()` and `check()`.
+7. Docs: the enterprise ATS table in README and SETUP, the `ats` enum in CONTRACTS.md, and the `/onboard` / `/discover` text that lists ATSs.
+
+If an ATS can't be supported (login wall, `robots.txt` block, unstable HTML, terms), add it to the "Unsupported" list in CONTRACTS.md with the reason and the date you checked, so nobody retries it blind.
+
+## Adding an email-alert platform
+
+Platforms whose terms forbid scraping are covered through their alert emails instead.
+
+1. Create `src/scrape/boards/<platform>.js` with `PLATFORM`, `SCRAPER = false`, `parseAlertEmail(text)`, `isPlatformJobUrl(url)`, `normalizeJobUrl(url)` and `jobFromUrl(url)`, using the helpers in `alertEmail.js`. Parsers are pure: no network, never follow links.
+2. Add the sender filter and setup steps to `.claude/commands/email-alerts.md` and the `via` value to CONTRACTS.md.
+3. Fixtures in `tests/fixtures/platforms/` must be redacted (no real names, emails or tracking tokens). Synthetic is fine; a redacted real alert that failed to parse is better.
+
 ## Adding a job board (query-based)
 
 1. Create `src/scrape/boards/<name>.js` exporting `normalize(payload)` and `fetchJobs(opts)`. Fetch the whole feed once and let the pipeline filter by track titles locally; don't fan out a request per title unless the API requires it.

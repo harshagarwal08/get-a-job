@@ -282,11 +282,38 @@ export function renderSettings(ctx) {
     searchPanel(ctx, { where: 'settings' }),
     h('div', { class: 'settings-grid' }, tracksCard,
       h('div', { class: 'settings-col' }, locationCard),
-      h('div', { class: 'settings-col' }, compCard, dealCard, companyCard),
+      h('div', { class: 'settings-col' }, dailyCard(ctx), compCard, dealCard, companyCard),
       sourcesCard));
   ctx.settingsEl = el;
   requestAnimationFrame(() => updateDirty(ctx));
   return el;
+}
+
+// Read-only status of the OS schedule; the UI only shows the command, it never installs.
+function dailyCard(ctx) {
+  const body = h('div', { class: 'daily-body' }, h('p', { class: 'muted' }, 'Checking…'));
+  const copyRow = (cmd) => h('div', { class: 'cmd-row' }, h('code', { class: 'cmd' }, cmd),
+    h('button', { class: 'btn sm', type: 'button', onclick: async (e) => {
+      try { await navigator.clipboard.writeText(cmd); e.currentTarget.textContent = 'Copied'; toast('Command copied', { sub: 'Run it in a terminal in the get-a-job folder.' }); }
+      catch { toast('Clipboard blocked: select the command and copy it', { error: true }); }
+    } }, 'Copy'));
+  const fmt = (iso) => (iso ? new Date(iso).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
+  api('/api/schedule/status').then((st) => {
+    const row = (k, v) => h('div', { class: 'kv' }, h('span', null, k), h('b', null, v));
+    body.replaceChildren(
+      h('div', { class: 'daily-state' },
+        h('span', { class: `chip dot ${st.installed ? (st.loaded === false ? 'st-interview' : 'st-offer') : 'st-saved'}` },
+          st.installed ? (st.loaded === false ? 'Installed, not loaded' : `Daily at ${st.time ?? '?'}`) : 'Not scheduled'),
+        !st.supported ? h('span', { class: 'muted small' }, 'Automatic install works on macOS and Linux; Windows prints Task Scheduler steps.') : null),
+      st.warning ? h('div', { class: 'banner warn', role: 'status' }, icon('alert', 15), h('div', null, st.warning)) : null,
+      h('div', { class: 'kvs' },
+        st.installed ? row('Next run', fmt(st.nextRunAt)) : null,
+        row('Last digest', st.lastDigestDate ? `${st.lastDigestDate}${st.lastDigestAt ? ` · marked ${fmt(st.lastDigestAt)}` : ''}` : 'none yet'),
+        row('Last run log', st.lastLog ? st.lastLog.file : 'none yet')),
+      h('p', { class: 'hint-line' }, st.installed ? 'To change the time, re-run install with a new --time. To stop it:' : 'Run this once in a terminal (or ask Claude). It scrapes free sources only, never paid providers, then writes a digest.'),
+      copyRow(st.installed && !st.warning ? 'node bin/gaj.js schedule remove --yes' : st.installCommand));
+  }).catch(() => body.replaceChildren(h('p', { class: 'muted' }, 'Could not read the schedule status.')));
+  return card('Daily search', 'Scrape every morning and get a digest of what\'s new.', [body]);
 }
 
 const cap = (s) => String(s).charAt(0).toUpperCase() + String(s).slice(1);

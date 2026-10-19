@@ -2,6 +2,7 @@
 import { h, icon, label, api, toast, storage, debounce, STATUSES, CHANNELS, WORK_MODES, VERDICTS, statusChip, fitBadge, dateTime, relDue, dueState } from './util.js';
 import { renderPipeline, renderTable } from './views.js';
 import { renderJobs, renderStats } from './views2.js';
+import { openDigestModal } from './digest.js';
 import { renderSettings, settingsDirty, loadSettings, runSearch, pollSearch, searchStatusBox } from './settings.js';
 
 const VIEWS = ['pipeline', 'table', 'jobs', 'stats', 'settings'];
@@ -15,8 +16,11 @@ const ctx = {
   expandedJob: null, dragging: null,
   settings: null, settingsEl: null, searchState: null, searchOpts: { paid: false, track: null }, searchDismissed: null,
   runSearch: () => runSearch(ctx), searchStatusBox,
+  digest: null, inboxBaseline: null,
+  openDigest: () => openDigestModal(ctx),
   async onSearchDone(s) {
     ctx.lastRaw.jobs = '';
+    await loadDigest();
     await refresh({ force: true }).catch(() => {});
     if (ctx.view !== 'settings') render();
     else document.getElementById('jobs-count').textContent = String(ctx.jobs.filter((j) => j.status === 'new' || j.status === 'ranked').length || '');
@@ -52,6 +56,14 @@ async function loadJobs() {
   return changed;
 }
 async function loadStats() { ctx.stats = await api('/api/stats'); }
+async function loadDigest() { ctx.digest = await api('/api/digest').catch(() => null); }
+
+// "New" badges: jobs first seen after the previous inbox visit (first visit: after the last digest).
+function enterInbox() {
+  const prev = storage.get('gaj.lastSeenInbox', null);
+  ctx.inboxBaseline = typeof prev === 'string' ? prev : ctx.digest?.lastDigestAt ?? null;
+  storage.set('gaj.lastSeenInbox', new Date().toISOString());
+}
 
 async function refresh({ force = false } = {}) {
   const [a, j] = await Promise.all([loadApps(), loadJobs()]);
@@ -86,9 +98,11 @@ function setView(v) {
     // Pick up edits made outside the UI (e.g. /onboard) when nothing is pending here.
     if (ctx.settings && !settingsDirty(ctx)) loadSettings(ctx).then(() => { if (ctx.view === 'settings') render(); }).catch(() => {});
   }
+  const prevView = ctx.view;
   ctx.view = v;
   if (location.hash !== `#${v}`) history.replaceState(null, '', `#${v}`);
   if (v === 'stats') loadStats().then(render).catch(() => {});
+  if (v === 'jobs' && (prevView !== 'jobs' || !ctx.inboxEntered)) { ctx.inboxEntered = true; enterInbox(); }
   render();
 }
 
@@ -435,6 +449,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
     ctx.meta = await api('/api/meta');
     $('demo-badge').hidden = !ctx.meta.demo;
     await refresh({ force: true });
+    await loadDigest();
     loadSettings(ctx).then(() => { if (ctx.view === 'jobs') render(); }).catch(() => {});
     pollSearch(ctx);
   } catch (e) {

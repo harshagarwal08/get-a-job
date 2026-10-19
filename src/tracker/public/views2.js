@@ -14,7 +14,8 @@ export function filteredJobs(ctx) {
     && (!f.eligibility || j.eligibility === f.eligibility)
     && (!f.track || j.track === f.track)
     && (f.status === 'all' || (!f.status ? ['new', 'ranked'].includes(j.status) : j.status === f.status))
-    && (!f.minScore || (j.rank?.score ?? -1) >= f.minScore))
+    && (!f.minScore || (j.rank?.score ?? -1) >= f.minScore)
+    && (!f.sinceDigest || !ctx.digest?.lastDigestAt || (j.firstSeen && j.firstSeen > ctx.digest.lastDigestAt)))
     .sort((a, b) => (b.rank?.score ?? -1) - (a.rank?.score ?? -1)
       || ({ green: 0, unknown: 1, orange: 2 }[a.eligibility] ?? 3) - ({ green: 0, unknown: 1, orange: 2 }[b.eligibility] ?? 3)
       || (b.postedAt ?? b.firstSeen ?? '').localeCompare(a.postedAt ?? a.firstSeen ?? ''));
@@ -39,11 +40,12 @@ function jobRow(ctx, j) {
         typeof j.url === 'string' && /^https?:\/\//i.test(j.url)
           ? h('a', { href: j.url, target: '_blank', rel: 'noopener noreferrer', title: 'Open posting' }, j.title)
           : h('span', null, j.title),
+        isNewSince(ctx, j) ? h('span', { class: 'new-badge', title: 'First seen since your last visit' }, 'New') : null,
         verdict ? h('span', { class: `chip v-${verdict}` }, verdict) : null,
         j.status !== 'new' && j.status !== 'ranked' ? h('span', { class: 'chip plain' }, label(j.status)) : null),
       h('div', { class: 'job-sub' },
         h('b', null, j.company), h('span', { class: 'sep' }, '·'), j.location ?? 'Location n/a',
-        j.workMode && j.workMode !== 'unknown' ? [h('span', { class: 'sep' }, '·'), label(j.workMode)] : null,
+        j.workMode && j.workMode !== 'unknown' && !String(j.location ?? '').toLowerCase().includes(j.workMode) ? [h('span', { class: 'sep' }, '·'), label(j.workMode)] : null,
         j.salary ? [h('span', { class: 'sep' }, '·'), fmtSalary(j.salary)] : null),
       h('div', { class: 'job-chips' },
         h('span', { class: `chip dot el-${j.eligibility}`, title: j.eligibilityReason || label(j.eligibility) }, j.eligibility === 'green' ? 'Eligible' : j.eligibility === 'orange' ? 'Check eligibility' : 'Eligibility unknown'),
@@ -84,6 +86,8 @@ function jobRow(ctx, j) {
   return row;
 }
 
+const isNewSince = (ctx, j) => !!(ctx.inboxBaseline && j.firstSeen && j.firstSeen > ctx.inboxBaseline && (j.status === 'new' || j.status === 'ranked'));
+
 function toggleJob(ctx, key) { ctx.expandedJob = ctx.expandedJob === key ? null : key; ctx.render(); }
 
 const fmtSalary = (sal) => {
@@ -119,6 +123,7 @@ export function renderJobs(ctx) {
   const wrap = h('section', null, h('div', { class: 'view-head' }, h('div', null, h('h1', null, 'Jobs inbox'),
     h('p', null, 'Scraped postings, best fit first. Track the good ones, skip the rest.')),
     h('span', { class: 'spacer' }),
+    h('button', { class: 'btn ghost', type: 'button', title: 'Read the latest digest', onclick: () => ctx.openDigest() }, icon('file', 14), h('span', null, 'Digests')),
     h('a', { class: 'btn ghost', href: '#settings', title: 'Edit tracks, locations and sources' }, icon('gear', 14), h('span', { class: 'hide-sm' }, 'Search settings')),
     runBtn),
   ctx.searchStatusBox(ctx));
@@ -138,6 +143,11 @@ export function renderJobs(ctx) {
       h('input', { type: 'range', min: 0, max: 90, step: 5, value: f.minScore || 0,
         oninput: (e) => { rangeOut.value = e.target.value; },
         onchange: (e) => { ctx.jobFilters.minScore = Number(e.target.value); ctx.saveUi(); ctx.render(); } }), rangeOut),
+    ctx.digest?.lastDigestAt ? h('button', {
+      type: 'button', class: `pill${f.sinceDigest ? ' on' : ''}`, 'aria-pressed': String(!!f.sinceDigest),
+      title: `First seen after the last digest (${new Date(ctx.digest.lastDigestAt).toLocaleString()})`,
+      onclick: () => { ctx.jobFilters.sinceDigest = !f.sinceDigest; ctx.saveUi(); ctx.render(); },
+    }, `New since last digest · ${ctx.jobs.filter((j) => (j.status === 'new' || j.status === 'ranked') && j.firstSeen > ctx.digest.lastDigestAt).length}`) : null,
     h('span', { class: 'count' }, `${list.length} of ${ctx.jobs.length}`)));
   wrap.append(list.length ? h('div', { class: 'jobs' }, list.map((j) => jobRow(ctx, j)))
     : emptyState({ title: 'Inbox zero', body: 'No jobs match these filters. Loosen them, or run /scrape for more.', actions: [h('button', { class: 'btn sm', onclick: () => { ctx.jobFilters = {}; ctx.saveUi(); ctx.render(); } }, 'Reset filters')] }));

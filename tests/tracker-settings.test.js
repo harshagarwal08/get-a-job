@@ -16,7 +16,7 @@ fs.copyFileSync(path.join(FIX, 'jobs.json'), path.join(ROOT, 'data', 'jobs.json'
 const month = new Date().toISOString().slice(0, 7);
 fs.writeFileSync(path.join(ROOT, 'data', 'usage.json'), JSON.stringify({ [month]: { googleJobs: { requests: 12, usdCap: 0 }, apify: { requests: 2, usdCap: 1.5 } } }));
 
-let createTrackerServer, createSearchRunner, createStore;
+let createTrackerServer, createSearchRunner, createStore, scrapeArgs;
 
 // Fake child process: test drives stdout/stderr/close.
 function fakeSpawn() {
@@ -67,7 +67,7 @@ let main;
 let spawnFn;
 before(async () => {
   ({ createTrackerServer } = await import('../src/tracker/server.js'));
-  ({ createSearchRunner } = await import('../src/tracker/search.js'));
+  ({ createSearchRunner, scrapeArgs } = await import('../src/tracker/search.js'));
   ({ createStore } = await import('../src/tracker/store.js'));
   spawnFn = fakeSpawn();
   main = await boot({ search: createSearchRunner({ root: ROOT, spawn: spawnFn }) });
@@ -132,13 +132,20 @@ test('search lifecycle with fake child; one at a time; paid needs confirmPaid', 
   assert.match(r.data.error, /confirmPaid/);
   r = await main.j('/api/search', { method: 'POST', body: { track: 'nope' } });
   assert.equal(r.status, 400);
+  assert.match(r.data.error, /unknown track/);
+  for (const bad of ['--paid', 'FE', '-x', 'fe x', 'fe;rm']) {
+    r = await main.j('/api/search', { method: 'POST', body: { track: bad } });
+    assert.equal(r.status, 400, bad);
+    assert.match(r.data.error, /track id/, bad);
+  }
+  assert.throws(() => scrapeArgs({ track: '--paid' }), /invalid track/);
   r = await main.j('/api/search', { method: 'POST', body: { paid: true, confirmPaid: true, track: 'fe', days: 7 } });
   assert.equal(r.status, 202);
   assert.ok(r.data.id);
   const call = spawnFn.calls.at(-1);
   assert.equal(call.cmd, process.execPath);
   assert.ok(call.args[0].endsWith(path.join('bin', 'gaj.js')));
-  assert.deepEqual(call.args.slice(1), ['scrape', '--json', '--paid', '--track', 'fe', '--days', '7']);
+  assert.deepEqual(call.args.slice(1), ['scrape', '--json', '--paid', '--track=fe', '--days', '7']);
   assert.equal(call.opts.env.GAJ_ROOT, ROOT);
   r = await main.j('/api/search', { method: 'POST', body: {} });
   assert.equal(r.status, 409);
@@ -176,7 +183,11 @@ test('search timeout kills the child', async () => {
   assert.equal(spawn.calls[0].child.killed, 'SIGTERM');
   const st = runner.status();
   assert.equal(st.running, false);
-  assert.match(st.error, /timed out/);
+  assert.match(st.error, /10 minutes/);
+  assert.match(st.error, /Nothing was merged/);
+  assert.match(st.error, /--company/);
+  assert.equal(st.timedOut, true);
+  assert.equal(st.summary, null);
 });
 
 test('demo mode: simulated search adds fictional jobs, no spawn', async () => {
@@ -201,4 +212,36 @@ test('demo mode: simulated search adds fictional jobs, no spawn', async () => {
     assert.equal(Object.keys(after).length, before + 3);
     assert.ok(Object.values(after).filter((x) => x.status === 'new' && /demo search/.test(x.description)).length === 3);
   } finally { await demo.srv.close(); }
+});
+
+test('digest + schedule status API', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gaj-digest-api-'));
+  fs.mkdirSync(path.join(dir, 'data'), { recursive: true });
+  const store = createStore({ root: dir, trackerFile: path.join(dir, 'data', 'tracker.json'), jobsFile: path.join(dir, 'data', 'jobs.json') });
+  const { env } = await import('../src/digest/schedule.js');
+  const calls = [];
+  const scheduleEnv = env({ platform: 'darwin', home: dir, uid: 1, root: dir, run: (c, a) => { calls.push([c, ...a]); return { status: 0, stdout: '', stderr: '' }; } });
+  const s = await boot({ store, scheduleEnv, search: createSearchRunner({ root: dir, spawn: fakeSpawn() }) });
+  try {
+    let r = await s.j('/api/digest');
+    assert.deepEqual(r.data, { lastDigestAt: null, latest: null });
+    assert.equal((await s.j('/api/digest/latest')).status, 404);
+    fs.copyFileSync(path.join(FIX, 'jobs.json'), store.jobsFile);
+    const { runDigest } = await import('../src/digest/digest.js');
+    runDigest(dir, { hours: 100000, mark: true });
+    r = await s.j('/api/digest');
+    assert.ok(r.data.lastDigestAt);
+    assert.match(r.data.latest.path, /^data\/digests\/\d{4}-\d{2}-\d{2}/);
+    assert.ok(r.data.latest.counts.total > 0);
+    r = await s.j('/api/digest/latest');
+    assert.equal(r.status, 200);
+    assert.match(r.data, /^<!-- gaj-digest/);
+    r = await s.j('/api/schedule/status');
+    assert.equal(r.status, 200);
+    assert.equal(r.data.installed, false);
+    assert.equal(r.data.installCommand, 'node bin/gaj.js schedule install --time 08:00 --yes');
+    assert.ok(r.data.lastDigestDate);
+    assert.deepEqual(calls, [], 'status of an uninstalled schedule runs nothing');
+    assert.equal((await s.j('/api/schedule/install', { method: 'POST', body: {} })).status, 404);
+  } finally { await s.srv.close(); }
 });

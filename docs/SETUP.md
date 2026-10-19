@@ -10,7 +10,9 @@ Detailed setup for get-a-job. For the short version see the [README](../README.m
 - [Company list](#company-list)
 - [Job boards](#job-boards)
 - [Providers and API keys](#providers-and-api-keys)
-- [LinkedIn alerts and pasted results](#linkedin-alerts-and-pasted-results)
+- [Email alerts](#email-alerts)
+- [Gmail sync](#gmail-sync)
+- [Daily schedule and digest](#daily-schedule-and-digest)
 - [Cache and rate limits](#cache-and-rate-limits)
 - [Running tests](#running-tests)
 - [Troubleshooting](#troubleshooting)
@@ -133,13 +135,13 @@ The gitignore rules still apply in a private repo. Keep them: a private repo can
 
 **Tracks** let you search for more than one kind of role at once (say, Frontend Engineer and Forward Deployed Engineer). Each track has its own titles and keywords and can point at its own resume file.
 
-To change a preference later, either edit the JSON or ask Claude ("raise my compensation floor to 40 LPA").
+To change a preference later, run `/preferences <what to change>` ("raise my compensation floor to 40 LPA", "add Remote EU"), use the tracker's **Settings** tab, or edit the JSON. `/preferences` and Settings both validate before saving, keep a backup of the previous file in `data/backups/` (last 10), and offer to re-run the search. Run `node bin/gaj.js doctor --validate` after hand edits.
 
 ## Company list
 
 `config/companies.json` lists the companies whose ATS feeds and careers pages get scraped. `/onboard` creates it for you: it maps your location, relocation targets and remote scope to region tags and copies the matching entries from `config/companies.example.json`.
 
-The seed list has 177 companies, each verified when the list was built and tagged by region (where they hire) and stage. A company can carry several regions: `us` 137, `uk` 120, `eu` 112, `india` 77, `apac` 75, `remote-global` 50. By source: Ashby 77, Greenhouse 65, careers pages 17, Lever 12, SmartRecruiters 3, Workable 2, Recruitee 1.
+The seed list has 211 companies, each verified when the list was built and tagged by region (where they hire) and stage. A company can carry several regions: `us` 166, `uk` 120, `eu` 112, `india` 111, `apac` 75, `remote-global` 50. By source: Ashby 77, Greenhouse 65, Workday 29, careers pages 17, Lever 12, Keka 3, SmartRecruiters 3, Workable 2, Recruitee 1, Zoho Recruit 1, SuccessFactors 1.
 
 To start from the whole seed list instead: `cp config/companies.example.json config/companies.json`.
 
@@ -153,9 +155,9 @@ To start from the whole seed list instead: `cp config/companies.example.json con
 
 | Field | Values |
 |---|---|
-| `ats` | `greenhouse`, `lever`, `ashby`, `workable`, `smartrecruiters`, `recruitee`, `careers` |
-| `slug` | the company's identifier on that ATS (for `careers`, any short company slug) |
-| `url` | required for `careers`: the https careers listing page |
+| `ats` | slug-based: `greenhouse`, `lever`, `ashby`, `workable`, `smartrecruiters`, `recruitee`; url-based: `workday`, `keka`, `zohorecruit`, `successfactors`; or `careers` |
+| `slug` | the company's identifier on that ATS. For url-based ATSs it's derived from `url` when omitted; for `careers`, any short company slug |
+| `url` | required for url-based ATSs and `careers`: the https careers page (see [below](#workday-keka-zoho-recruit-and-successfactors)) |
 | `region` | any of `india`, `us`, `eu`, `uk`, `apac`, `remote-global` (optional) |
 | `stage` | `seed`, `series-a`, `series-b`, `series-c`, `growth`, `public`, `unknown` (optional) |
 | `tags` | free-form, e.g. industry (optional) |
@@ -218,6 +220,32 @@ Open the company's careers page and hover over an "Apply" link, or check the job
 
 If the careers page embeds the board, view the page source and search for the ATS names.
 
+### Workday, Keka, Zoho Recruit and SuccessFactors
+
+These are identified by their careers URL. There's no slug guessing (Workday tenants can't be guessed), so you need the URL from the company's "Apply" links.
+
+| ATS | Entry `url` | Where to find it |
+|---|---|---|
+| `workday` | `https://<tenant>.wd<N>.myworkdayjobs.com/<site>` | Click any job on the company's careers page; the link goes to `…myworkdayjobs.com/<site>/job/…`. Keep up to `<site>` (a `/en-US/` locale prefix is fine). |
+| `keka` | `https://<tenant>.keka.com/careers/` | Common with Indian startups; job links go to `<tenant>.keka.com/careers/jobdetails/…`. |
+| `zohorecruit` | `https://<tenant>.zohorecruit.com/jobs/Careers` (`.in`, `.eu`, `.com.au` too) or a custom domain with the same `/jobs/Careers` portal | Job links end in `/jobs/Careers/<id>`. |
+| `successfactors` | `https://<careers site>` | Classic SAP SuccessFactors "RMK" sites with a `/search/?q=` page and `/job/…` links (e.g. `careers.tatamotors.com`). |
+
+```bash
+# Classify a careers URL by host shape (Workday, Keka, Zoho Recruit; SuccessFactors sites use their own domains, so add those directly)
+node bin/gaj.js company:detect "Acme" --url https://acme.wd3.myworkdayjobs.com/en-US/Careers
+
+# Add (slug is derived from the URL)
+node bin/gaj.js companies:add --name Acme --ats workday --url https://acme.wd3.myworkdayjobs.com/Careers --region india,us
+node bin/gaj.js companies:add --name Beta --ats keka --url https://beta.keka.com/careers/ --region india
+```
+
+- `companies:add` and `company:check` require `--url` for these and validate the host shape.
+- Workday is searched by your track titles (a few pages each) and only title-matched jobs get a detail request, one request at a time per company. Big employers still take a while.
+- Newer JS-only SuccessFactors sites (no server-rendered results) fail `company:check`; use a `careers` entry instead.
+
+**Not supported:** iCIMS (no stable listing), Darwinbox (needs login), Freshteam (being discontinued), TurboHire (`robots.txt` blocks all but Googlebot), Oracle Taleo (not investigated). For those, use a `careers` entry if the company has its own page, set up email alerts, or `/import-jobs`.
+
 ### Careers-page entries
 
 For a company with its own careers page and no supported ATS, run `careers:check` on the listing page first. It's the only command that crawls a page that isn't already in your list, so Claude Code asks before running it. A successful check is remembered for 7 days; `companies:add --ats careers` and `company:check careers` refuse the URL without one ("run careers:check <url> first").
@@ -239,7 +267,7 @@ node bin/gaj.js companies:add --name Acme --ats careers --slug acme --url https:
 - Headless Chrome runs behind a local proxy that blocks private and local addresses, with WebSocket, WebRTC and service workers turned off, one render at a time. A page that needs those won't render.
 - Turn the crawler off with `"careersPages": false` in `preferences.sources`.
 
-**Not supported:** Workday (`myworkdayjobs.com`), SAP SuccessFactors, Oracle Taleo, iCIMS, and similar enterprise systems. Their pages are search apps that don't expose a plain list. For those, `/tailor` a posting by its link or pasted text, or bring results in with `/import-jobs`.
+If `careers:check` or `company:detect --url` says the page is really Workday, Keka, Zoho Recruit or SuccessFactors, add it under that ATS instead.
 
 ### Verifying a company's ATS slug
 
@@ -393,16 +421,36 @@ The first run downloads Python 3.12 and JobSpy (pinned to python-jobspy 1.3.0) i
 
 JobSpy scrapes those sites directly from your IP. Their terms may forbid it and they may rate-limit or block you. Keep `resultsWanted` modest (ceiling 100). The `linkedin` site is skipped unless `sources.linkedin` is true.
 
-## LinkedIn alerts and pasted results
+## Email alerts
 
-Two ways to get jobs from sites the scraper doesn't cover, with no scraping:
+Job platforms already email you new jobs. `/email-alerts` reads those emails read-only through the Gmail connector and imports the jobs. This is how Naukri, Wellfound, Cutshort and Instahyre are covered: their terms forbid scraping, so there's no scraper for them.
 
-**`/linkedin-alerts`**
-1. On LinkedIn → Jobs, search a target title and location, set filters, and turn on **Set alert** with daily email. One alert per title × location.
-2. In Claude, connect the Gmail connector (claude.ai → Settings → Connectors → Gmail).
-3. Run `/linkedin-alerts` (optionally `/linkedin-alerts 14` for the last 14 days). Claude reads the alert emails read-only, extracts the jobs and imports them with `gaj jobs:import`. It never changes, sends or deletes email.
+**One-time setup**
+1. Connect Gmail in Claude: claude.ai → Settings → Connectors → Gmail.
+2. Turn on alerts on each platform you use (daily email where there's a choice):
 
-**`/import-jobs`**: browse any job site yourself, copy the results list (or a list of job links), run `/import-jobs` and paste. Claude extracts title, company, location and link and imports them. It doesn't open the pasted links.
+   | Platform | Set up alerts |
+   |---|---|
+   | LinkedIn | Jobs → search a title + location → **Set alert** → email, daily. One alert per title × location. |
+   | Naukri | Search → **Create Job Alert** (or Profile → Job alerts). |
+   | Indeed | Search → "Get new jobs for this search by email". |
+   | Wellfound | Jobs → set filters → enable job-match emails in notification settings. |
+   | Instahyre | Complete your profile → enable opportunity emails. |
+   | Cutshort | Fill in profile and preferences → enable job recommendation emails. |
+   | Glassdoor | Search → **Create job alert**. |
+
+3. Run it:
+
+   ```
+   /email-alerts               # last 7 days, all platforms
+   /email-alerts 14 naukri     # last 14 days, one platform
+   ```
+
+Claude searches by sender, parses each alert, and imports with `gaj jobs:import --source email-alert --via <platform>`. Already-processed messages are remembered in `data/gmail-sync.json`, so reruns don't duplicate. It never sends, labels, archives, marks, moves or deletes email, and never opens links from it. `/linkedin-alerts` still works as an alias.
+
+If a platform returns nothing but you do get its alerts, the sender address may have changed; tell Claude the sender and it will search for that. If an alert parses badly, a redacted copy makes a good test fixture (see CONTRIBUTING).
+
+**`/import-jobs`** covers everything else: browse any job site yourself, copy the results list (or a list of job links), run `/import-jobs` and paste. Claude extracts title, company, location and link and imports them. It doesn't open the pasted links.
 
 Both go through the same matching, eligibility tagging and de-duplication as `/scrape`. To import a file you built yourself:
 
@@ -411,6 +459,41 @@ node bin/gaj.js jobs:import data/my-jobs.json --source manual
 # data/my-jobs.json: [{"title": "...", "company": "...", "url": "https://...", "location": "..."}]
 # The file must be under data/ or the OS temp dir.
 ```
+
+## Gmail sync
+
+`/gmail-sync` keeps the tracker in step with your inbox. For each active application it searches recent mail from the company and the common ATS senders, classifies messages (screen invite, interview, rejection, offer, other), and shows a table of proposed status changes. Nothing changes until you approve; approved changes go through `gaj track update`.
+
+```
+/gmail-sync          # last 14 days
+/gmail-sync 30       # last 30 days (max 90)
+```
+
+Needs the same Gmail connector as `/email-alerts`. It's read-only in the same way and skips messages it has already processed (`data/gmail-sync.json`).
+
+## Daily schedule and digest
+
+The schedule runs once a day: `gaj scrape` with free sources only (never `--paid`), then `gaj digest --mark`, which writes `data/digests/<date>.md` with the jobs first seen since the previous digest. Output goes to `data/logs/`.
+
+```bash
+node bin/gaj.js schedule install --time 08:30        # dry run: prints exactly what it would write
+node bin/gaj.js schedule install --time 08:30 --yes  # install
+node bin/gaj.js schedule status                      # installed?, last log, last digest
+node bin/gaj.js schedule remove --yes                # uninstall
+```
+
+| OS | What `install --yes` does |
+|---|---|
+| macOS | Writes a LaunchAgent plist to `~/Library/LaunchAgents/` and loads it. launchd errors go to `data/logs/launchd.err.log`. |
+| Linux | Writes a systemd user service and timer (falls back to printing a cron line if systemd user units aren't available). |
+| Windows | Prints Task Scheduler steps to follow by hand; writes nothing. |
+
+The schedule writes outside the repo, so `install` and `remove` are dry runs without `--yes`, and neither is pre-approved for Claude. The computer must be on at the scheduled time; on macOS a run missed during sleep happens when it wakes.
+
+**Reading the digest**
+- `/digest` in Claude: shows the latest digest (or builds one with `--hours N` / `--since ISO`), and offers to rank the new jobs.
+- The tracker: the Jobs inbox has **New** badges and a "New since last digest" filter; the Digests modal shows the latest digest and the Daily search card shows whether the schedule is installed.
+- `node bin/gaj.js digest --notify` also shows a macOS notification.
 
 ## Cache and rate limits
 
@@ -444,7 +527,7 @@ Run the same checks CI runs before pushing:
 
 ```bash
 bash .github/scripts/privacy-guard.sh   # personal data ignored and untracked
-bash .github/scripts/prompt-lint.sh     # no unrestricted Bash in .claude/settings.json
+bash .github/scripts/prompt-lint.sh     # no unrestricted Bash, and fetch/careers:check/schedule not pre-approved
 ```
 
 ## Troubleshooting

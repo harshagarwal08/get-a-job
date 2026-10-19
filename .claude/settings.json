@@ -15,6 +15,7 @@
       "Bash(node bin/gaj.js verify:*)",
       "Bash(node bin/gaj.js track:*)",
       "Bash(node bin/gaj.js tracker:*)",
+      "Bash(node bin/gaj.js digest:*)",
       "Bash(node bin/gaj.js export:*)",
       "Bash(node bin/gaj.js doctor:*)",
       "Bash(node bin/gaj.js help:*)",

@@ -98,7 +98,7 @@ UK or EU while `workAuthorization` does not cover them)
 | Option | One-liner | Default |
 |---|---|---|
 | Careers pages (`careersPages`) | Crawls company careers pages that have no supported ATS (only URLs in your company list) | on |
-| LinkedIn alerts via Gmail (`/linkedin-alerts`) | LinkedIn emails you jobs from alerts you set up; Claude reads them read-only through the Gmail connector. No scraping, zero account risk | recommended (no config key; just a habit) |
+| Email alerts via Gmail (`/email-alerts`) | LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort, Glassdoor email you jobs from alerts you set up; Claude reads them read-only through the Gmail connector. No scraping, zero account risk | recommended (no config key; just a habit) |
 | Google for Jobs (`googleJobs`) | Searches Google's job index, which aggregates LinkedIn, Naukri, Indeed and company sites, through a JSearch or SerpAPI key (free tier). No scraping on your side | recommended for India; off elsewhere unless asked |
 | Apify (`apify`) | Runs scraper "actors" you choose; paid per result with your own token, capped by `maxItems`/`maxChargeUsd`. Never actors that need your LinkedIn cookie or login | off |
 | JobSpy (`jobspy`) | Free open-source scraper for LinkedIn/Indeed/Naukri/Glassdoor/Google; scraping-based, so sites' terms may forbid it; needs `uv` installed | off |
@@ -236,7 +236,17 @@ tags filter.
 ## 9. Finish
 
 Summarise what was written (paths) and gaps still open (unconfirmed metrics,
-missing stories, comp floor 0). Next steps: `/scrape`, then `/rank`;
-`/discover` to grow the company list; `/linkedin-alerts` if they set up
-LinkedIn alerts; `/import-jobs` to paste results from any site; or
-`/tailor <url>` for a specific job; `/track` to open the tracker.
+missing stories, comp floor 0). Then offer (AskUserQuestion, multiSelect):
+
+1. **Email alerts**: set up alerts on the platforms that fit their market
+   (India: LinkedIn, Naukri, Wellfound, Instahyre, Cutshort; elsewhere:
+   LinkedIn, Indeed, Wellfound, Glassdoor) using the setup table in
+   `.claude/commands/email-alerts.md`, then run `/email-alerts`.
+2. **Daily schedule**: a daily free-sources scrape + digest, set up as in
+   `/digest` step 4 (dry run first, `--yes` only after they agree; it writes
+   outside the repo).
+
+Next steps: `/scrape`, then `/rank`; `/discover` to grow the company list;
+`/import-jobs` to paste results from any site; `/tailor <url>` for a specific
+job; `/track` to open the tracker; after applying, `/gmail-sync` keeps
+statuses current from recruiter emails.

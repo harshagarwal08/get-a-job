@@ -26,10 +26,17 @@ const bad = allow.filter((rule) => {
   const r = String(rule).replace(/\s+/g, '');
   return r === 'Bash' || r === 'Bash(*)' || r === 'Bash(:*)' || r === 'Bash(**)';
 });
+// Commands that must always prompt: they reach arbitrary hosts or write outside the repo.
+const MUST_PROMPT = ['fetch', 'careers:check', 'schedule'];
+for (const rule of allow) {
+  const m = /^Bash\((?:node bin\/gaj\.js|npx gaj|gaj)\s+([^\s:)*]+(?::[^\s:)*]+)?)/.exec(String(rule).trim());
+  if (m && MUST_PROMPT.includes(m[1])) bad.push(rule);
+  if (/^Bash\((?:node bin\/gaj\.js|npx gaj|gaj)(?::\*|\s*\*)\)$/.test(String(rule).trim())) bad.push(rule);
+}
 if (bad.length) {
-  console.error(`✗ ${file} allows unrestricted shell: ${bad.join(', ')}`);
-  console.error('  Allow specific commands only, e.g. "Bash(node bin/gaj.js:*)" or "Bash(npm run:*)".');
+  console.error(`✗ ${file} pre-approves rules that must prompt: ${bad.join(', ')}`);
+  console.error('  Allow specific gaj subcommands only (never bare Bash, all of gaj, fetch, careers:check or schedule).');
   process.exit(1);
 }
-console.log(`✓ prompt-lint: ${file} has no unrestricted Bash rule (${allow.length} allow rules)`);
+console.log(`✓ prompt-lint: ${file} has no unrestricted Bash rule and no always-prompt gaj command (${allow.length} allow rules)`);
 JS

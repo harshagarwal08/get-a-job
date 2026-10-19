@@ -1,0 +1,34 @@
+{
+ "jobPostingInfo": {
+  "id": "f0d2d9510e9c1000dfc55349d50a0000",
+  "title": "HPC Operations Engineer",
+  "jobDescription": "<p>NVIDIA has been transforming computer graphics, PC gaming, and accelerated computing for more than 25 years. It’s a unique legacy of innovation that’s fueled by great technology—and amazing people. Today, we’re tapping into the unlimited potential of AI to define the next era of computing. An era in which our GPU acts as the brains of computers, robots, and self-driving cars that can understand the world. Doing what’s never been done before takes vision, innovation, and the world’s best talent. As an NVIDIAN, you’ll be immersed in a diverse, supportive environment where everyone is inspired</p>",
+  "location": "India, Bengaluru",
+  "postedOn": "Posted 30+ Days Ago",
+  "startDate": "2026-07-29",
+  "timeType": "Full time",
+  "jobReqId": "JR2014195",
+  "jobPostingId": "HPC-Operations-Engineer_JR2014195",
+  "jobPostingSiteId": "NVIDIAExternalCareerSite",
+  "country": {
+   "descriptor": "India",
+   "id": "c4f78be1a8f14da0ab49ce1162348a5e"
+  },
+  "canApply": true,
+  "posted": true,
+  "includeResumeParsing": true,
+  "jobRequisitionLocation": {
+   "descriptor": "India, Bengaluru",
+   "country": {
+    "descriptor": "India",
+    "id": "c4f78be1a8f14da0ab49ce1162348a5e",
+    "alpha2Code": "IN"
+   }
+  },
+  "externalUrl": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/job/India-Bengaluru/HPC-Operations-Engineer_JR2014195"
+ },
+ "hiringOrganization": {
+  "name": "IN01 NVIDIA Graphics Bengaluru",
+  "url": ""
+ }
+}

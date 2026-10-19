@@ -44,10 +44,36 @@ const API_HOSTS = [
 const MAX_REDIRECTS = 5;
 
 /** Whether `request()` is allowed to contact this URL (https + known API host). */
+// Suffix patterns for multi-tenant ATS hosts: "*.<suffix>" with exactly `labels` tenant labels.
+// e.g. Workday "<tenant>.wd5.myworkdayjobs.com" = 2 labels before "myworkdayjobs.com".
+const API_HOST_SUFFIXES = [
+  { suffix: 'myworkdayjobs.com', labels: 2, shape: [/^[a-z0-9][a-z0-9-]{0,62}$/, /^wd\d{1,3}$/] },
+  { suffix: 'keka.com', labels: 1, exclude: new Set(['www', 'login', 'app', 'api', 'help', 'support', 'status', 'developer', 'developers', 'blog', 'docs', 'cdn', 'mail']) },
+];
+const LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+
+/**
+ * Whether `host` is "<labels>.<suffix>" with the exact number of well-formed DNS labels.
+ * Rejects lookalikes ("evilmyworkdayjobs.com", "x.myworkdayjobs.com.evil.com"), IPs and
+ * extra or empty labels.
+ * @param {string} host lowercase hostname
+ * @param {{suffix: string, labels: number, shape?: RegExp[]}} rule
+ */
+export function hostMatchesSuffix(host, { suffix, labels, shape, exclude }) {
+  const h = String(host ?? '').toLowerCase();
+  if (!h.endsWith(`.${suffix}`)) return false;
+  const parts = h.slice(0, -(suffix.length + 1)).split('.');
+  if (parts.length !== labels || !parts.every((p) => LABEL.test(p))) return false;
+  if (exclude?.has(parts[0])) return false;
+  return !shape || shape.every((re, i) => re.test(parts[i]));
+}
+
 export function isApiUrl(url) {
   try {
     const u = new URL(url);
-    return u.protocol === 'https:' && API_HOSTS.some((re) => re.test(u.hostname.toLowerCase()));
+    const host = u.hostname.toLowerCase();
+    if (u.protocol !== 'https:' || u.port || u.username || u.password) return false;
+    return API_HOSTS.some((re) => re.test(host)) || API_HOST_SUFFIXES.some((r) => hostMatchesSuffix(host, r));
   } catch { return false; }
 }
 
@@ -61,7 +87,7 @@ export function stripAuthHeaders(headers = {}) {
   return Object.fromEntries(Object.entries(headers).filter(([k]) => !AUTH_HEADERS.includes(k.toLowerCase()) && !/token|secret|key$/i.test(k)));
 }
 
-async function fetchManual(url, { onAttempt, noRedirect, ...init }) {
+async function fetchManual(url, { onAttempt, noRedirect, sameOrigin, ...init }) {
   let current = url;
   const origin = new URL(url).origin;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
@@ -73,6 +99,7 @@ async function fetchManual(url, { onAttempt, noRedirect, ...init }) {
     await res.body?.cancel?.().catch(() => {});
     if (noRedirect) throw new HostError(`unexpected redirect from ${redactUrl(current)} (redirects are disabled for this call)`);
     current = new URL(loc, current).href;
+    if (sameOrigin && new URL(current).origin !== origin) throw new HostError(`refusing redirect off ${origin} to ${redactUrl(current)}`);
     // Never forward credentials to another origin.
     if (new URL(current).origin !== origin) init = { ...init, headers: stripAuthHeaders(init.headers) };
     // Only 307/308 keep the method and body; everything else becomes a GET.
@@ -103,7 +130,7 @@ export async function request(url, opts = {}) {
   }
 }
 
-async function requestInner(url, { headers = {}, timeout = 15000, retries = 4, backoff = 500, method = 'GET', body, onAttempt, noRedirect } = {}) {
+async function requestInner(url, { headers = {}, timeout = 15000, retries = 4, backoff = 500, method = 'GET', body, onAttempt, noRedirect, sameOrigin } = {}) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -112,6 +139,7 @@ async function requestInner(url, { headers = {}, timeout = 15000, retries = 4, b
         body,
         onAttempt,
         noRedirect,
+        sameOrigin,
         headers: { 'user-agent': USER_AGENT, ...headers },
         signal: AbortSignal.timeout(timeout),
       });

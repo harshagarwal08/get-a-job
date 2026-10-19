@@ -72,6 +72,8 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const PLACE_RES = Object.entries(PLACES).map(([cc, names]) =>
   [cc, new RegExp(`(^|[^\\p{L}])(${names.map(esc).join('|')})(?=$|[^\\p{L}])`, 'iu')]);
 const CODE_RES = Object.entries(CODES).map(([cc, codes]) => [cc, new RegExp(`(^|[^A-Za-z])(${codes.join('|')})(?=$|[^A-Za-z])`)]);
+const INDIA_RE = PLACE_RES.find(([cc]) => cc === 'IN')[1];
+const INDIA_STATE_CODE_RE = /,\s*(MH|KA|TS|AP|DL|UP|WB|GJ|RJ|KL|HR|PB|MP)\s*,\s*IN\b/;
 const NAME_TO_CODE = new Map(Object.entries(PLACES).map(([cc, n]) => [n[0], cc]));
 
 /**
@@ -82,17 +84,26 @@ const NAME_TO_CODE = new Map(Object.entries(PLACES).map(([cc, n]) => [n[0], cc])
 export function detectCountries(text) {
   const s = String(text ?? '');
   if (!s) return [];
+  // Each location segment ("A; B", "A | B", "A / B", "A or B") is judged on its own, so
+  // "Pune, IN or Indianapolis, IN" → IN + US.
+  const segments = s.split(/\s*(?:;|\||\s\/\s|\bor\b)\s*/i).filter((x) => x.trim());
+  if (segments.length > 1) return [...new Set(segments.flatMap(segmentCountries))];
+  return segmentCountries(s);
+}
+
+function segmentCountries(s) {
   const found = new Set();
   // "<City>, <US state>" is a US place even when the city name exists elsewhere ("Delhi, NY").
-  // Exception: "<Indian city>, TN" (Tamil Nadu) and anything followed by ", India".
-  let rest = s.replace(CITY_STATE_RE, (m, city, st) => {
-    if (/^\s*,\s*india\b/i.test(s.slice(s.indexOf(m) + m.length))) return m;
-    if (st === 'TN' && PLACE_RES.find(([cc]) => cc === 'IN')[1].test(city)) return m;
+  // Exception: "<Indian city>, IN|TN" in the same segment, and anything followed by ", India".
+  const rest = s.replace(CITY_STATE_RE, (m, city, st, _a, offset) => {
+    if (/^\s*,\s*india\b/i.test(s.slice(offset + m.length))) return m;
+    if ((st === 'IN' || st === 'TN') && INDIA_RE.test(s)) return m;
     found.add('US');
     return ' ';
   });
   for (const [cc, re] of PLACE_RES) if (re.test(rest)) found.add(cc);
   for (const [cc, re] of CODE_RES) if (re.test(rest)) found.add(cc);
+  if (INDIA_STATE_CODE_RE.test(s)) { found.delete('US'); found.add('IN'); return [...found]; }
   if (US_STATE_RE.test(rest) && !found.has('IN')) found.add('US');
   return [...found];
 }

@@ -17,7 +17,8 @@ export function validatePreferences(prefs) {
   if (!Array.isArray(prefs.tracks) || prefs.tracks.length === 0) errors.push('tracks: need at least one track');
   const ids = new Set();
   for (const [i, t] of (prefs.tracks ?? []).entries()) {
-    if (!t.id || !/^[a-z0-9-]+$/.test(t.id)) errors.push(`tracks[${i}].id: lowercase letters, digits, dashes`);
+    if (!t || typeof t !== 'object') { errors.push(`tracks[${i}]: must be an object`); continue; }
+    if (!t.id || !/^[a-z0-9][a-z0-9-]*$/.test(t.id)) errors.push(`tracks[${i}].id: lowercase letters, digits, dashes`);
     else if (ids.has(t.id)) errors.push(`tracks[${i}].id: duplicate id "${t.id}"`);
     ids.add(t.id);
     if (!t.name) errors.push(`tracks[${i}].name: missing`);

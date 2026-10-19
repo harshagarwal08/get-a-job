@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runDigest } from '../digest/digest.js';
 
 export const FIXTURE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'tests', 'fixtures', 'tracker');
 
@@ -36,6 +37,16 @@ export function prepareDemoRoot({ now = Date.now() } = {}) {
   fs.writeFileSync(path.join(root, 'data', 'jobs.json'), JSON.stringify(shiftDates(jobs, ms), null, 2));
   const prefs = path.join(FIXTURE_DIR, 'preferences.json');
   if (fs.existsSync(prefs)) fs.copyFileSync(prefs, path.join(root, 'profile', 'preferences.json'));
+  // Digest demo: last digest marked 2 days before the fixture "now", covering the 3 days before that.
+  const statePath = path.join(FIXTURE_DIR, 'digest-state.json');
+  if (fs.existsSync(statePath)) {
+    const state = shiftDates(JSON.parse(fs.readFileSync(statePath, 'utf8')), ms);
+    fs.writeFileSync(path.join(root, 'data', 'digest-state.json'), JSON.stringify(state, null, 2));
+    if (state.lastDigestAt) {
+      const at = new Date(state.lastDigestAt).getTime();
+      runDigest(root, { since: new Date(at - 3 * 86400000).toISOString(), now: at });
+    }
+  }
   return root;
 }
 

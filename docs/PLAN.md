@@ -121,7 +121,7 @@ get-a-job/
 
 ### 4.2 `/scrape`, `/discover` and other job inputs
 `gaj scrape` loads your preferences and company list, then:
-- fetches each company's public job feed (Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee)
+- fetches each company's public job feed: slug-based (Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee) and url-based enterprise/Indian ATSs (Workday, Keka, Zoho Recruit, SAP SuccessFactors), with per-company request caps. iCIMS, Darwinbox, Freshteam and TurboHire are unsupported (reasons in CONTRACTS.md)
 - crawls careers pages for `ats: "careers"` entries (`sources.careersPages`): JSON-LD first, then embedded-ATS detection, then same-site job links, then one headless Chrome render if nothing else works; all through safeFetch
 - fetches the job boards you enabled in `preferences.sources`:
   - `hn`: the monthly "Ask HN: Who is hiring?" thread (mostly US/EU startups, REMOTE/VISA flags)
@@ -141,13 +141,15 @@ get-a-job/
 Claude then adds a quick fit (high/medium/low) and shows the green jobs first. It also gives LinkedIn people-search links for referrals.
 
 Two more ways in, both through `gaj jobs:import` (same matching, eligibility and merge):
-- `/linkedin-alerts`: reads LinkedIn job-alert emails read-only via the Gmail connector. No scraping.
+- `/email-alerts` (alias `/linkedin-alerts`): reads job-alert emails from LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort and Glassdoor, read-only via the Gmail connector, and imports them with `--source email-alert --via <platform>`. No scraping. Wellfound, Cutshort and Instahyre have no scraper because their terms forbid it (and Wellfound is behind bot protection); alerts are the only route.
 - `/import-jobs`: you paste results or links from any site you browsed; Claude extracts them without fetching the pages.
 
+Running it daily: `gaj schedule install --yes` adds a user-level LaunchAgent (macOS) or systemd timer (Linux) that runs a free-source `scrape` and `gaj digest --mark` each day; `/digest` and the tracker's New badges show what's new since the last digest. The tracker's Settings tab and `/preferences` edit preferences and can re-run the search.
+
 The company list grows three ways:
-- `/onboard` picks seed companies from `config/companies.example.json` (177 verified entries tagged by region and stage, 17 of them careers pages) that match your regions, and asks which boards and providers to enable.
+- `/onboard` picks seed companies from `config/companies.example.json` (211 verified entries tagged by region and stage, including 29 Workday and 17 careers-page entries) that match your regions, and asks which boards and providers to enable.
 - `/discover <criteria>` finds candidates (YC via `gaj discover yc`, or web search), verifies each ATS with `gaj company:detect`, and adds only the ones you pick with `gaj companies:add`. Low-confidence matches are never added.
-- `gaj companies:add` / `company:detect` by hand (`--ats careers --url` for careers pages).
+- `gaj companies:add` / `company:detect` by hand (`--url` for url-based ATSs and careers pages; `careers:check` first for the latter).
 
 ### 4.3 `/rank`
 Parallel subagents, about 5 jobs each, read the full posting and score it:
@@ -259,10 +261,9 @@ Phases:
 6. Dogfood: the maintainer runs `/onboard` on a real resume (kept local and gitignored).
 
 ## 8. Roadmap (post-v1)
-- Workday, SuccessFactors and other enterprise ATS support
-- More sources: Wellfound, Cutshort, Instahyre
-- `/gmail-sync`: propose status changes from email, applied only after approval
+- Darwinbox and iCIMS, if they offer a public listing that needs no login
+- Naukri via alert emails only (`/email-alerts`), unless it offers a permitted feed
 - Two-way Google Sheets sync
-- Resume template gallery
+- More resume templates
 - Salary data (Levels.fyi / AmbitionBox, user-provided)
-- Scheduled scrape (`/loop` or cron) with a "new since last run" digest
+- Tracker-side ranking: hand new jobs from the tracker to Claude for `/rank`

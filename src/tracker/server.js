@@ -8,7 +8,9 @@ import { computeStats } from './stats.js';
 import { FORMATS, exportApplications } from './export.js';
 import { readJSON, writeJSON } from '../lib/store.js';
 import { validatePreferences, REMOTE_SCOPES } from '../lib/preferences.js';
-import { createSearchRunner } from './search.js';
+import { TRACK_ID, createSearchRunner } from './search.js';
+import { loadState as loadDigestState, latestDigest } from '../digest/digest.js';
+import * as schedule from '../digest/schedule.js';
 
 const EXAMPLE_PREFS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'examples', 'preferences.example.json');
 const MAX_BACKUPS = 10;
@@ -71,7 +73,7 @@ function splitBody(body) {
   return { note, fields };
 }
 
-export function createTrackerServer({ store = createStore(), port = 4317, meta = {}, search } = {}) {
+export function createTrackerServer({ store = createStore(), port = 4317, meta = {}, search, scheduleEnv } = {}) {
   const applicationsDir = path.join(store.root, 'data', 'applications');
   const prefsFile = path.join(store.root, 'profile', 'preferences.json');
   const backupsDir = path.join(store.root, 'data', 'backups');
@@ -129,7 +131,8 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
     if (!prefs) throw new HttpError(400, 'no profile/preferences.json yet: save your settings (or run /onboard) first');
     let track;
     if (b.track !== undefined && b.track !== null && b.track !== '') {
-      if (typeof b.track !== 'string' || !(prefs.tracks ?? []).some((t) => t.id === b.track)) throw new HttpError(400, `unknown track "${b.track}"`);
+      if (typeof b.track !== 'string' || !TRACK_ID.test(b.track)) throw new HttpError(400, 'track must be a track id (lowercase letters, digits, dashes)');
+      if (!(prefs.tracks ?? []).some((t) => t.id === b.track)) throw new HttpError(400, `unknown track "${b.track}"`);
       track = b.track;
     }
     let days;
@@ -210,6 +213,27 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
       throw new HttpError(405, 'method not allowed');
     }
 
+    if (resource === 'digest' && method === 'GET') {
+      if (!id) {
+        const latest = latestDigest(store.root);
+        return send(res, 200, {
+          lastDigestAt: loadDigestState(store.root).lastDigestAt,
+          latest: latest ? { date: latest.date, path: path.relative(store.root, latest.file).split(path.sep).join('/'), counts: latest.counts, generatedAt: latest.generatedAt } : null,
+        });
+      }
+      if (id === 'latest') {
+        const latest = latestDigest(store.root);
+        if (!latest) throw new HttpError(404, 'no digest yet: run "gaj digest"');
+        return send(res, 200, latest.text, { 'Content-Type': 'text/plain; charset=utf-8' });
+      }
+      throw new HttpError(404, 'not found');
+    }
+
+    if (resource === 'schedule' && id === 'status' && method === 'GET') {
+      // Read-only: the UI never installs anything.
+      return send(res, 200, schedule.status(scheduleEnv ?? schedule.env({ root: store.root })));
+    }
+
     if (resource === 'search') {
       if (!id && method === 'POST') return send(res, 202, startSearch(body));
       if (id === 'status' && method === 'GET') return send(res, 200, runner.status());
@@ -224,17 +248,17 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
         }
         if (method === 'POST') {
           const { note, fields } = splitBody(body);
-          return send(res, 201, store.add(fields, { note: typeof note === 'string' && note.trim() ? note : undefined }));
+          return send(res, 201, await store.add(fields, { note: typeof note === 'string' && note.trim() ? note : undefined }));
         }
       } else if (action === 'undo' && method === 'POST') {
-        return send(res, 200, store.undo(id));
+        return send(res, 200, await store.undo(id));
       } else if (!action) {
         if (method === 'GET') return send(res, 200, store.get(id));
         if (method === 'PATCH') {
           const { note, fields } = splitBody(body);
-          return send(res, 200, store.update(id, fields, { note }));
+          return send(res, 200, await store.update(id, fields, { note }));
         }
-        if (method === 'DELETE') return send(res, 200, { deleted: store.remove(id).id });
+        if (method === 'DELETE') return send(res, 200, { deleted: (await store.remove(id)).id });
       }
       throw new HttpError(405, 'method not allowed');
     }
@@ -250,11 +274,11 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
       }
       if (id && !action && method === 'PATCH') {
         if (!body || typeof body.status !== 'string') throw new HttpError(400, 'body must be {status}');
-        return send(res, 200, store.setJobStatus(id, body.status));
+        return send(res, 200, await store.setJobStatus(id, body.status));
       }
       if (id && action === 'track' && method === 'POST') {
         const { note, ...fields } = body ?? {};
-        return send(res, 201, store.trackJob(id, fields));
+        return send(res, 201, await store.trackJob(id, fields));
       }
       throw new HttpError(405, 'method not allowed');
     }
@@ -290,7 +314,7 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
       }
       await route(req, res);
     } catch (err) {
-      const status = err instanceof URIError ? 400 : err.status ?? 500;
+      const status = err instanceof URIError ? 400 : err.status ?? (/is locked by another gaj process/.test(err.message) ? 503 : 500);
       if (err instanceof URIError) err.message = 'malformed URL encoding';
       if (status === 500) console.error(err);
       const extra = err.data ? (err instanceof HttpError ? err.data : { existing: err.data }) : {};

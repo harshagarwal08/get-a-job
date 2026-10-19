@@ -85,7 +85,7 @@ async function trackCmd(argv) {
     Object.assign(fields, parseFields(a.field));
     let res;
     try {
-      res = s.addOrUpdate(fields, { upsert: !!a.upsert });
+      res = await s.addOrUpdate(fields, { upsert: !!a.upsert });
     } catch (err) {
       if (err.name === 'ConflictError') fail(err.message);
       throw err;
@@ -104,7 +104,7 @@ async function trackCmd(argv) {
     if (a.status !== undefined) fields.status = a.status;
     if (a['next-action'] !== undefined) fields.nextAction = a['next-action'];
     if (a['next-date'] !== undefined) fields.nextActionDate = a['next-date'];
-    const app = s.update(id, fields, { note: a.note });
+    const app = await s.update(id, fields, { note: a.note });
     return out(app, a.json, (x) => `Updated ${x.id}: ${x.company} - ${x.role} [${x.status}]`);
   }
   if (sub === 'list') {

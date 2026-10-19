@@ -54,10 +54,14 @@ export function consolidate(jobs, prefs) {
 
 const DAY = 86400000;
 /** Query-based sources with no per-company feed: expire by age since lastSeen (HN also expires on thread change). */
-export const TIME_EXPIRY_SOURCES = new Set(['linkedin', 'hn', 'arbeitnow', 'remotive', 'remoteok', 'google-jobs', 'apify', 'jobspy', 'linkedin-alert', 'manual']);
+export const TIME_EXPIRY_SOURCES = new Set(['linkedin', 'hn', 'arbeitnow', 'remotive', 'remoteok', 'google-jobs', 'apify', 'jobspy', 'linkedin-alert', 'email-alert', 'manual', 'workday', 'successfactors']);
+/** Search-based ATS sources: results are partial (per search term), so they never miss-expire. */
+export const SEARCH_SOURCES = new Set(['workday', 'successfactors']);
+/** Whether a record expires by age rather than by missing from its feed. */
+export const expiresByAge = (job) => TIME_EXPIRY_SOURCES.has(job.source) || (job.source === 'careers' && SEARCH_SOURCES.has(job.via));
 
 /** Aggregated/secondary sources: when they repeat a job we already have from another source, merge into it. */
-export const SECONDARY_SOURCES = new Set(['google-jobs', 'apify', 'jobspy', 'linkedin', 'linkedin-alert']);
+export const SECONDARY_SOURCES = new Set(['google-jobs', 'apify', 'jobspy', 'linkedin', 'linkedin-alert', 'email-alert']);
 const LEGAL = /\b(inc|incorporated|llc|ltd|limited|pvt|private|corp|corporation|co|gmbh|plc|technologies|technology|labs|hq)\b\.?/gi;
 
 const cityOf = (job) => String(job.location ?? '').toLowerCase().replace(/\(.*?\)/g, '').split(/[,;|/]/)[0].replace(/\b(remote|hybrid|onsite|on-site)\b/g, '').replace(/[^a-z]+/g, ' ').trim();
@@ -127,7 +131,7 @@ export function mergeJobs(store, incoming, { now, scraped = [], noLongerMatching
   stats.crossSource = 0;
   const seenElsewhere = (key, source) => {
     const r = jobs[key];
-    jobs[key] = { ...r, alsoSeenOn: [...new Set([...(r.alsoSeenOn ?? []), source])], ...(TIME_EXPIRY_SOURCES.has(r.source) ? { lastSeen: now } : {}) };
+    jobs[key] = { ...r, alsoSeenOn: [...new Set([...(r.alsoSeenOn ?? []), source])], ...(expiresByAge(r) ? { lastSeen: now } : {}) };
     stats.crossSource++;
   };
   // Primary sources (ATS, careers, boards) first so secondaries can fold into them.
@@ -203,7 +207,7 @@ export function mergeJobs(store, incoming, { now, scraped = [], noLongerMatching
   if (Number.isFinite(nowMs)) {
     for (const job of Object.values(jobs)) {
       // tracked jobs are the user's applications: never expire them by age
-      if (!TIME_EXPIRY_SOURCES.has(job.source) || job.status === 'expired' || job.status === 'tracked' || incomingKeys.has(job.key)) continue;
+      if (!expiresByAge(job) || job.status === 'expired' || job.status === 'tracked' || incomingKeys.has(job.key)) continue;
       const seen = Date.parse(job.lastSeen ?? job.firstSeen);
       if (Number.isFinite(seen) && nowMs - seen > expireDays * DAY) {
         jobs[job.key] = { ...job, status: 'expired' };

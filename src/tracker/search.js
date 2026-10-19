@@ -3,7 +3,7 @@
 import { spawn as nodeSpawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readJSON, writeJSON, nowISO } from '../lib/store.js';
+import { readJSON, writeJSON, nowISO, withLock } from '../lib/store.js';
 import { jobKey } from '../lib/jobKey.js';
 import { ConflictError } from './store.js';
 
@@ -12,11 +12,17 @@ export const GAJ_BIN = path.join(REPO_ROOT, 'bin', 'gaj.js');
 const ANSI = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 const MAX_STDOUT = 5 * 1024 * 1024;
 const LOG_LINES = 50;
+/** Track ids as written by /onboard; anything else is refused before it reaches argv. */
+export const TRACK_ID = /^[a-z0-9][a-z0-9-]*$/;
+export const TIMEOUT_MESSAGE = 'Search stopped after 10 minutes. Nothing was merged into your jobs (the scrape saves only at the end). Try one company (gaj scrape --company <slug>) or turn off some sources in Settings.';
 
 export function scrapeArgs({ paid = false, track, days } = {}) {
   const args = [GAJ_BIN, 'scrape', '--json'];
   if (paid) args.push('--paid');
-  if (track) args.push('--track', track);
+  if (track) {
+    if (!TRACK_ID.test(track)) throw new Error(`invalid track id "${track}"`);
+    args.push(`--track=${track}`); // = form: an id can never be read as a separate flag
+  }
   if (days) args.push('--days', String(days));
   return args;
 }
@@ -41,7 +47,8 @@ export function createSearchRunner({ root, spawn = nodeSpawn, demo = false, jobs
     if (state.log.length > LOG_LINES) state.log = state.log.slice(-LOG_LINES);
   };
 
-  function finish({ exitCode, summary = null, error = null }) {
+  function finish({ exitCode, summary = null, error = null, timedOut = false }) {
+    state.timedOut = timedOut;
     state.running = false;
     state.finishedAt = nowISO();
     state.exitCode = exitCode;
@@ -66,7 +73,7 @@ export function createSearchRunner({ root, spawn = nodeSpawn, demo = false, jobs
     }
     let stdout = '';
     let timedOut = false;
-    const timer = setTimeout(() => { timedOut = true; pushLog('Search took longer than 10 minutes; stopping it.'); child.kill('SIGTERM'); }, timeoutMs);
+    const timer = setTimeout(() => { timedOut = true; pushLog('Search took longer than 10 minutes; stopping it. Nothing was merged.'); child.kill('SIGTERM'); }, timeoutMs);
     timer.unref?.();
     child.stdout?.on('data', (c) => { if (stdout.length < MAX_STDOUT) stdout += c; });
     child.stderr?.on('data', (c) => pushLog(c));
@@ -75,11 +82,11 @@ export function createSearchRunner({ root, spawn = nodeSpawn, demo = false, jobs
       clearTimeout(timer);
       if (state.id !== id || !state.running) return;
       let summary = null;
-      try { summary = JSON.parse(stdout.slice(stdout.indexOf('{'))); } catch { /* not JSON */ }
+      if (!timedOut) { try { summary = JSON.parse(stdout.slice(stdout.indexOf('{'))); } catch { /* not JSON */ } }
       const lastErr = [...state.log].reverse().find((l) => /error/i.test(l)) ?? state.log.at(-1);
-      const error = timedOut ? 'search timed out after 10 minutes'
+      const error = timedOut ? TIMEOUT_MESSAGE
         : code !== 0 ? (lastErr ? lastErr.replace(/^error:\s*/, '') : `search exited with code ${code}`) : null;
-      finish({ exitCode: code, summary, error });
+      finish({ exitCode: code, summary, error, timedOut });
     });
     return { id };
   }
@@ -100,11 +107,9 @@ export function createSearchRunner({ root, spawn = nodeSpawn, demo = false, jobs
     const tick = () => {
       if (state.id !== id) return;
       if (i < lines.length) { pushLog(lines[i++]); setTimeout(tick, demoStepMs); return; }
-      try {
-        finish({ exitCode: 0, summary: addDemoJobs(jobsFile, track) });
-      } catch (err) {
-        finish({ exitCode: 1, error: err.message });
-      }
+      addDemoJobs(jobsFile, track)
+        .then((summary) => finish({ exitCode: 0, summary }))
+        .catch((err) => finish({ exitCode: 1, error: err.message }));
     };
     setTimeout(tick, demoStepMs);
   }
@@ -123,6 +128,10 @@ const DEMO_JOBS = [
 ];
 
 export function addDemoJobs(jobsFile, track) {
+  return withLock(jobsFile, () => addDemoJobsUnlocked(jobsFile, track));
+}
+
+function addDemoJobsUnlocked(jobsFile, track) {
   const store = readJSON(jobsFile, null) ?? { version: 1, updatedAt: null, jobs: {} };
   const now = nowISO();
   let added = 0;

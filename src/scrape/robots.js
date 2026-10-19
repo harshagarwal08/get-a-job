@@ -58,19 +58,40 @@ export function isAllowed(rules, path) {
   return best ? best.allow : true;
 }
 
+const CACHE_TTL = 10 * 60 * 1000;
+const CACHE_MAX = 200;
+const cache = new Map(); // origin → {at, rules}
+
+/** Forget cached robots.txt rules (tests). */
+export function clearRobotsCache() { cache.clear(); }
+/** Seed the cache for an origin (tests: avoids network). */
+export function primeRobotsCache(origin, txt) { cache.set(new URL(origin).origin, { at: Date.now(), rules: parseRobots(txt) }); }
+
 /**
  * Fetch robots.txt for a URL's origin and check the path. Missing robots.txt = allowed.
+ * Rules are cached per origin for 10 minutes (one robots.txt fetch per site per run, not per URL);
+ * calls with injected `fetchImpl`/`lookup` (tests) bypass the cache.
  * @param {string} url
  * @param {object} [opts] passed to safeGet (lookup/fetchImpl in tests)
  * @returns {Promise<boolean>}
  */
 export async function robotsAllows(url, opts = {}) {
   const u = new URL(url);
-  let txt;
-  try {
-    txt = (await safeGet(`${u.origin}/robots.txt`, { ...opts, robots: null, timeout: 10000, maxBytes: 512 * 1024 })).text;
-  } catch {
-    return true; // missing or unreachable robots.txt: no rules apply
+  const cacheable = !opts.fetchImpl && !opts.lookup;
+  const hit = cacheable ? cache.get(u.origin) : null;
+  let rules = hit && Date.now() - hit.at < CACHE_TTL ? hit.rules : null;
+  if (!rules) {
+    let txt = '';
+    try {
+      txt = (await safeGet(`${u.origin}/robots.txt`, { ...opts, robots: null, timeout: 10000, maxBytes: 512 * 1024 })).text;
+    } catch {
+      txt = ''; // missing or unreachable robots.txt: no rules apply
+    }
+    rules = parseRobots(txt);
+    if (cacheable) {
+      if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value);
+      cache.set(u.origin, { at: Date.now(), rules });
+    }
   }
-  return isAllowed(parseRobots(txt), u.pathname + u.search);
+  return isAllowed(rules, u.pathname + u.search);
 }

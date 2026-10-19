@@ -1,9 +1,10 @@
 // Tracker store: data/tracker.json (owned here) + narrow read/status-only access to data/jobs.json.
 // Every operation re-reads from disk (the Claude CLI may edit files concurrently) and writes atomically.
+// Mutations are async: each read-modify-write holds withLock(file) and re-reads inside the lock.
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { paths } from '../lib/paths.js';
-import { readJSON, writeJSON, nowISO } from '../lib/store.js';
+import { readJSON, writeJSON, nowISO, withLock } from '../lib/store.js';
 
 export const STAGES = ['saved', 'drafted', 'applied', 'screening', 'interview', 'offer', 'hired'];
 export const ACTIVE_STATUSES = ['saved', 'drafted', 'applied', 'screening', 'interview', 'offer'];
@@ -166,22 +167,30 @@ export function createStore({ trackerFile = paths.tracker, jobsFile = paths.jobs
 
   function get(id) { return find(load(), id); }
 
+  const lockT = (fn) => withLock(trackerFile, fn);
+  const lockJ = (fn) => withLock(jobsFile, fn);
+
   // Returns {app, created}. A row with the same jobKey → ConflictError, unless upsert (then merge into it).
-  function addOrUpdate(input, { note, upsert = false } = {}) {
+  async function addOrUpdate(input, { note, upsert = false } = {}) {
     const fields = clean(input);
-    if (fields.jobKey) {
-      const existing = load().applications.find((a) => a.jobKey === fields.jobKey);
+    return lockT(() => {
+      const t = load();
+      const existing = fields.jobKey ? t.applications.find((a) => a.jobKey === fields.jobKey) : null;
       if (existing) {
         if (!upsert) throw new ConflictError(`already tracked as ${existing.id}`, existing);
-        return { app: update(existing.id, fields, { note }), created: false };
+        const app = applyUpdate(t, existing.id, fields, note);
+        save(t);
+        return { app, created: false };
       }
-    }
-    return { app: insert(fields, { note }), created: true };
+      const app = insertInto(t, fields, note);
+      save(t);
+      return { app, created: true };
+    });
   }
 
-  function add(input, opts = {}) { return addOrUpdate(input, opts).app; }
+  async function add(input, opts = {}) { return (await addOrUpdate(input, opts)).app; }
 
-  function insert(fields, { note } = {}) {
+  function insertInto(t, fields, note) {
     if (!fields.company || !fields.role) throw new ValidationError('company and role are required');
     const now = nowISO();
     const status = fields.status ?? 'drafted';
@@ -194,19 +203,14 @@ export function createStore({ trackerFile = paths.tracker, jobsFile = paths.jobs
       history: [{ at: now, status, note: note ?? 'Created' }],
     };
     if (STAGES.indexOf(status) >= STAGES.indexOf('applied') && STAGES.includes(status) && !app.appliedAt) app.appliedAt = now;
-    const t = load();
     while (t.applications.some((a) => a.id === app.id)) app.id = newId();
     t.applications.push(app);
-    save(t);
     return app;
   }
 
-  // patch: editable fields; note: optional history note (also recorded when status is unchanged).
-  function update(id, patch = {}, { note } = {}) {
-    const fields = clean(patch);
+  function applyUpdate(t, id, fields, note) {
     if (note !== undefined && note !== null && typeof note !== 'string') throw new ValidationError('note must be a string');
     const cleanNote = typeof note === 'string' ? note.trim() : '';
-    const t = load();
     const app = find(t, id);
     const now = nowISO();
     const prevStatus = app.status;
@@ -219,33 +223,42 @@ export function createStore({ trackerFile = paths.tracker, jobsFile = paths.jobs
       app.history.push({ at: now, status: app.status, note: cleanNote });
     }
     app.updatedAt = now;
-    save(t);
     return app;
+  }
+
+  // patch: editable fields; note: optional history note (also recorded when status is unchanged).
+  async function update(id, patch = {}, { note } = {}) {
+    const fields = clean(patch);
+    return lockT(() => { const t = load(); const app = applyUpdate(t, id, fields, note); save(t); return app; });
   }
 
   // Undo the last live history entry: mark it undone, restore the previous status,
   // and clear appliedAt if that entry set it.
-  function undo(id) {
-    const t = load();
-    const app = find(t, id);
-    const live = (app.history ?? []).filter((h) => !h.undone);
-    if (live.length < 2) throw new ValidationError('nothing to undo');
-    const last = live[live.length - 1];
-    const prev = live[live.length - 2];
-    last.undone = true;
-    app.status = prev.status;
-    if (app.appliedAt && app.appliedAt === last.at && last.status === 'applied') app.appliedAt = null;
-    app.updatedAt = nowISO();
-    save(t);
-    return app;
+  async function undo(id) {
+    return lockT(() => {
+      const t = load();
+      const app = find(t, id);
+      const live = (app.history ?? []).filter((h) => !h.undone);
+      if (live.length < 2) throw new ValidationError('nothing to undo');
+      const last = live[live.length - 1];
+      const prev = live[live.length - 2];
+      last.undone = true;
+      app.status = prev.status;
+      if (app.appliedAt && app.appliedAt === last.at && last.status === 'applied') app.appliedAt = null;
+      app.updatedAt = nowISO();
+      save(t);
+      return app;
+    });
   }
 
-  function remove(id) {
-    const t = load();
-    const app = find(t, id);
-    t.applications = t.applications.filter((a) => a.id !== app.id);
-    save(t);
-    return app;
+  async function remove(id) {
+    return lockT(() => {
+      const t = load();
+      const app = find(t, id);
+      t.applications = t.applications.filter((a) => a.id !== app.id);
+      save(t);
+      return app;
+    });
   }
 
   // ---- jobs.json (owned by scrape): read-only, plus status-only updates ----
@@ -265,28 +278,29 @@ export function createStore({ trackerFile = paths.tracker, jobsFile = paths.jobs
     return job;
   }
 
-  function setJobStatus(key, status) {
+  async function setJobStatus(key, status) {
     if (!JOB_STATUSES.includes(status)) throw new ValidationError(`job status must be one of ${JOB_STATUSES.join(', ')}`);
-    const j = readJSON(jobsFile, null);
-    if (!j || !j.jobs || !j.jobs[key]) throw new NotFoundError(`job ${key} not found`);
-    j.jobs[key].status = status; // touch only this field
-    writeJSON(jobsFile, j);
-    return j.jobs[key];
+    return lockJ(() => {
+      const j = readJSON(jobsFile, null); // re-read inside the lock (scrape may have merged meanwhile)
+      if (!j || !j.jobs || !j.jobs[key]) throw new NotFoundError(`job ${key} not found`);
+      j.jobs[key].status = status; // touch only this field
+      writeJSON(jobsFile, j);
+      return j.jobs[key];
+    });
   }
 
-  function trackJob(key, overrides = {}) {
+  // Adds the application (tracker lock; jobKey conflict re-checked inside it), then marks the job tracked (jobs lock).
+  async function trackJob(key, overrides = {}) {
     const job = getJob(key);
-    const existing = load().applications.find((a) => a.jobKey === key);
-    if (existing) throw new ConflictError(`already tracked as ${existing.id}`, existing);
     const channel = job.source === 'linkedin' ? 'linkedin' : job.source === 'manual' ? 'other' : 'ats';
-    const app = add({
+    const app = await add({
       company: job.company || 'Unknown', role: job.title || 'Untitled', jobKey: key,
       track: job.track ?? null, url: safeUrl(job.applyUrl) ?? safeUrl(job.url), location: job.location ?? null,
       workMode: WORK_MODES.includes(job.workMode) ? job.workMode : 'unknown', channel,
       fit: job.rank && Number.isFinite(job.rank.score) ? { score: job.rank.score, verdict: job.rank.verdict ?? null } : null,
       salary: formatSalary(job.salary), status: 'saved', ...overrides,
     }, { note: 'Tracked from jobs inbox' });
-    setJobStatus(key, 'tracked');
+    await setJobStatus(key, 'tracked');
     return app;
   }
 

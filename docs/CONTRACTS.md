@@ -29,7 +29,10 @@ The dispatcher maps commands to modules. Each module exports
 | `companies [--tag t] [--region r] [--json]` | scrape | list `config/companies.json` |
 | `companies:add --name N --ats A --slug S [--tags a,b] [--region us,eu] [--stage s] [--source seed\|yc\|discover\|manual] [--url careers-url] [--merge] [--force]` | scrape | verify via company:check (SmartRecruiters with 0 postings is unverifiable unless `--force`), then add. Duplicate ats+slug → "already exists" (returns the stored entry) unless `--merge`. Warns on same name under another ATS. Creates companies.json from the example if missing. |
 | `discover yc [--region r[,r]] [--industry x] [--batch W24] [--limit N (default 20)] [--add] [--json]` | scrape | list hiring YC companies (yc-oss public JSON), auto-detect each one's ATS, print matches; `--add` writes high-confidence matches with jobs to companies.json with `source: "yc"`. Detect results cached 7 days. |
-| `jobs:import <file.json> [--source linkedin-alert\|manual] [--json]` | scrape | import jobs collected outside the CLI (e.g. LinkedIn alert emails read via Gmail, or a pasted list). File = array of `{title, company, url, location?, description?, postedAt?, workMode?, salary?}`. Runs track match + eligibility + merge (no age filter when `postedAt` missing). Prints counts. |
+| `jobs:import <file.json> [--source linkedin-alert\|email-alert\|manual] [--via platform] [--json]` | scrape | import jobs collected outside the CLI (e.g. LinkedIn alert emails read via Gmail, or a pasted list). File = array of `{title, company, url, location?, description?, postedAt?, workMode?, salary?}`. Runs track match + eligibility + merge (no age filter when `postedAt` missing). Prints counts. |
+| `digest [--since ISO \| --hours N] [--mark] [--notify] [--out path] [--json]` | digest | jobs first seen since the last digest (default: since `data/digest-state.json.lastDigestAt`, else 24h), green and unknown first, grouped by track; writes `data/digests/<YYYY-MM-DD>.md`. `--mark` saves now as `lastDigestAt`. |
+| `digest --mark-only [--at ISO] [--json]` | digest | set `lastDigestAt` to `--at` (the `generatedAt` of a digest you showed) or now; writes no file. Prints `{lastDigestAt, marked: true}`. |
+| `schedule install [--time HH:MM] [--notify] [--yes] \| schedule remove [--yes] \| schedule status [--json]` | digest | daily job that runs `gaj scrape` (free sources only, never `--paid`) then `gaj digest --mark`, logging to `data/logs/`. macOS: a LaunchAgent plist in `~/Library/LaunchAgents/`; Linux: a systemd user timer (cron line fallback); Windows: prints Task Scheduler instructions only. Writes outside the repo, so `install`/`remove` print exactly what they will write and require `--yes`; not pre-approved. |
 | `fetch <url> [--json]` | scrape | fetch one posting URL. Recognised ATS URLs use the API; anything else is plain HTML→text. Returns `{url, host, hostClass: 'ats'\|'linkedin'\|'unknown', title?, company?, location?, text}`. |
 | `render <resume.md> [--out file.pdf] [--template classic\|modern] [--track id] [--paper letter\|a4] [--html] [--json]` | resume | md → HTML → PDF. `--json` prints `{pdf, html?, pages}`. |
 | `verify <file.pdf> [--pages N] [--keywords "a,b,c" \| --keywords-file f] [--json]` | resume | page count, text extraction, ASCII date check, keyword coverage. Exit 1 if `--pages` is exceeded. |
@@ -43,6 +46,8 @@ The dispatcher maps commands to modules. Each module exports
 ## Safety rules for CLI writes
 - `--out` paths (render, export) must resolve inside `data/`, `profile/`, or the OS temp dir; otherwise exit 1.
 - `fetch` refuses loopback, private, and link-local addresses; LinkedIn URLs only when `preferences.sources.linkedin` is true.
+- Writes to `data/jobs.json` and `data/tracker.json` hold an exclusive lockfile (`src/lib/store.js` `withLock`) so the scheduled scrape, tracker search and CLI commands can't clobber each other.
+- Search-based sources (workday, successfactors) never miss-expire jobs (their results are partial by design); they expire by age (not seen for maxAgeDays*2).
 - `.claude/settings.json` allowlists `gaj` per subcommand; `fetch` is intentionally NOT pre-approved (it reaches arbitrary hosts).
 - Paid providers (googleJobs, apify) run only when enabled in preferences AND `scrape --paid` is passed (or env `GAJ_ALLOW_PAID=1`); otherwise the summary prints "paid providers skipped (pass --paid)". /scrape asks the user once per session before adding `--paid`.
 - Paid usage is recorded in `data/usage.json` (`{ "<YYYY-MM>": { "<provider>": { "requests": n, "usdCap": x } } }`) and enforced before each call against `sources.<provider>.maxRequestsPerMonth` (googleJobs, default 100) / `maxUsdPerMonth` (apify, default 5). Each HTTP attempt (including retries) counts. Hard ceilings regardless of config: googleJobs maxQueries ≤ 20/run; apify maxItems 1–500, maxChargeUsd ≤ 5/actor/run, ≤ 3 actors; jobspy resultsWanted ≤ 100, maxQueries ≤ 5.
@@ -101,7 +106,7 @@ The dispatcher maps commands to modules. Each module exports
       "region": ["india"], "stage": "series-a", "source": "seed" }
   ] }
 ```
-`ats` ∈ `greenhouse | lever | ashby | workable | smartrecruiters | recruitee | careers`.
+`ats` ∈ `greenhouse | lever | ashby | workable | smartrecruiters | recruitee | workday | keka | zohorecruit | successfactors | careers`.
 `careers` entries have `"slug": "<company-slug>"` plus a required `"url"`: the company's careers listing page (https). `company:check careers` and `companies:add --ats careers` never crawl: they require a successful `careers:check` of the same URL within 7 days (from the record above) and fail with "run careers:check <url> first" otherwise. Crawled by `src/scrape/sources/careers.js` (see below).
 `region` ⊆ `india | us | eu | uk | apac | remote-global` (where the company hires, not HQ only). `stage` ∈ `seed | series-a | series-b | series-c | growth | public | unknown`. `source` ∈ `seed | yc | discover | manual`. All optional except name/ats/slug.
 Public endpoints:
@@ -111,6 +116,29 @@ Public endpoints:
 - workable: `https://apply.workable.com/api/v1/widget/accounts/{slug}`
 - smartrecruiters: `https://api.smartrecruiters.com/v1/companies/{slug}/postings`
 - recruitee: `https://{slug}.recruitee.com/api/offers/`
+
+### Enterprise and Indian ATS (owned by the scrape module; section maintained by the scraper agent)
+Entries for these ATSs are identified by `"url"` (authoritative); `slug` is derived from it when omitted. `companies:add`/`company:check` require `--url` and validate the host shape; `company:detect <name> --url <careers url>` classifies a URL (no slug guessing: Workday tenants are not guessable). Investigated 2026-10-19 with the honest UA.
+
+Supported (`ats` value → entry `url` → endpoints):
+- `workday` → `https://<tenant>.wd<N>.myworkdayjobs.com/<site>` (a `/<locale>/` prefix is accepted and dropped).
+  - List: `POST https://<tenant>.wd<N>.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs` body `{"appliedFacets":{},"limit":20,"offset":<n>,"searchText":"<track title>"}` → `{total, jobPostings:[{title, externalPath, locationsText, postedOn, bulletFields:[reqId]}]}`. Unknown site → 404, unknown tenant → 422.
+  - Detail: `GET …/wday/cxs/<tenant>/<site><externalPath>` → `jobPostingInfo {title, jobDescription(html), location, additionalLocations?, startDate, jobReqId, externalUrl, jobRequisitionLocation.country.alpha2Code}`.
+  - Limits: searchText per track title (≤4 terms × ≤3 pages of 20), ≤20 detail requests (title-matched only), one request at a time per company with ≥0.5 s gaps, robots.txt checked for the `/wday/cxs/` path. `postedOn` ("Posted Today/Yesterday/N Days Ago/30+ Days Ago") → date when no `startDate`; `locationsText` "N Locations" → location taken from the `externalPath` segment until the detail fills it. Hosts allowlisted by the suffix rule `<tenant>.wd<N>.myworkdayjobs.com`.
+- `keka` → `https://<tenant>.keka.com/careers/`.
+  - `GET /careers/` (HTML) → portal GUID from `/ats/documents/<guid>/`; then `GET /careers/api/embedjobs/default/active/<guid>` → `[{id, title, description(html), departmentName, jobLocations:[{city, state, countryCode, countryName}], publishedOn, salaryRange}]`. Job URL `…/careers/jobdetails/<id>`. Unknown tenant redirects to `/careers/Content/TenantNotFound.html`.
+  - robots.txt: `Disallow: /` except `Allow: /careers` (both URLs are under it). 2 requests per company. Hosts allowlisted by the suffix rule `<tenant>.keka.com`.
+- `zohorecruit` → `https://<tenant>.zohorecruit.(com|in|eu|com.au)/jobs/Careers` or a custom domain serving the same portal (e.g. `https://careers.zohocorp.com/jobs/Careers`).
+  - `GET <origin>/jobs/Careers` (HTML); published openings are embedded as JSON in `<input type="hidden" id="jobs" value="[…]">` (`id, Posting_Title|Job_Opening_Name, City, State, Country|Country1, Remote_Job, Job_Description, Date_Opened, Publish`). Job URL `<origin>/jobs/Careers/<id>`. robots allows `/jobs/`. 1 request per company, through safeFetch (custom domains can't be allowlisted).
+- `successfactors` → `https://<careers site>` (classic SAP SuccessFactors Recruiting Marketing "RMK" sites, e.g. `careers.tatamotors.com`).
+  - `GET <origin>/search/?q=<track title>&locale=en_US&startrow=<0|25>` (server-rendered rows `tr.data-row` → `a.jobTitle-link`, `span.jobLocation` "City, CC", `span.jobDate`); details from the job page (`itemprop="description"`). ≤4 terms × ≤2 pages, ≤10 detail pages, ≥1 s gaps, through safeFetch (robots per URL and per redirect hop).
+  - The RSS feeds (`/feeds/<kw>` → `/services/rss/job/`) are robots-disallowed on every RMK site checked, so they are not used. Newer JS-rendered RMK templates (e.g. jobs.standardchartered.com, careers.hcltech.com) have no server-rendered rows: `company:check` fails for them; use `careers` or another ATS.
+
+Unsupported (do not add entries; use `careers` with a careers-page URL, email alerts or `jobs:import`):
+- `icims`: no JSON listing; the `?in_iframe=1` HTML differs per tenant, most `careers-<tenant>.icims.com` hosts tried were "gone" (404), and robots.txt redirects. Not stable.
+- `darwinbox`: `<tenant>.darwinbox.in/ms/candidateapi/job` answers 500 ("Invalid subdomain"/"Error while getting tenant info") or a 403 WAF page; the careers SPA and robots.txt redirect to `/user/login`. No login-free listing.
+- `freshteam`: `<tenant>.freshteam.com/hire/widgets/jobs.json` returns 503/404 (Freshteam is being discontinued).
+- `turbohire`: `<tenant>.turbohire.co/robots.txt` is `Disallow: /` for all agents except Googlebot.
 
 ### Careers-page crawler (`ats: "careers"`, enabled by `sources.careersPages`)
 `src/scrape/sources/careers.js` exports the same interface as other sources: `fetchJobs(company, opts) → NormalizedJob[]`, `normalize(...)`, `fetchOne(url)`, plus `checkCareers(url) → {ok, jobs, method}` used by `company:check careers <slug> --url <url>` and `companies:add --ats careers --url <url>`.
@@ -122,6 +150,34 @@ Keys live in `.env` (gitignored; template `.env.example`), read via `src/lib/env
 - `apify`: `actors: [{ "id": "owner~actor-name", "input": { ... } }]` run via `https://api.apify.com/v2/acts/{id}/run-sync-get-dataset-items` with `maxItems` and `maxTotalChargeUsd` = `maxChargeUsd`. Field mapping is heuristic (title/positionName, companyName/company, location, url/jobUrl/link, description/descriptionText, postedAt/publishedAt). `source: "apify"`, `via` = actor id. Never use actors that require the user's LinkedIn cookie or credentials.
 - `jobspy`: `linkedin` in `sites` is used only when `sources.linkedin` is true. Runs the open-source `python-jobspy` (pinned version) via `uvx` with an environment stripped of provider keys, (`uvx --python 3.12 --with python-jobspy python src/scrape/providers/jobspy_runner.py <args-json>`), which prints JSON to stdout. Requires `uv`. `source: "jobspy"`, `via` = site. Scraping-based: README/onboard state the ToS caveat.
 Provider and imported jobs (`google-jobs | apify | jobspy | linkedin-alert | manual`) expire when not seen for maxAgeDays*2.
+
+### India/startup platforms (Wellfound, Cutshort, Instahyre): email alerts only
+A scraper is built only when a listing is public, allowed by robots.txt, needs no login, can be fetched without getting past bot protection, and is not forbidden by the platform's terms. None of the three passes all five checks (investigated 2026-10-19 with the honest UA). So there is **no scraper, no `BOARDS` entry and no `sources.wellfound|cutshort|instahyre` preference**. Jobs come from the user's own alert emails (`/email-alerts`) or pasted lists (`/import-jobs`), via `jobs:import --source email-alert --via <platform>`.
+- **Wellfound** (`wellfound.com`, legacy `angel.co`):
+  - Role/city SEO pages (`/role/l/<role>/<city>`) return 200 without login. They embed listings in Next.js `__NEXT_DATA__` (Apollo cache, 20 per page) and robots allows them.
+  - However, `/search`, `/jobs?jobId=` and `/_jobs/` are disallowed. The site runs behind Cloudflare with bot management.
+  - The Terms forbid copying Content "through the use of automated or non-automated harvesting, collection or 'scraping'".
+  - Verdict: email alerts only.
+- **Cutshort** (`cutshort.io`):
+  - `/job/<slug>` pages are public and allowed by robots. `/view/j/`, `/vj/`, `/apply/` and `?job_listing` are disallowed.
+  - `sitemap_jobs.xml` lists about 44k job URLs. Job pages carry only `WebPage` JSON-LD; the job data sits in Next.js `__NEXT_DATA__`.
+  - The Terms prohibit "any automated process or service to access and/or use the Service" and "systematic or automated data collection".
+  - The public API/MCP is a paid recruiter product.
+  - Verdict: email alerts only.
+- **Instahyre** (`www.instahyre.com`):
+  - robots.txt allows everything, and `sitemap-jobs.xml?p=1..387` lists `/job-<id>-<title>-at-<company>-<city>/` URLs.
+  - Job pages are AngularJS shells: details load client-side from `/api/v1/…` and there is no `JobPosting` JSON-LD.
+  - The Terms forbid "manual or automated software … to crawl or spider any part of the Platform" and to "harvest or scrape" any Content.
+  - Verdict: email alerts only.
+
+Parsers live in `src/scrape/boards/{wellfound,cutshort,instahyre}.js`. They are pure and make no network calls; shared helpers are in `alertEmail.js`. Each module exports:
+- `PLATFORM`, and `SCRAPER = false`.
+- `parseAlertEmail(text) → [{title, company, location, url}]`. Input is the plain-text or HTML email body. A job is anchored on each platform job link, after unwrapping `?url=`-style redirect wrappers. Two card layouts are understood: "details then View-job link" and "title as link anchor". Missing title, company or location fall back to the URL slug (Wellfound `/company/<c>/jobs/<id>-<title>`, Instahyre `…-at-<company>-<city>`). Links with the same normalized URL merge into one job. Entries without both title and company are dropped. Opaque click-trackers (e.g. SendGrid `ls/click?upn=`) are not recognized.
+- `isPlatformJobUrl(url)`. Wellfound accepts `/jobs/<id>[-slug]`, `/company/<c>/jobs/<id>[-slug]` and `/jobs?jobId=N`. Cutshort accepts `/job/<slug>-<id>`, `/vj/<id>` and `/view/j/<id>`. Instahyre accepts `/job-<id>[-slug]/`, `/job/<id>[/slug]` and `/candidate/opportunities/?job_id=N`.
+- `normalizeJobUrl(url) → string|null`. It always returns https, unwraps redirects, and drops `utm_*`, `ref`, `source` and other tracking params plus the fragment. Job URLs lose their whole query. Hosts are canonicalized: `angel.co` becomes `wellfound.com`, `www.cutshort.io` becomes `cutshort.io`, and `instahyre.com` becomes `www.instahyre.com` with a trailing slash on `/job-…/`.
+- `jobFromUrl(url) → {title?, company?, location?}`, the slug info. For Cutshort it is always `{}` because its slugs are ambiguous.
+
+The platforms' alert emails are not published anywhere. The parsers therefore accept many layouts, and the fixtures in `tests/fixtures/platforms/` are synthetic. When a real alert fails to parse, add it (redacted) as a fixture.
 
 ### Job boards (`preferences.sources.*`, query-based, not per company)
 Each board's feed is fetched (cached 6h, failures negatively cached 1h) and filtered locally against track titles, then the same filter/eligibility/merge pipeline runs. Attribution requirements (e.g. RemoteOK) are honored by keeping the source `url`.
@@ -141,7 +197,7 @@ Board jobs: `source` = board name; key uses company+title+location as usual; the
     "location": "Bengaluru, India", "countries": ["IN"],
     "workMode": "remote|hybrid|onsite|unknown",
     "url": "https://...", "applyUrl": "https://...|null",
-    "source": "greenhouse|lever|ashby|workable|smartrecruiters|recruitee|careers|linkedin|hn|arbeitnow|remotive|remoteok|google-jobs|apify|jobspy|linkedin-alert|manual",
+    "source": "greenhouse|lever|ashby|workable|smartrecruiters|recruitee|workday|keka|zohorecruit|successfactors|careers|linkedin|hn|arbeitnow|remotive|remoteok|google-jobs|apify|jobspy|linkedin-alert|email-alert|manual",
     "via": "original publisher for aggregated sources (e.g. LinkedIn, Naukri) | null",
     "department": "Engineering|null",
     "salary": { "min": 0, "max": 0, "currency": "INR", "unit": "year" } ,
@@ -201,6 +257,7 @@ Merge rule on re-scrape:
 - Jobs: `GET /api/jobs` (no descriptions), `GET /api/jobs?key=`, `PATCH /api/jobs/:key {status}`, `POST /api/jobs/:key/track`.
 - Preferences: `GET /api/preferences` → `{prefs, exists, errors, warnings, remoteScopes, usage}`; `PUT /api/preferences` validates with `src/lib/preferences.js` (400 on errors), backs up the previous file to `data/backups/preferences-<ISO>.json` (last 10 kept), preserves unknown keys.
 - Search: `POST /api/search {paid?, confirmPaid?, track?, days?}` runs `gaj scrape --json` as a child process (one at a time → 409; `paid` requires `confirmPaid`; killed after 10 min; simulated in `--demo`); `GET /api/search/status`.
+- Digest/schedule (read-only): `GET /api/digest` → `{lastDigestAt, latest}`, `GET /api/digest/latest` (markdown), `GET /api/schedule/status`. The UI never installs a schedule.
 - Stats/export: `GET /api/stats`, `GET /api/export.(csv|tsv|xlsx|json)`; files: `GET /files?path=` (only under `data/applications/`).
 
 ### `data/applications/<slug>/` (written by Claude commands; slug = `[a-z0-9-]` of company-role)
@@ -212,6 +269,11 @@ Merge rule on re-scrape:
 - `interview_prep_<stage>.md`
 - `followup_<date>.md`
 - `form_answers.md`
+
+### Digest and Gmail sync state
+- `data/digest-state.json`: `{ "lastDigestAt": "ISO|null" }`. Digest markdown starts with `<!-- gaj-digest {since,generatedAt,counts} -->`. `--notify` shows a macOS notification. launchd errors go to `data/logs/launchd.err.log`. `data/digests/<date>.md`: the digest. `data/logs/schedule-<date>.log`: scheduled run output.
+- `data/gmail-sync.json`: `{ "lastSyncAt": "ISO|null", "processedMessageIds": ["..."] }` (cap 5000, oldest dropped). Written by `/gmail-sync` and `/email-alerts`.
+- `email-alert` imports set `via` to the platform (`linkedin|naukri|indeed|wellfound|instahyre|cutshort|glassdoor|other`).
 
 ### `data/research/<company-slug>.json`
 `{ company, fetchedAt, expiresAt (+30d), facts: [{claim, source_url}], notes }`. Treat as a lead, never as proof.

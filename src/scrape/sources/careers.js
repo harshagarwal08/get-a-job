@@ -14,7 +14,7 @@ export const DETAIL_CAP = 25;
 export const RENDER_DETAIL_CAP = 10;
 const LISTING_RENDER_CAP = 2;
 const THIN_TEXT = 300;
-const SUPPORTED_ATS = ['greenhouse', 'lever', 'ashby', 'workable', 'smartrecruiters', 'recruitee'];
+const SUPPORTED_ATS = ['greenhouse', 'lever', 'ashby', 'workable', 'smartrecruiters', 'recruitee', 'workday', 'keka', 'zohorecruit', 'successfactors'];
 
 const isHtml = (r) => /html|xml/i.test(r.contentType) || /^\s*</.test(r.text);
 
@@ -65,7 +65,7 @@ export function analyzeListing(html, pageUrl) {
     const url = resolveHref(u, pageUrl);
     if (url && sameSite(url, pageUrl) && !links.some((l) => l.url === url)) links.push({ url, title: '', location: '' });
   }
-  return { postings, embeddedAts: ats[0] ? { ats: ats[0].ats, slug: ats[0].slug } : null, atsCandidates: ats, links, listings };
+  return { postings, embeddedAts: ats[0] ? { ats: ats[0].ats, slug: ats[0].slug, ...(ats[0].url ? { url: ats[0].url } : {}) } : null, atsCandidates: ats, links, listings };
 }
 
 function wantFilter(opts) {
@@ -283,11 +283,11 @@ export async function fetchJobs(company, opts = {}) {
   const meta = { method: r.method, rendered: r.rendered, delegatedTo: null, notes: r.notes };
   let jobs;
   if (r.method === 'embedded-ats' && r.embeddedAts) {
-    const delegatedTo = { ats: r.embeddedAts.ats, slug: r.embeddedAts.slug };
+    const delegatedTo = { ats: r.embeddedAts.ats, slug: r.embeddedAts.slug, ...(r.embeddedAts.url ? { url: r.embeddedAts.url } : {}) };
     meta.delegatedTo = delegatedTo;
     opts.onEmbeddedAts?.({ company: company.name, ...delegatedTo });
     const src = await atsSource(delegatedTo.ats, opts.deps);
-    const raw = await src.fetchJobs({ ...company, ats: delegatedTo.ats, slug: delegatedTo.slug }, opts);
+    const raw = await src.fetchJobs({ ...company, ats: delegatedTo.ats, slug: delegatedTo.slug, url: delegatedTo.url ?? company.url }, opts);
     jobs = retag(raw, delegatedTo.ats);
   } else {
     if (r.failed || (r.error && !r.records.length)) throw new Error(`${company.name}: ${r.error}`);
@@ -328,7 +328,7 @@ export async function checkCareers(url, opts = {}) {
       let error;
       try {
         const src = await atsSource(r.embeddedAts.ats, opts.deps);
-        jobs = retag(await src.fetchJobs({ name, slug: r.embeddedAts.slug }, { http: { retries: 1 } }), r.embeddedAts.ats);
+        jobs = retag(await src.fetchJobs({ name, slug: r.embeddedAts.slug, ...(r.embeddedAts.url ? { url: r.embeddedAts.url } : {}) }, { http: { retries: 1 } }), r.embeddedAts.ats);
       } catch (e) { error = e.message; }
       const ok = jobs.length > 0;
       return { ...base, ok, jobs: jobs.length, sample: [...new Set(jobs.map((j) => j.title))].slice(0, 5), results: jobs,

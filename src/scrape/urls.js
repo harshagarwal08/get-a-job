@@ -1,7 +1,7 @@
 /**
  * Recognise a job posting URL from a supported ATS or LinkedIn.
  * @param {string} url
- * @returns {{source: 'greenhouse'|'lever'|'ashby'|'workable'|'smartrecruiters'|'recruitee'|'linkedin', slug?: string, id: string}|null}
+ * @returns {{source: string, slug?: string, id: string, byUrl?: boolean}|null} (`byUrl`: the source's fetchOne takes the URL)
  */
 export function recognizeUrl(url) {
   let u;
@@ -34,6 +34,20 @@ export function recognizeUrl(url) {
   if (rc) {
     const i = parts.indexOf('o');
     return i >= 0 && parts[i + 1] ? { source: 'recruitee', slug: rc[1], id: parts[i + 1] } : null;
+  }
+  const wd = /^([a-z0-9-]+)\.wd\d{1,3}\.myworkdayjobs\.com$/.exec(host);
+  if (wd) {
+    const i = parts.indexOf('job');
+    return i >= 1 && parts.length > i + 1 ? { source: 'workday', slug: wd[1], id: parts.slice(i).join('/'), byUrl: true } : null;
+  }
+  const kk = /^([a-z0-9-]+)\.keka\.com$/.exec(host);
+  if (kk) {
+    const i = parts.indexOf('jobdetails');
+    return parts[0] === 'careers' && i >= 0 && /^\d+$/.test(parts[i + 1] ?? '') ? { source: 'keka', slug: kk[1], id: parts[i + 1], byUrl: true } : null;
+  }
+  const zr = /^([a-z0-9-]+)\.zohorecruit\.(com|in|eu|com\.au)$/.exec(host);
+  if (zr) {
+    return parts[0] === 'jobs' && parts[1]?.toLowerCase() === 'careers' && /^\d+$/.test(parts[2] ?? '') ? { source: 'zohorecruit', slug: zr[1], id: parts[2], byUrl: true } : null;
   }
   if (/(^|\.)linkedin\.com$/.test(host)) {
     const cur = u.searchParams.get('currentJobId');

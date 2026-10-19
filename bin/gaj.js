@@ -8,6 +8,7 @@ const MODULES = {
   scrape: '../src/scrape/cli.js',
   resume: '../src/resume/cli.js',
   tracker: '../src/tracker/cli.js',
+  digest: '../src/digest/cli.js',
 };
 
 const ROUTES = {
@@ -15,6 +16,7 @@ const ROUTES = {
   'company:detect': 'scrape', companies: 'scrape', 'companies:add': 'scrape', discover: 'scrape', 'jobs:import': 'scrape', 'careers:check': 'scrape',
   render: 'resume', verify: 'resume',
   tracker: 'tracker', track: 'tracker', export: 'tracker',
+  digest: 'digest', schedule: 'digest',
 };
 
 async function load(mod) {

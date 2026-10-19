@@ -47,6 +47,8 @@ claude                                # opens Claude Code in this folder
 /onboard
 ```
 
+Change your mind later with `/preferences` ("add Remote EU", "exclude Staff titles") or the tracker's **Settings** tab.
+
 **3. Optional: add API keys for extra sources.** The free sources are enough to start. If you want Google for Jobs or Apify too, copy the template and paste your keys into it yourself (never into the chat). Paid sources only run when you allow it (`/scrape` asks once per session) and stop at a monthly budget.
 
 ```bash
@@ -57,32 +59,42 @@ cp .env.example .env
 
 ```
 /scrape                     # free sources; say yes to the paid ones when asked, if you set them up
-/linkedin-alerts            # also pull jobs from your LinkedIn alert emails (via Gmail)
+/email-alerts               # jobs from your LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort, Glassdoor alert emails (read-only Gmail)
 /import-jobs                # paste results from any job site you browsed yourself
 /discover AI startups in London   # find more companies to watch
 ```
 
-**5. Get a shortlist.** `/rank` scores each job against your profile (skills, experience, career fit) and shows the best ones first.
+**5. Let it run daily (optional).** A scheduled job scrapes the free sources every morning and writes a digest of what's new. `/digest` shows it and offers to rank the new jobs. The schedule writes a file outside the repo (a macOS LaunchAgent or a Linux systemd timer), so it shows you exactly what it will write and needs `--yes`.
+
+```bash
+node bin/gaj.js schedule install --time 08:30          # dry run: prints what it would write
+node bin/gaj.js schedule install --time 08:30 --yes    # install
+```
+```
+/digest
+```
+
+**6. Get a shortlist.** `/rank` scores each job against your profile (skills, experience, career fit) and shows the best ones first.
 
 ```
 /rank
 ```
 
-**6. Tailor your resume to one job.** Give it the job link. You get a one-page PDF in `data/applications/<company-role>/`, a keyword check against the posting, and an honest list of gaps. Nothing is invented. Read it before you send it.
+**7. Tailor your resume to one job.** Give it the job link. You get a one-page PDF in `data/applications/<company-role>/`, a keyword check against the posting, and an honest list of gaps. Nothing is invented. Read it before you send it.
 
 ```
 /tailor https://jobs.lever.co/acme/1234
 ```
 
-**7. Write the message.** A referral DM, a short cover note, or answers to application-form questions.
+**8. Write the message.** A referral DM, a short cover note, or answers to application-form questions.
 
 ```
 /cover Acme referral
 ```
 
-**8. Apply yourself.** Open the job link and submit. The tool never applies, sends email, or messages anyone for you.
+**9. Apply yourself.** Open the job link and submit. The tool never applies, sends email, or messages anyone for you.
 
-**9. Track everything.** The tracker opens in your browser: a board of your applications by stage, a table, and stats. You can export it to a spreadsheet or Google Sheets.
+**10. Track everything.** The tracker opens in your browser: a board of your applications by stage, a jobs inbox with **New** badges, stats, and a Settings tab where you can change preferences and run a search. You can export it to a spreadsheet or Google Sheets.
 
 ```bash
 npm run tracker             # or /track inside Claude Code
@@ -91,10 +103,11 @@ npm run tracker             # or /track inside Claude Code
 /export-sheets
 ```
 
-**10. After you apply.**
+**11. After you apply.**
 
 ```
 /outcome Acme applied       # record what happened (applied, interview, offer, rejection)
+/gmail-sync                 # read recruiter/ATS emails (read-only) and propose status updates you approve
 /followup                   # drafts a polite nudge for applications quiet 10+ days
 /interview Acme technical   # prep pack for a specific interview round
 /upskill                    # which skills keep showing up as gaps, and a study plan
@@ -102,14 +115,15 @@ npm run tracker             # or /track inside Claude Code
 
 ### A typical week
 
-- **Monday:** `/scrape`, then `/rank`. Pick the top 3 and run `/tailor` on each. Apply, then `/outcome <company> applied`.
-- **Thursday:** `/followup` for anything gone quiet; `/scrape` again if you want fresh jobs.
+- **Every morning (automatic):** the schedule scrapes free sources and writes a digest. Open the tracker, filter the Jobs inbox to **New since last digest**, or run `/digest`.
+- **Monday:** `/email-alerts`, then `/rank`. Pick the top 3 and run `/tailor` on each. Apply, then `/outcome <company> applied`.
+- **Wednesday:** `/gmail-sync` to catch replies and rejections; approve the proposed updates.
+- **Thursday:** `/followup` for anything gone quiet.
 - **Before an interview:** `/interview <company> <round>`.
-- **Any time:** `npm run tracker` to see where everything stands.
 
 ### What it costs
 
-Free by default: the ATS feeds, careers pages, job boards, LinkedIn alerts and JobSpy cost nothing. You need Claude Code itself (a Claude subscription or API key). Google for Jobs and Apify are optional and use your own key. They run only with `scrape --paid` (`/scrape` asks first), stop at a monthly budget (default 100 Google for Jobs requests, $5 of Apify), and have hard per-run ceilings. `/scrape` prints the caps it ran under.
+Free by default: the ATS feeds, careers pages, job boards, email alerts, JobSpy and the daily schedule (which never runs paid sources) cost nothing. You need Claude Code itself (a Claude subscription or API key). Google for Jobs and Apify are optional and use your own key. They run only with `scrape --paid` (`/scrape` and the tracker ask first), stop at a monthly budget (default 100 Google for Jobs requests, $5 of Apify), and have hard per-run ceilings. `/scrape` prints the caps it ran under.
 
 ## How it works
 
@@ -120,8 +134,9 @@ Free by default: the ATS feeds, careers pages, job boards, LinkedIn alerts and J
     │
 /scrape  ──► data/jobs.json   (ATS feeds, careers pages, boards, providers;
     │                          deduped, eligibility-tagged, quick fit)
-/linkedin-alerts · /import-jobs ──► more jobs into the same inbox
+/email-alerts · /import-jobs ──► more jobs into the same inbox
     │
+schedule ──► daily free scrape + digest ──► /digest
 /rank    ──► scored shortlist (gates → weighted score → verdict)
     │
 /tailor <url|key|JD> ──► data/applications/<slug>/
@@ -132,18 +147,20 @@ Free by default: the ATS feeds, careers pages, job boards, LinkedIn alerts and J
     │
 /export-sheets ──► CSV / XLSX, or a Google Sheet via the Drive connector
     │
-/interview · /outcome · /followup · /upskill ──► the rest of the funnel
+/gmail-sync · /outcome · /followup · /interview · /upskill ──► the rest of the funnel
 ```
 
 ## Features
 
 - **Onboarding interview** (`/onboard`): target tracks (e.g. Frontend and Forward Deployed Engineer at the same time), seniority, locations, work authorization, compensation floor, notice period, company stage, deal-breakers. Reads your old CV from `inbox/` (PDF, DOCX, HTML, MD) and writes your profile files.
 - **Job scraping** (`/scrape`): pulls public ATS feeds for the companies you list and the job boards you enable, filters by title, location, work mode and age, removes duplicates (including the same role posted in several countries) and tags eligibility green / orange / unknown with a reason.
+- **Email alerts** (`/email-alerts`): imports jobs from the alert emails LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort and Glassdoor already send you, read-only through the Gmail connector. Covers platforms whose terms forbid scraping.
+- **Daily digest** (`gaj schedule`, `/digest`): a daily free-source scrape and a markdown digest of jobs first seen since the last one.
 - **Company discovery** (`/discover`): describe what you want ("Series A-C AI startups in Berlin or London"), get candidates from the YC directory or web search, each with its ATS detected and verified, and pick which to add.
 - **Ranking** (`/rank`): eligibility, compensation and notice gates, then a weighted score (technical 30, experience 25, culture 15, career alignment 30) and a verdict from Strong to Poor. Flags close deadlines and stale postings.
 - **Tailoring** (`/tailor`): rewrites your master resume for one posting, runs a fresh-context reviewer, a grounding audit and a check for AI-sounding phrasing, renders a one-page PDF and reports keyword coverage.
-- **Cover notes and form answers** (`/cover`), **interview prep** with cached company research (`/interview`), **outcome logging** (`/outcome`), **follow-up drafts** that are never sent automatically (`/followup`), and a **skill-gap study plan** (`/upskill`).
-- **Tracker**: local web app with a pipeline kanban, a filterable table, a detail drawer with history, a jobs inbox and a stats page. Light and dark themes. Export to CSV, XLSX, or TSV for pasting into Google Sheets.
+- **Cover notes and form answers** (`/cover`), **interview prep** with cached company research (`/interview`), **outcome logging** (`/outcome`), **follow-up drafts** that are never sent automatically (`/followup`), **status updates proposed from your email** that you approve (`/gmail-sync`), and a **skill-gap study plan** (`/upskill`).
+- **Tracker**: local web app with a pipeline kanban, a filterable table, a detail drawer with history, a jobs inbox with New badges and a run-search button, a stats page and a Settings tab for your preferences. Light and dark themes. Export to CSV, XLSX, or TSV for pasting into Google Sheets.
 
 ## Quick start
 
@@ -194,15 +211,17 @@ npm run tracker -- --demo        # same UI with sample data; never touches data/
 |---|---|
 | `/onboard [update \| fresh]` | Interview in short batches, read your CV from `inbox/`, write `profile/preferences.json`, `profile/profile.md` and `profile/resume.md`, render a first PDF, ask which job boards to enable, and build your company list from the seed list by region. |
 | `/discover <criteria>` | Find companies matching plain-words criteria (YC directory or web search), detect and verify each one's ATS, show a table, and add only the ones you pick. |
-| `/linkedin-alerts [days]` | Read your LinkedIn job-alert emails through the Gmail connector (read-only) and import the jobs. Nothing touches LinkedIn directly. |
+| `/email-alerts [days] [platform]` | Read job-alert emails (LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort, Glassdoor) through the Gmail connector, read-only, and import the jobs. Explains how to set up alerts on each platform. `/linkedin-alerts` is an alias. |
 | `/import-jobs` | Paste search results or job links from any site you browsed; Claude extracts and imports them. |
 | `/preferences [change]` | Change roles, titles, locations, salary floor or sources by describing it; shows a diff, validates, then offers to re-run the search. The tracker's Settings tab does the same. |
 | `/scrape [--track id] [--days N] [--company name]` | Run `gaj scrape` over your companies and enabled boards, tag a quick fit on new jobs, show green-eligibility jobs first (orange collapsed with reasons), suggest LinkedIn people-search links for referrals. |
+| `/digest [--hours N \| --since ISO]` | Show jobs first seen since the last digest, offer to rank them, and help set up the daily schedule. |
 | `/rank [--top N] [--limit N] [focus]` | Score jobs in parallel (gates, weighted dimensions, verdict), write results back with `gaj jobs:set`, show a shortlist. |
 | `/tailor <url \| job key \| JD>` | Tailor the resume for one posting, review it, audit grounding, render and verify the PDF, write an ATS report, add a tracker row. |
 | `/cover <company> [cover\|referral\|recruiter\|form]` | Cover note, referral DM, recruiter email, or answers to application-form questions. |
 | `/interview <company> [stage]` | Stage-specific prep pack (recruiter, technical, machine-coding, system-design, hiring-manager, behavioral, customer, final) from the archived posting and the resume they read, cached research, optional mock interview. |
 | `/outcome <company> <what happened>` | Record applied, a screen, an interview, an offer or a rejection in `outcome.md` and the tracker history. |
+| `/gmail-sync [days]` | Read recruiter and ATS emails for your active applications (read-only Gmail) and propose status changes (screen, interview, rejection, offer). Nothing changes until you approve. |
 | `/followup [company]` | Draft follow-ups for applications quiet 10+ days (at most 2 each) and sweep stale ones to `no_response`. Drafts only, never sent. |
 | `/track [--port N] [--demo]` | Start the tracker and summarise what needs attention: overdue next actions, things due this week, close deadlines, quiet applications, drafts not yet submitted. |
 | `/export-sheets` | Export the tracker to CSV and, if the Google Drive connector is available, upload it as a Google Sheet. |
@@ -222,16 +241,16 @@ node bin/gaj.js help             # or: npx gaj help
 | Command | Purpose |
 |---|---|
 | `scrape [--track id] [--days 14] [--limit N] [--company name] [--paid] [--json]` | Fetch your companies' ATS feeds and careers pages, enabled boards and free providers into `data/jobs.json`. `--paid` (or `GAJ_ALLOW_PAID=1`) also runs enabled paid providers, within the monthly budget. |
-| `jobs:import <file.json> [--source linkedin-alert\|manual] [--json]` | Import jobs collected outside the CLI (array of `{title, company, url, location?, ...}`; file must be under `data/` or the OS temp dir); same matching, eligibility and de-duplication as `scrape`. |
+| `jobs:import <file.json> [--source linkedin-alert\|email-alert\|manual] [--via platform] [--json]` | Import jobs collected outside the CLI (array of `{title, company, url, location?, ...}`; file must be under `data/` or the OS temp dir); same matching, eligibility and de-duplication as `scrape`. |
 | `jobs [--status s] [--eligibility green\|orange\|unknown] [--track id] [--limit N] [--json]` | List scraped jobs without descriptions. |
 | `job <key> [--json]` | Show one job with its description. |
 | `jobs:set <key> [--status s] [--quick-fit f] [--rank-file r.json]` | Update one job (rank file is validated strictly). |
 | `jobs:set --quick-fit-file map.json` | Batch quick fit from `{"<key>": "high\|medium\|low"}`. |
 | `company:check <ats> <slug> [--url careers-url] [--json]` | Verify a company's public ATS feed; exit 1 if not. For `careers`, it only confirms a successful `careers:check` of that URL in the last 7 days. |
 | `careers:check <url> [--json]` | Crawl one careers page (static, then headless Chrome) and report jobs found, method, and any embedded ATS. The only way to crawl a new careers page; not pre-approved, so Claude asks first. |
-| `company:detect <name> [--slug s] [--json]` | Find which ATS a company uses by trying slug variants on every supported ATS. Results cached 7 days. |
+| `company:detect <name> [--slug s \| --url careers-url] [--json]` | Find which ATS a company uses by trying slug variants on every slug-based ATS, or classify a careers URL (`--url`; needed for Workday, Keka, Zoho Recruit, SuccessFactors). Results cached 7 days. |
 | `companies [--tag t] [--region r] [--json]` | List `config/companies.json`. |
-| `companies:add --name N --ats A --slug S [--url careers-url] [--tags a,b] [--region us,eu] [--stage s] [--source seed\|yc\|discover\|manual] [--merge] [--force]` | Verify, then add a company. Duplicate ats+slug is reported unless `--merge` (adds regions/tags). `--force` only for SmartRecruiters boards with 0 postings. |
+| `companies:add --name N --ats A --slug S [--url url] [--tags a,b] [--region us,eu] [--stage s] [--source seed\|yc\|discover\|manual] [--merge] [--force]` | Verify, then add a company. Duplicate ats+slug is reported unless `--merge` (adds regions/tags). `--force` only for SmartRecruiters boards with 0 postings. Workday, Keka, Zoho Recruit and SuccessFactors need `--url` (slug is derived). |
 | `discover yc [--region r[,r]] [--industry x] [--batch W24] [--limit N] [--add] [--json]` | List hiring YC companies (default 20), detect each one's ATS; `--add` writes high-confidence matches with open jobs. |
 | `fetch <url> [--json]` | Fetch one posting as text and classify its host (`ats`, `linkedin`, `unknown`). |
 | `render <resume.md> [--out f.pdf] [--template classic\|modern] [--track id] [--paper letter\|a4] [--html] [--json]` | Markdown to PDF. `--out` must be inside `data/`, `profile/` or the OS temp dir. |
@@ -241,6 +260,8 @@ node bin/gaj.js help             # or: npx gaj help
 | `track update <id> [--status s] [--note ...] [--next-action ...] [--next-date D] [--field k=v]` | Update one application; status changes go into history. |
 | `track list [--status s] [--json]` | List applications. |
 | `export [--format csv\|xlsx\|tsv\|json] [--out path]` | Export the tracker (default `data/exports/tracker-<date>.<ext>`). |
+| `digest [--since ISO \| --hours N] [--mark] [--notify] [--out path] [--json]` | Write `data/digests/<date>.md` with jobs first seen since the last digest (green and unknown first, by track). `--mark` records this digest as the new starting point. |
+| `schedule install [--time HH:MM] [--yes] \| remove [--yes] \| status` | Daily job: free-source `scrape` then `digest --mark`, logged to `data/logs/`. macOS LaunchAgent, Linux systemd user timer (cron fallback), Windows prints Task Scheduler steps. Dry run unless `--yes`; not pre-approved. |
 | `doctor [--validate]` | Check Node, that Chrome launches, and profile files; `--validate` also checks `preferences.json` structure, including `remoteScope` and `sources`. |
 
 npm shortcuts: `npm run scrape`, `npm run tracker`, `npm run render`, `npm run doctor`, `npm test`. Full flags and file formats are in [docs/CONTRACTS.md](docs/CONTRACTS.md).
@@ -262,6 +283,30 @@ Per company in `config/companies.json`. Always on (`sources.ats`).
 
 These are endpoints companies publish for their own careers pages. You only get jobs from companies on your list.
 
+**Enterprise and Indian ATSs** are identified by the careers `url` rather than a slug (Workday tenants can't be guessed):
+
+| ATS | Entry `url` looks like | How it's read |
+|---|---|---|
+| Workday | `https://<tenant>.wd<N>.myworkdayjobs.com/<site>` | Workday's own job-search JSON, one search per track title (a few pages), title-matched details only, one request at a time per company |
+| Keka | `https://<tenant>.keka.com/careers/` | The portal's embedded jobs JSON, 2 requests per company |
+| Zoho Recruit | `https://<tenant>.zohorecruit.com/jobs/Careers` (also `.in`, `.eu`, `.com.au`, or a custom domain) | Openings embedded in the careers page, 1 request |
+| SAP SuccessFactors | `https://<careers site>` (classic server-rendered "RMK" sites) | The site's search page per track title, then job pages; at least 1 s between requests. Newer JS-only SuccessFactors sites fail `company:check`; use `careers` instead. |
+
+```bash
+node bin/gaj.js company:detect "Acme" --url https://acme.wd5.myworkdayjobs.com/External
+node bin/gaj.js companies:add --name Acme --ats workday --url https://acme.wd5.myworkdayjobs.com/External --region india
+```
+
+**Not supported** (use a `careers` entry, email alerts or `/import-jobs` instead):
+
+| ATS | Why |
+|---|---|
+| iCIMS | No JSON listing; the HTML differs per tenant and many tenant hosts return 404. Not stable. |
+| Darwinbox | No listing without login; the API errors or sits behind a WAF, and the careers app redirects to login. |
+| Freshteam | The jobs widget returns 503/404; the product is being discontinued. |
+| TurboHire | `robots.txt` disallows all crawlers except Googlebot. |
+| Oracle Taleo and others | Not investigated yet. |
+
 ### Careers pages
 
 For companies without a supported ATS, an entry can be `"ats": "careers"` with the careers page `url` (on by default, `sources.careersPages`). The crawler tries, in order: structured `JobPosting` data on the page; an embedded ATS board (if it finds one, it tells you to switch the entry to that ATS, which is more reliable); links to job detail pages on the same site (at most 25 per company, pre-filtered by your track titles); and, only if the static HTML has nothing, one headless Chrome render. It respects `robots.txt` (a server error on `robots.txt` counts as "disallowed"), waits at least 1 second between requests to the same host, and only crawls URLs from your company list.
@@ -273,7 +318,7 @@ node bin/gaj.js careers:check https://acme.com/careers
 node bin/gaj.js companies:add --name Acme --ats careers --slug acme --url https://acme.com/careers
 ```
 
-Workday, SuccessFactors, iCIMS, Taleo and similar systems aren't supported yet; their pages are usually JS apps behind search forms. You can still `/tailor` those postings by link or pasted text, or add them through `/import-jobs`.
+If a careers page is really a Workday, Keka, Zoho Recruit or SuccessFactors site, add it under that ATS instead (`company:detect <name> --url <url>` tells you).
 
 ### Job boards
 
@@ -292,10 +337,12 @@ Query-based, not per company. Turn each on or off in `profile/preferences.json` 
 - Remotive asks for at most 4 API requests a day and no resubmission of its jobs to third-party sites. The 6-hour cache keeps a normal day under that. This tool is for personal use; don't republish what it collects.
 - LinkedIn's terms restrict automated access. The scraper uses only the logged-out guest search, makes few requests, and never touches your account, but whether that's acceptable is your call. Expect occasional `429`/`403`.
 
-### LinkedIn alerts and pasted results
+### Email alerts and pasted results
 
-- **`/linkedin-alerts`**: set up job alerts on LinkedIn (one per title and location, emailed daily), connect the Gmail connector in Claude, and this command reads those emails read-only and imports the jobs with `gaj jobs:import`. Nothing touches LinkedIn, so there's no account risk. It never labels, archives, replies to or deletes email.
-- **`/import-jobs`**: browse any site yourself (LinkedIn, Naukri, Wellfound, anything), copy the results list or job links, paste them. Claude extracts the jobs; it doesn't fetch the pasted pages.
+- **`/email-alerts`** (alias `/linkedin-alerts`): set up job alerts on the platforms you use, connect the Gmail connector in Claude, and this command reads those emails read-only and imports the jobs with `gaj jobs:import --source email-alert --via <platform>`. Supported senders: LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort, Glassdoor. Nothing touches those sites, so there's no account risk. It never labels, archives, replies to or deletes email, and never opens links from it. Setup per platform is in [docs/SETUP.md](docs/SETUP.md#email-alerts).
+- **`/import-jobs`**: browse any site yourself, copy the results list or job links, paste them. Claude extracts the jobs; it doesn't fetch the pasted pages.
+
+**Wellfound, Cutshort and Instahyre: email alerts only.** A scraper is only built when listings are public, allowed by `robots.txt`, need no login, aren't behind bot protection, and the platform's terms allow it. None of these three passes all five: each one's terms explicitly forbid scraping, and Wellfound sits behind Cloudflare bot management. So there's no scraper and no preference for them; their job-match emails, read by `/email-alerts`, are the way in. Naukri is the same: alerts only.
 
 ### Providers (optional)
 
@@ -311,24 +358,24 @@ Query-based sources that search many sites at once. All are off by default; `/on
 
 When a provider finds a job that another source already has, it isn't added twice; the existing job records `alsoSeenOn`. Aggregated jobs carry `via` (the original publisher, e.g. LinkedIn or Naukri), and the employer's own apply link is preferred when there is one.
 
-**How LinkedIn can be covered, safest first:** `/linkedin-alerts` (zero risk) → `googleJobs` (API, LinkedIn jobs show up via Google) → `/import-jobs` (you browse) → `linkedin` guest search, Apify or JobSpy (scraping; ToS caveat).
+**How LinkedIn can be covered, safest first:** `/email-alerts` (zero risk) → `googleJobs` (API, LinkedIn jobs show up via Google) → `/import-jobs` (you browse) → `linkedin` guest search, Apify or JobSpy (scraping; ToS caveat).
 
 **Eligibility.** Most US and EU roles will come back **orange** if you don't live there or lack work authorization. That's expected: each job carries an `eligibilityReason` (for example "US only, no visa mentioned") so you can see why, and `/scrape` lists orange jobs collapsed below the green ones. HN `VISA` and Arbeitnow's sponsorship flag are the main way to find roles that can work for you.
 
 ### Seed company list
 
-`config/companies.example.json` has **177 companies**, each verified when the list was built and tagged by region (where they hire, not just HQ) and stage. A company can have several regions:
+`config/companies.example.json` has **211 companies**, each verified when the list was built and tagged by region (where they hire, not just HQ) and stage. A company can have several regions:
 
 | Region | Companies |
 |---|---|
-| `us` | 137 |
+| `us` | 166 |
 | `uk` | 120 |
 | `eu` | 112 |
-| `india` | 77 |
+| `india` | 111 |
 | `apac` | 75 |
 | `remote-global` | 50 |
 
-By source: Ashby 77, Greenhouse 65, careers pages 17, Lever 12, SmartRecruiters 3, Workable 2, Recruitee 1. `/onboard` copies the entries that match your regions into `config/companies.json`.
+By source: Ashby 77, Greenhouse 65, Workday 29, careers pages 17, Lever 12, Keka 3, SmartRecruiters 3, Workable 2, Recruitee 1, Zoho Recruit 1, SuccessFactors 1. `/onboard` copies the entries that match your regions into `config/companies.json`.
 
 ### Adding and discovering companies
 
@@ -359,9 +406,12 @@ By source: Ashby 77, Greenhouse 65, careers pages 17, Lever 12, SmartRecruiters 
 - **Table**: search, filter by status, track, fit and channel, sort any column.
 - **Detail drawer**: history timeline, notes, next action and date, salary, contact, links to the posting and the tailored resume.
 - **Undo**: status changes show an Undo toast. Undo marks the last history entry as undone and restores the previous status; stats ignore undone entries.
-- **Jobs inbox**: scraped and ranked jobs with eligibility chips and a "Track" button.
+- **Jobs inbox**: scraped and ranked jobs with eligibility chips, **New** badges, a "New since last digest" filter, a "Track" button, and **Run search** (runs `gaj scrape` in the background, one at a time; paid sources need an extra confirmation).
+- **Digests**: a modal with the latest digest, and a Daily search card showing whether the schedule is installed. The UI only reads the schedule status; installing it is a CLI step.
 - **Stats**: funnel by furthest stage reached, response rate, applications per week, breakdown by track and channel.
 - **Settings**: edit your preferences (tracks, titles, locations, salary floor, sources) and hit **Save & run search** to re-scrape with the new settings. Paid providers need an extra confirmation. Ranking the new jobs still happens in Claude (`/rank`).
+
+<p align="center"><img src="docs/assets/tracker-digest.png" alt="Tracker digest: jobs first seen since the last digest" width="85%"></p>
 
 <p align="center"><img src="docs/assets/tracker-settings.png" alt="Tracker settings: edit preferences and re-run the search" width="85%"></p>
 
@@ -419,11 +469,14 @@ node bin/gaj.js verify profile/resume.pdf --pages 1
 - `profile/`, `data/`, `inbox/`, `config/companies.json`, `.env`, `.claude/settings.local.json` and `CLAUDE.local.md` are gitignored. The pre-commit hook (`.githooks/pre-commit`) and CI both check the ignore rules and fail if any of those paths is tracked.
 - Job postings, scraped pages, cached research and emails are treated as **data, never instructions**. Links inside a posting are never followed.
 - API keys for optional providers live only in `.env` (gitignored), which Claude Code is denied from reading. Keys are never printed, logged, cached or written to `data/`, and are dropped on cross-origin redirects. Paid providers run only with `--paid` and stop at a monthly budget.
-- Scraping and discovery only talk to an allowlist of ATS, board and provider API hosts over HTTPS, re-checked on every redirect. The careers crawler goes through the same private-address and `robots.txt` guards as `gaj fetch`; in headless Chrome every connection goes through a local proxy that resolves and checks the address itself, and WebSocket, WebRTC and service workers are disabled. Crawling a new careers page (`careers:check`) always asks first. Board, HN and YC data is untrusted, and apply links in it are never fetched automatically.
+- Scraping and discovery only talk to an allowlist of ATS, board and provider API hosts over HTTPS, re-checked on every redirect. Multi-tenant hosts (Workday, Keka) match a strict host pattern that rejects lookalikes; Zoho Recruit and SuccessFactors sites, which can be on any domain, go through the guarded `safeFetch` path. The careers crawler goes through the same private-address and `robots.txt` guards as `gaj fetch`; in headless Chrome every connection goes through a local proxy that resolves and checks the address itself, and WebSocket, WebRTC and service workers are disabled. Crawling a new careers page (`careers:check`) always asks first. Board, HN and YC data is untrusted, and apply links in it are never fetched automatically.
 - `gaj fetch` (for a single posting URL) refuses loopback, private and link-local addresses, re-checks every redirect hop and `robots.txt`, caps bodies at 5 MB, and only touches LinkedIn if you opted in.
 - `render --out` and `export --out` only write inside `data/`, `profile/` or the OS temp dir.
 - The tracker binds to `127.0.0.1` only and rejects requests with a foreign `Host` or `Origin`.
 - `.claude/settings.json` pre-approves specific `gaj` subcommands and npm scripts only. `gaj fetch` and `careers:check` are deliberately not pre-approved, so Claude asks before reaching an arbitrary host. Reading `.env` is denied.
+- Gmail access (`/email-alerts`, `/gmail-sync`) is read-only: nothing is sent, labelled, archived or deleted, links in emails are never opened, and `/gmail-sync` only proposes tracker changes you approve.
+- `gaj schedule install` writes outside the repo (a LaunchAgent or systemd timer), so it's a dry run unless you pass `--yes` and isn't pre-approved. Scheduled runs use free sources only.
+- The tracker's **Run search** starts `gaj scrape` as a child process (one at a time, killed after 10 minutes); paid sources need an explicit confirmation.
 - Nothing is sent anywhere automatically. Follow-ups and cover notes are drafts.
 
 These are instruction-level and code-level defenses, not a sandbox. Read what Claude produces before you send it. Details and how to report a vulnerability: [SECURITY.md](SECURITY.md).
@@ -439,13 +492,12 @@ These are instruction-level and code-level defenses, not a sandbox. Read what Cl
 
 ## Roadmap
 
-- Workday, SuccessFactors and other enterprise ATS support
-- More sources: Wellfound, Cutshort, Instahyre
-- `/gmail-sync`: propose status changes from email, applied only after you approve
+- Darwinbox and iCIMS support, if they offer a public listing that doesn't need a login
+- Naukri stays alerts-only (via `/email-alerts`) unless it offers a permitted feed
 - Two-way Google Sheets sync
-- Resume template gallery
+- More resume templates
 - Salary data from Levels.fyi / AmbitionBox, user-provided
-- Scheduled scrape (`/loop` or cron) with a "new since last run" digest
+- Ranking new jobs from inside the tracker (handing off to Claude)
 
 ## Contributing
 
