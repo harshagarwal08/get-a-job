@@ -86,6 +86,13 @@ node bin/gaj.js schedule install --time 08:30 --yes    # install
 /tailor https://jobs.lever.co/acme/1234
 ```
 
+Check how an ATS reads any resume PDF with `/ats`: a 0-100 score (parseability, contact, sections, content, and keyword match when you give it a job) with fixes ranked by points.
+
+```
+/ats                                     # your master resume, format only
+/ats inbox/cv.pdf https://jobs.lever.co/acme/1234
+```
+
 **8. Write the message.** A referral DM, a short cover note, or answers to application-form questions.
 
 ```

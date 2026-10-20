@@ -1,5 +1,6 @@
 /**
- * Load a PDF (Buffer/Uint8Array) with pdfjs and return {pages, lines, text}.
+ * Load a PDF (Buffer/Uint8Array) with pdfjs and return {pages, lines, text, links}.
+ * `links` are the URLs of link annotations (what a click opens, not what the text shows).
  * Lines are reconstructed per page by grouping text items on similar y and sorting by x.
  * @param {Uint8Array|Buffer} data
  */
@@ -9,14 +10,16 @@ export async function extractPdf(data) {
     data: new Uint8Array(data), verbosity: 0, isEvalSupported: false, disableFontFace: true, useSystemFonts: false,
   }).promise;
   const lines = [];
+  const links = [];
   for (let p = 1; p <= doc.numPages; p++) {
     const page = await doc.getPage(p);
     const { items } = await page.getTextContent();
     lines.push(...groupLines(items.filter((i) => typeof i.str === 'string' && i.str.length)));
+    for (const a of await page.getAnnotations()) if (a.subtype === 'Link' && a.url) links.push(a.url);
   }
   const pages = doc.numPages;
   await doc.destroy();
-  return { pages, lines, text: lines.join('\n') };
+  return { pages, lines, text: lines.join('\n'), links };
 }
 
 /** Group pdfjs text items into lines of text (top-to-bottom, left-to-right). */
