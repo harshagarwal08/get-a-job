@@ -13,6 +13,7 @@
       "Bash(node bin/gaj.js discover:*)",
       "Bash(node bin/gaj.js render:*)",
       "Bash(node bin/gaj.js verify:*)",
+      "Bash(node bin/gaj.js ats:*)",
       "Bash(node bin/gaj.js track:*)",
       "Bash(node bin/gaj.js tracker:*)",
       "Bash(node bin/gaj.js digest:*)",

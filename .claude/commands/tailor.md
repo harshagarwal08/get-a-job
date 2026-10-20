@@ -113,6 +113,7 @@ edit that adds an unsupported claim.
 ```bash
 node bin/gaj.js render data/applications/<slug>/resume.md --track <track id> --out data/applications/<slug>/resume.pdf --html --json
 node bin/gaj.js verify data/applications/<slug>/resume.pdf --pages 1 --keywords-file data/tmp/keywords-<slug>.txt --json
+node bin/gaj.js ats data/applications/<slug>/resume.pdf --keywords-file data/tmp/keywords-<slug>.txt --json
 ```
 
 - Keywords go in `data/tmp/keywords-<slug>.txt`, one per line (posting text
@@ -130,6 +131,7 @@ node bin/gaj.js verify data/applications/<slug>/resume.pdf --pages 1 --keywords-
 
 In the application folder:
 - Fit summary (score, verdict, gates).
+- ATS score (`N/100`, grade) and any remaining fixes from `gaj ats`.
 - Verify results (pages, text extraction, ASCII dates).
 - Keyword table (`resume-rules.md` section 6) with all four categories.
 - Grounding audit result, humanization result, backtrack decisions.

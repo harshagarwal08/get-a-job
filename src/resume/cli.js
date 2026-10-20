@@ -3,11 +3,13 @@ import path from 'node:path';
 import { parse, out, fail } from '../lib/args.js';
 import { renderResume } from './render.js';
 import { verifyPdf, formatReport } from './verify.js';
+import { atsPdf, formatAts } from './ats.js';
 import { parseKeywords } from './keywords.js';
 import { TEMPLATES, PAPERS } from './templates/index.js';
 
 const RENDER_USAGE = 'gaj render <resume.md> [--out file.pdf] [--template classic|modern] [--paper letter|a4] [--track id] [--html] [--json]';
 const VERIFY_USAGE = 'gaj verify <file.pdf> [--pages N] [--keywords "a,b,c" | --keywords-file f] [--json]';
+const ATS_USAGE = 'gaj ats <file.pdf> [--keywords "a,b,c" | --keywords-file f] [--json]';
 
 async function render(argv) {
   const a = parse(argv, {
@@ -41,8 +43,22 @@ async function verify(argv) {
   if (!res.ok) process.exitCode = 1;
 }
 
+async function ats(argv) {
+  const a = parse(argv, { keywords: { type: 'string' }, 'keywords-file': { type: 'string' } });
+  if (a.help) return console.log(ATS_USAGE);
+  const file = a._[0];
+  if (!file) fail(`missing <file.pdf>\nusage: ${ATS_USAGE}`);
+  if (!fs.existsSync(file)) fail(`no such file: ${file}`);
+  const keywords = [
+    ...parseKeywords(a.keywords),
+    ...(a['keywords-file'] ? parseKeywords(fs.readFileSync(a['keywords-file'], 'utf8')) : []),
+  ];
+  out(await atsPdf(file, { keywords }), a.json, formatAts);
+}
+
 /** Commands exported to bin/gaj.js (see docs/CONTRACTS.md). */
 export const commands = {
   render: { summary: 'Render resume.md to PDF (classic|modern, letter|a4, optional --track)', usage: RENDER_USAGE, run: render },
+  ats: { summary: 'Score a resume PDF for ATS readiness, 0-100 (format; plus keywords if given)', usage: ATS_USAGE, run: ats },
   verify: { summary: 'Check a resume PDF: pages, extractable text, date dashes, keyword coverage', usage: VERIFY_USAGE, run: verify },
 };
