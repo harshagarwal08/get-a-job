@@ -13,7 +13,7 @@ body {
 .hd .contact .sep { color: #a3abb5; }
 h2 {
   display: flex; align-items: center; gap: 6pt;
-  font-size: 8.6pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.13em; color: var(--accent);
+  font-size: 8.6pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent);
   margin: 10pt 0 4.5pt;
 }
 h2::after { content: ""; flex: 1; height: 0.6pt; background: var(--rule); }

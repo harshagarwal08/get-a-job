@@ -11,14 +11,14 @@ CLI flags: `docs/CONTRACTS.md`. Design: `docs/PLAN.md`.
 
 - `profile/`: `preferences.json`, `profile.md` (facts store, single source of
   truth), `resume.md` (master resume)
-- `data/`: `jobs.json`, `tracker.json`, `research/`, `applications/<slug>/`, `exports/`
+- `data/`: `jobs.json`, `tracker.json`, `funded.json`, `research/`, `applications/<slug>/`, `exports/`
 - `inbox/`: resumes/LinkedIn exports to import
 - `config/companies.json`: companies + ATS slugs to scrape
 
 ## Commands
 
-`/onboard` · `/preferences` · `/discover <criteria>` · `/scrape` · `/email-alerts` ·
-`/linkedin-alerts` · `/import-jobs` · `/digest` · `/gmail-sync` · `/rank` · `/tailor <url|key|JD>` · `/cover` ·
+`/onboard` · `/preferences` · `/discover <criteria>` · `/funded [criteria]` · `/cold-dm <company>` · `/scrape` · `/email-alerts` ·
+`/linkedin-alerts` · `/import-jobs` · `/digest` · `/gmail-sync` · `/rank` · `/tailor <url|key|JD>` · `/ats [pdf] [job]` · `/cover` ·
 `/interview <company> [stage]` · `/outcome <company> <what happened>` ·
 `/followup` · `/track` · `/export-sheets` · `/upskill` · `/doctor`
 
