@@ -81,6 +81,18 @@ Persist all at once: write one map `{"<key>": "high|medium|low", ...}` to
 node bin/gaj.js jobs:set --quick-fit-file data/tmp/quickfit.json
 ```
 
+Then fill missing descriptions for the jobs worth a look (aggregators like
+JobSpy return title and location only):
+
+```bash
+node bin/gaj.js jobs:enrich --fit high,medium --limit 40
+```
+
+It fetches each posting's own URL (LinkedIn's guest posting page only when
+`sources.linkedin` is on). Naukri, Glassdoor, Indeed, Wellfound and other
+sites whose terms forbid fetching are skipped: say how many, and that the user
+can paste those in the tracker (**Add JD**).
+
 Jobs that are clearly irrelevant (wrong discipline entirely) may also get
 `--status skipped`; list them in one line so the user can object.
 

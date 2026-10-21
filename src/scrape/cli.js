@@ -518,6 +518,76 @@ async function fetchCmd(argv) {
   ].join('\n'));
 }
 
+// ---------- jobs:enrich ----------
+
+// Hosts whose terms forbid automated access (or that block bots): their postings stay paste-only.
+export const NO_FETCH_HOSTS = /(^|\.)(naukri\.com|glassdoor\.[a-z.]+|wellfound\.com|angel\.co|instahyre\.com|cutshort\.io|indeed\.[a-z.]+|weekday\.works|ycombinator\.com)$/i;
+export const THIN_JD = 400;
+
+/** Open jobs whose description is missing or a stub, best quick fit first. */
+export function enrichTargets(store, { fits, minChars = THIN_JD, limit = 25, allowLinkedIn = false } = {}) {
+  const order = { high: 0, medium: 1, low: 2 };
+  const skipped = { host: 0, noUrl: 0, linkedin: 0 };
+  const out = [];
+  const jobs = Object.values(store.jobs ?? {})
+    .filter((j) => ['new', 'ranked', 'tracked'].includes(j.status) && (j.description ?? '').length < minChars)
+    .filter((j) => !fits?.length || fits.includes(j.quickFit))
+    .sort((a, b) => (order[a.quickFit] ?? 3) - (order[b.quickFit] ?? 3) || String(b.postedAt ?? '').localeCompare(String(a.postedAt ?? '')));
+  for (const j of jobs) {
+    const url = [j.applyUrl, j.url].find((u) => typeof u === 'string' && /^https?:\/\//i.test(u));
+    if (!url) { skipped.noUrl++; continue; }
+    const host = new URL(url).hostname;
+    if (NO_FETCH_HOSTS.test(host)) { skipped.host++; continue; }
+    if (hostClass(url) === 'linkedin' && !allowLinkedIn) { skipped.linkedin++; continue; }
+    out.push({ key: j.key, url });
+    if (out.length >= limit) break;
+  }
+  return { targets: out, skipped };
+}
+
+async function jobsEnrich(argv) {
+  const a = parse(argv, { limit: { type: 'string' }, fit: { type: 'string' }, 'min-chars': { type: 'string' }, delay: { type: 'string' } }, { allowPositionals: false });
+  if (a.help) return console.log(commands['jobs:enrich'].usage);
+  const limit = intOpt(a.limit, 'limit', 1) ?? 25;
+  const minChars = intOpt(a['min-chars'], 'min-chars', 1) ?? THIN_JD;
+  const delay = intOpt(a.delay, 'delay', 0) ?? 1500;
+  const fits = a.fit ? a.fit.split(',').map((s) => s.trim()).filter(Boolean) : null;
+  const allowLinkedIn = isOn(readJSON(paths.preferences)?.sources?.linkedin);
+  const { targets, skipped } = enrichTargets(loadStore(), { fits, minChars, limit, allowLinkedIn });
+  const res = { tried: targets.length, filled: 0, failed: [], skipped };
+  const got = [];
+  for (const [i, t] of targets.entries()) {
+    if (i) await new Promise((r) => setTimeout(r, delay)); // polite pause between hosts
+    try {
+      const p = await fetchPosting(t.url, { allowLinkedIn });
+      const text = String(p.text ?? '').trim();
+      if (text.length < THIN_JD) throw new Error('page had little readable text');
+      got.push({ key: t.key, text: text.slice(0, 50000) });
+    } catch (err) { res.failed.push({ key: t.key, error: err.message.split('\n')[0].slice(0, 160) }); }
+  }
+  // One locked write at the end; re-read so a concurrent scrape/tracker edit survives.
+  if (got.length) {
+    await withLock(paths.jobs, () => {
+      const store = loadStore();
+      const at = nowISO();
+      for (const g of got) {
+        const j = store.jobs[g.key];
+        if (!j || (j.description ?? '').length >= g.text.length) continue;
+        Object.assign(j, { description: g.text, descriptionVia: 'fetched', descriptionAt: at });
+        res.filled++;
+      }
+      writeJSON(paths.jobs, store);
+    });
+  }
+  out(res, a.json, (r) => [
+    `Fetched descriptions for ${r.filled} of ${r.tried} job(s).`,
+    r.skipped.host ? `  ${r.skipped.host} skipped: the site's terms forbid fetching (Naukri, Glassdoor, Indeed, Wellfound...). Paste those in the tracker (Add JD).` : null,
+    r.skipped.linkedin ? `  ${r.skipped.linkedin} LinkedIn job(s) skipped: LinkedIn fetching is off (sources.linkedin).` : null,
+    r.skipped.noUrl ? `  ${r.skipped.noUrl} without a posting URL.` : null,
+    ...r.failed.map((f) => `  ✗ ${f.key}: ${f.error}`),
+  ].filter(Boolean).join('\n'));
+}
+
 // ---------- careers:check ----------
 
 async function careersCheck(argv) {
@@ -803,4 +873,5 @@ export const commands = {
   'companies:add': { summary: 'Verify and add a company to config/companies.json', usage: 'gaj companies:add --name N --ats A --slug S [--url https://… (careers)] [--tags a,b] [--region us,eu] [--stage s] [--source seed|yc|discover|manual] [--merge] [--force] [--json]', run: companiesAdd },
   discover: { summary: 'Discover hiring YC companies and detect their ATS', usage: 'gaj discover yc [--region india,us,eu,uk,apac,remote-global] [--industry x] [--batch W24] [--limit N (default 20)] [--add] [--json]', run: discover },
   fetch: { summary: 'Fetch one posting URL as text', usage: 'gaj fetch <url> [--json]', run: fetchCmd },
+  'jobs:enrich': { summary: 'Fill missing job descriptions from each posting\'s own URL (best fit first)', usage: 'gaj jobs:enrich [--fit high,medium] [--limit 25] [--min-chars 400] [--delay 1500] [--json]', run: jobsEnrich },
 };

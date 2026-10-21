@@ -145,6 +145,25 @@ async function trackJob(ctx, j) {
   }
 }
 
+// "Fill missing JDs": fetch descriptions from each posting's own URL (sites whose terms forbid it stay paste-only).
+function missingJd(ctx) {
+  const n = ctx.jobs.filter((j) => ['new', 'ranked', 'tracked'].includes(j.status) && thinJd(j)).length;
+  if (!n) return null;
+  const btn = h('button', { class: 'btn ghost', type: 'button', title: 'Fetch descriptions for jobs that have none (LinkedIn and company sites; Naukri, Glassdoor and Indeed need pasting)',
+    onclick: async () => {
+      btn.disabled = true;
+      btn.lastChild.textContent = 'Fetching…';
+      try {
+        const r = await api('/api/jobs/enrich', { method: 'POST', body: {} });
+        ctx.lastRaw.jobs = '';
+        toast(`Filled ${r.filled} job description${r.filled === 1 ? '' : 's'}`, { sub: r.skipped.host ? `${r.skipped.host} need pasting (Naukri, Glassdoor, Indeed): use Add JD.` : undefined });
+        await ctx.refreshAll();
+      } catch (e) { toast(e.message, { error: true }); }
+      ctx.render();
+    } }, icon('file', 14), h('span', null, `Fill missing JDs · ${n}`));
+  return btn;
+}
+
 export function renderJobs(ctx) {
   const running = !!ctx.searchState?.running;
   const runBtn = h('button', { class: 'btn primary run-btn', type: 'button', disabled: running, onclick: () => ctx.runSearch() }, icon('search', 14), 'Run search');
@@ -153,6 +172,7 @@ export function renderJobs(ctx) {
     h('span', { class: 'spacer' }),
     h('button', { class: 'btn ghost', type: 'button', title: 'Read the latest digest', onclick: () => ctx.openDigest() }, icon('file', 14), h('span', null, 'Digests')),
     h('a', { class: 'btn ghost', href: '#settings', title: 'Edit tracks, locations and sources' }, icon('gear', 14), h('span', { class: 'hide-sm' }, 'Search settings')),
+    missingJd(ctx),
     runBtn),
   ctx.searchStatusBox(ctx));
   if (!ctx.jobs.length) {

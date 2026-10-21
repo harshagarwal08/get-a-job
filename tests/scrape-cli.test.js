@@ -126,3 +126,21 @@ test('fetch rejects non-http input', () => {
   const r = gaj('fetch', 'ftp://x');
   assert.equal(r.status, 1);
 });
+
+test('enrichTargets: stubs only, best fit first, skips no-fetch hosts and LinkedIn when off', async () => {
+  const { enrichTargets } = await import('../src/scrape/cli.js');
+  const job = (key, o) => ({ key, status: 'new', description: '', url: `https://jobs.example.com/${key}`, ...o });
+  const store = { jobs: {
+    a: job('a', { quickFit: 'low' }),
+    b: job('b', { quickFit: 'high' }),
+    c: job('c', { quickFit: 'high', description: 'x'.repeat(500) }),
+    d: job('d', { quickFit: 'high', url: 'https://www.naukri.com/job-listings-1' }),
+    e: job('e', { quickFit: 'medium', url: 'https://www.linkedin.com/jobs/view/123/' }),
+    f: job('f', { quickFit: 'high', status: 'skipped' }),
+  } };
+  let r = enrichTargets(store, {});
+  assert.deepEqual(r.targets.map((t) => t.key), ['b', 'a']);
+  assert.deepEqual(r.skipped, { host: 1, noUrl: 0, linkedin: 1 });
+  r = enrichTargets(store, { allowLinkedIn: true, fits: ['high', 'medium'] });
+  assert.deepEqual(r.targets.map((t) => t.key), ['b', 'e']);
+});

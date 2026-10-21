@@ -11,6 +11,8 @@ import { readJSON, writeJSON } from '../lib/store.js';
 import { validatePreferences, REMOTE_SCOPES } from '../lib/preferences.js';
 import { TRACK_ID, createSearchRunner } from './search.js';
 import { createAgentRunner } from './agent.js';
+import { spawn } from 'node:child_process';
+import { GAJ_BIN } from './search.js';
 import { loadState as loadDigestState, latestDigest } from '../digest/digest.js';
 import * as schedule from '../digest/schedule.js';
 
@@ -103,6 +105,26 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
       .filter((e) => e.isFile() && /\.(pdf|md|txt|html|json)$/i.test(e.name))
       .map((e) => ({ name: e.name, path: path.relative(store.root, path.join(dir, e.name)).split(path.sep).join('/') }))
       .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // Bulk backfill: `gaj jobs:enrich --json` as a child (it locks jobs.json and pauses between hosts).
+  let enriching = false;
+  function enrichAll() {
+    if (meta.demo) return Promise.resolve({ tried: 0, filled: 0, failed: [], skipped: { host: 0, noUrl: 0, linkedin: 0 } });
+    if (enriching) throw new HttpError(409, 'already filling job descriptions');
+    enriching = true;
+    return new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [GAJ_BIN, 'jobs:enrich', '--limit', '40', '--json'], { cwd: path.dirname(path.dirname(GAJ_BIN)), env: { ...process.env, GAJ_ROOT: store.root }, stdio: ['ignore', 'pipe', 'pipe'] });
+      let out = '';
+      let err = '';
+      child.stdout.on('data', (c) => { out += c; });
+      child.stderr.on('data', (c) => { err += c; });
+      child.on('error', (e) => { enriching = false; reject(new HttpError(500, e.message)); });
+      child.on('close', (code) => {
+        enriching = false;
+        try { resolve(JSON.parse(out)); } catch { reject(new HttpError(500, (err.trim().split('\n').pop() || `jobs:enrich exited ${code}`).replace(/^error:\s*/, ''))); }
+      });
+    });
   }
 
   async function fetchDescription(key) {
@@ -304,6 +326,7 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
     }
 
     if (resource === 'jobs') {
+      if (id === 'enrich' && !action && method === 'POST') return send(res, 200, await enrichAll());
       if (!id && method === 'GET') {
         const key = url.searchParams.get('key');
         if (key) return send(res, 200, store.getJob(key));
