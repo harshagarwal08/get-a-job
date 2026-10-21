@@ -162,10 +162,10 @@ export function outreachSection(ctx, a) {
     const named = new Set(o.contacts.map((c) => c.id));
     const others = [...byTo.entries()].filter(([k]) => !named.has(k)).map(([k, ms]) => h('div', { class: 'contact' },
       h('div', { class: 'contact-head' }, h('b', null, k || 'Anyone on the team'), h('span', { class: 'chip plain' }, 'find via search')), ms.map(msgEl)));
-    body.replaceChildren(
+    body.replaceChildren(...[
       o.searches.length ? h('div', { class: 'file-list' }, o.searches.map((s) => h('a', { class: 'chip file', href: s.url, target: '_blank', rel: 'noopener noreferrer' }, icon('search', 11), s.label))) : null,
       ...people, ...others,
-      h('p', { class: 'hint-line' }, 'Drafts only. Send them yourself, then note it on the timeline.'));
+      h('p', { class: 'hint-line' }, 'Drafts only. Send them yourself, then note it on the timeline.')].filter(Boolean));
   }).catch(() => body.replaceChildren(h('span', { class: 'muted' }, 'Could not load outreach.')));
   return sec;
 }
@@ -179,7 +179,7 @@ export function templatesSection(ctx, a) {
     .replaceAll('{{url}}', a.url || '[job link]').replaceAll('{{name}}', '[Name]');
   (templateCache ??= api('/api/templates')).then(({ templates, personal }) => {
     if (!templates.length) { body.replaceChildren(h('span', { class: 'muted' }, 'No templates. Add profile/outreach-templates.json.')); return; }
-    body.replaceChildren(
+    body.replaceChildren(...[
       !personal ? h('p', { class: 'hint-line' }, 'Example templates. Copy examples/outreach-templates.example.json to profile/outreach-templates.json and fill in your own facts.') : null,
       ...templates.map((t) => {
         const text = fill(t.text);
@@ -189,7 +189,7 @@ export function templatesSection(ctx, a) {
           subject ? h('div', { class: 'msg-subject' }, subject) : null,
           h('pre', { class: 'msg-text' }, text));
       }),
-      h('p', { class: 'hint-line' }, 'Replace [Name] and anything in [brackets] before sending.'));
+      h('p', { class: 'hint-line' }, 'Replace [Name] and anything in [brackets] before sending.')].filter(Boolean));
   }).catch(() => { templateCache = null; body.replaceChildren(h('span', { class: 'muted' }, 'Could not load templates.')); });
   return sec;
 }
