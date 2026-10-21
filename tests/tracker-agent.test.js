@@ -105,3 +105,25 @@ test('application files are listed only from data/applications', async () => {
   if (r.status === 201) assert.deepEqual((await j(`/api/applications/${r.data.id}/files`)).data.files, []);
   else assert.equal(r.status, 400);
 });
+
+test('outreach.json is re-validated before the UI sees it', async () => {
+  fs.writeFileSync(path.join(ROOT, 'data', 'applications', 'acme-fe', 'outreach.json'), JSON.stringify({
+    generatedAt: '2026-10-21T00:00:00Z',
+    contacts: [
+      { id: 'c1', name: 'Asha Rao', title: 'Head of Product', kind: 'hiring-manager', confidence: 'confirmed', source: 'https://acme.example/team', linkedin: 'javascript:alert(1)', email: 'not an email' },
+      { id: 'c2', title: 'no name' },
+    ],
+    searches: [{ label: 'Find a referrer', url: 'https://www.linkedin.com/search/results/people/?keywords=Acme' }, { label: 'bad', url: 'file:///etc/passwd' }],
+    messages: [{ id: 'm1', kind: 'referral', channel: 'linkedin-note', to: 'c1', text: 'Hi Asha\u0007, quick note.' }, { id: 'm2', kind: 'spam', channel: 'sms', text: 'x' }],
+  }));
+  let r = await j('/api/applications', { company: 'Acme2', role: 'PM', appDir: 'data/applications/acme-fe' });
+  r = await j(`/api/applications/${r.data.id}/outreach`);
+  assert.equal(r.data.contacts.length, 1);
+  assert.equal(r.data.contacts[0].linkedin, null);
+  assert.equal(r.data.contacts[0].email, null);
+  assert.deepEqual(r.data.searches.map((s) => s.label), ['Find a referrer']);
+  assert.equal(r.data.messages[0].text, 'Hi Asha, quick note.');
+  assert.equal(r.data.messages[1].kind, 'cold');
+  assert.equal(r.data.messages[1].channel, 'linkedin-dm');
+  assert.match(agent.taskPrompt({ task: 'outreach', key: KEY }), /^\/outreach mirelune/);
+});

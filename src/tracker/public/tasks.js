@@ -1,7 +1,7 @@
 // Claude tasks from the tracker (tailor, rank, cover, cold DM) and the job-description editor.
 import { h, icon, api, toast } from './util.js';
 
-const TASK_LABEL = { tailor: 'Tailor resume', rank: 'Rank job', cover: 'Draft message', 'cold-dm': 'Cold DM' };
+const TASK_LABEL = { tailor: 'Tailor resume', rank: 'Rank job', outreach: 'Outreach', cover: 'Draft message', 'cold-dm': 'Cold DM' };
 let panel;
 let timer;
 
@@ -120,6 +120,56 @@ export function openJd(ctx, j, { thenTailor = false } = {}) {
   area.focus();
 }
 
+const KIND_LABEL = { recruiter: 'Recruiter', 'hiring-manager': 'Hiring manager', founder: 'Founder', employee: 'Team member' };
+const MSG_LABEL = { referral: 'Referral request', cold: 'Cold message', recruiter: 'Recruiter note', followup: 'Follow-up' };
+const CH_LABEL = { 'linkedin-note': 'LinkedIn connection note', 'linkedin-dm': 'LinkedIn DM', email: 'Email' };
+
+function copyBtn(text, what) {
+  return h('button', { class: 'btn sm ghost', type: 'button', onclick: async () => {
+    try { await navigator.clipboard.writeText(text); toast(`Copied ${what}`); } catch { toast('Copy failed: select the text and copy it', { error: true }); }
+  } }, 'Copy');
+}
+
+/** "Who to contact" + ready messages from the application's outreach.json. */
+export function outreachSection(ctx, a) {
+  const body = h('div', { class: 'outreach' }, h('span', { class: 'muted' }, 'Loading…'));
+  const sec = h('div', { class: 'section' }, h('h3', null, 'Who to contact'), body);
+  if (!a.appDir) { body.replaceChildren(h('span', { class: 'muted' }, 'Tailor or draft outreach to get contacts and messages here.')); return sec; }
+  api(`/api/applications/${a.id}/outreach`).then((o) => {
+    if (o.missing || (!o.contacts.length && !o.messages.length)) {
+      body.replaceChildren(h('span', { class: 'muted' }, 'No outreach drafted yet. Use "Find contacts & draft outreach" above.'));
+      return;
+    }
+    const byTo = new Map();
+    for (const m of o.messages) { const k = m.to ?? ''; if (!byTo.has(k)) byTo.set(k, []); byTo.get(k).push(m); }
+    const msgEl = (m) => {
+      const full = m.subject ? `Subject: ${m.subject}\n\n${m.text}` : m.text;
+      return h('div', { class: 'msg' },
+        h('div', { class: 'msg-head' }, h('b', null, MSG_LABEL[m.kind] ?? m.kind), h('span', { class: 'muted' }, ` · ${CH_LABEL[m.channel] ?? m.channel} · ${m.text.length} chars`), h('span', { class: 'grow' }), copyBtn(full, MSG_LABEL[m.kind] ?? 'message')),
+        m.subject ? h('div', { class: 'msg-subject' }, m.subject) : null,
+        h('pre', { class: 'msg-text' }, m.text));
+    };
+    const people = o.contacts.map((c) => h('div', { class: 'contact' },
+      h('div', { class: 'contact-head' },
+        h('b', null, c.name), c.title ? h('span', { class: 'muted' }, ` · ${c.title}`) : null,
+        h('span', { class: `chip ${c.confidence === 'confirmed' ? 'qf-high' : 'plain'}` }, KIND_LABEL[c.kind]),
+        c.confidence !== 'confirmed' ? h('span', { class: 'chip plain', title: 'Title or role not confirmed by the source' }, 'unconfirmed') : null),
+      h('div', { class: 'contact-links' },
+        c.linkedin ? h('a', { href: c.linkedin, target: '_blank', rel: 'noopener noreferrer' }, icon('link', 11), ' LinkedIn') : null,
+        c.email ? [h('span', { class: 'muted' }, c.email), copyBtn(c.email, 'email')] : null,
+        c.source ? h('a', { href: c.source, target: '_blank', rel: 'noopener noreferrer', class: 'muted' }, 'source') : null),
+      (byTo.get(c.id) ?? []).map(msgEl)));
+    const named = new Set(o.contacts.map((c) => c.id));
+    const others = [...byTo.entries()].filter(([k]) => !named.has(k)).map(([k, ms]) => h('div', { class: 'contact' },
+      h('div', { class: 'contact-head' }, h('b', null, k || 'Anyone on the team'), h('span', { class: 'chip plain' }, 'find via search')), ms.map(msgEl)));
+    body.replaceChildren(
+      o.searches.length ? h('div', { class: 'file-list' }, o.searches.map((s) => h('a', { class: 'chip file', href: s.url, target: '_blank', rel: 'noopener noreferrer' }, icon('search', 11), s.label))) : null,
+      ...people, ...others,
+      h('p', { class: 'hint-line' }, 'Drafts only. Send them yourself, then note it on the timeline.'));
+  }).catch(() => body.replaceChildren(h('span', { class: 'muted' }, 'Could not load outreach.')));
+  return sec;
+}
+
 /** Action buttons and files for an application (drawer). */
 export function appActions(ctx, a) {
   const run = (body, title) => ctx.runTask(body, title);
@@ -136,9 +186,8 @@ export function appActions(ctx, a) {
     h('h3', null, 'Claude'),
     h('div', { class: 'btn-row' },
       h('button', { class: 'btn sm primary', type: 'button', disabled: busy, onclick: () => run(a.jobKey ? { task: 'tailor', key: a.jobKey } : { task: 'tailor', id: a.id }, `Tailoring for ${a.company}`) }, icon('file', 12), a.resumePath ? 'Re-tailor resume' : 'Tailor resume'),
-      h('button', { class: 'btn sm', type: 'button', disabled: busy, onclick: () => run({ task: 'cover', id: a.id, kind: 'cover' }, `Cover note for ${a.company}`) }, 'Cover note'),
-      h('button', { class: 'btn sm', type: 'button', disabled: busy, onclick: () => run({ task: 'cover', id: a.id, kind: 'referral' }, `Referral DM for ${a.company}`) }, 'Referral DM'),
-      h('button', { class: 'btn sm', type: 'button', disabled: busy, onclick: () => run({ task: 'cover', id: a.id, kind: 'recruiter' }, `Recruiter email for ${a.company}`) }, 'Recruiter email'),
+      h('button', { class: 'btn sm', type: 'button', disabled: busy, title: 'Find who to contact and draft the referral request, DMs and email', onclick: () => run({ task: 'outreach', id: a.id }, `Outreach for ${a.company}`) }, 'Find contacts & draft outreach'),
+      h('button', { class: 'btn sm ghost', type: 'button', disabled: busy, onclick: () => run({ task: 'cover', id: a.id, kind: 'cover' }, `Cover note for ${a.company}`) }, 'Cover note'),
       isCold && a.fundedId ? h('button', { class: 'btn sm', type: 'button', disabled: busy, onclick: () => run({ task: 'cold-dm', key: a.fundedId }, `Cold DM for ${a.company}`) }, 'Redo cold DM') : null),
     h('p', { class: 'hint-line' }, 'Runs Claude Code on this machine. Drafts only: nothing is sent.'),
     files);

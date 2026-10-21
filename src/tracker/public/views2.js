@@ -65,6 +65,7 @@ function jobRow(ctx, j) {
         j.funded ? h('span', { class: 'chip funded', title: `Raised ${label(j.funded.round)} on ${j.funded.announcedAt} (gaj funded)` }, `Funded · ${label(j.funded.round)}`) : null,
         jdChip(j),
         j.tailored ? h('span', { class: 'chip tailored', title: 'A tailored resume is linked to this job\'s application' }, icon('check', 11), 'Tailored') : null,
+        j.outreach ? h('button', { class: 'chip tailored as-btn', type: 'button', title: 'Contacts and referral/cold messages are ready: open the application', onclick: () => j.applicationId && ctx.openDrawer(j.applicationId) }, icon('check', 11), 'Outreach ready') : null,
         h('span', { class: `chip plain${old ? ' tag-flag' : ''}`, title: age ? `Posted ${age.slice(0, 10)}` : '' }, old ? `⚠ ${ago(age)} old` : `${ago(age)}${ago(age) === 'today' ? '' : ' ago'}`),
         h('span', { class: 'chip plain', title: j.via ? `${label(j.source)} via ${label(j.via)}` : label(j.source) }, j.via ? `${label(j.via)}` : label(j.source)),
         h('button', { class: 'expand-btn', 'aria-expanded': String(expanded), onclick: () => toggleJob(ctx, j.key) }, expanded ? 'Less' : 'Details', icon('chev', 11)))),
@@ -72,6 +73,8 @@ function jobRow(ctx, j) {
       h('button', { class: 'btn sm primary', disabled: ctx.taskBusy(), title: thinJd(j) ? 'Add the full job description first for a good result' : 'Tailor your resume to this job with Claude',
         onclick: () => (thinJd(j) ? ctx.openJd(j, { thenTailor: true }) : ctx.runTask({ task: 'tailor', key: j.key }, `Tailoring for ${j.company}`)) }, icon('file', 12), j.tailored ? 'Re-tailor' : 'Tailor'),
       h('button', { class: 'btn sm', onclick: () => ctx.openJd(j) }, thinJd(j) ? 'Add JD' : 'Edit JD'),
+      !j.outreach ? h('button', { class: 'btn sm', disabled: ctx.taskBusy(), title: 'Find who to contact and draft a referral request and cold DM/email',
+        onclick: () => ctx.runTask({ task: 'outreach', key: j.key }, `Outreach for ${j.company}`) }, 'Outreach') : null,
       !j.rank ? h('button', { class: 'btn sm ghost', disabled: ctx.taskBusy(), title: 'Score this job with Claude (/rank)', onclick: () => ctx.runTask({ task: 'rank', key: j.key }, `Ranking ${j.company}`) }, 'Rank') : null,
       tracked
         ? h('button', { class: 'btn sm ghost', onclick: () => { if (j.applicationId) ctx.openDrawer(j.applicationId); } }, 'Application')

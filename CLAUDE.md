@@ -18,7 +18,7 @@ CLI flags: `docs/CONTRACTS.md`. Design: `docs/PLAN.md`.
 ## Commands
 
 `/onboard` · `/preferences` · `/discover <criteria>` · `/funded [criteria]` · `/cold-dm <company>` · `/scrape` · `/email-alerts` ·
-`/linkedin-alerts` · `/import-jobs` · `/digest` · `/gmail-sync` · `/rank` · `/tailor <url|key|JD>` · `/ats [pdf] [job]` · `/cover` ·
+`/linkedin-alerts` · `/import-jobs` · `/digest` · `/gmail-sync` · `/rank` · `/tailor <url|key|JD>` · `/outreach <job|app>` · `/ats [pdf] [job]` · `/cover` ·
 `/interview <company> [stage]` · `/outcome <company> <what happened>` ·
 `/followup` · `/track` · `/export-sheets` · `/upskill` · `/doctor`
 

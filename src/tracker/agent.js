@@ -41,10 +41,14 @@ export function taskPrompt({ task, key, id, kind }) {
       if (!COVER_KINDS.includes(kind)) throw new ValidationError(`kind must be one of ${COVER_KINDS.join(', ')}`);
       return `/cover ${need(id, APP_ID, 'application id')} ${kind}\n\nThe argument is a tracker application id; find it with node bin/gaj.js track list --json.\n\n${NON_INTERACTIVE}`;
     }
+    case 'outreach': {
+      if (key) return `/outreach ${need(key, JOB_KEY, 'job key')}\n\n${NON_INTERACTIVE}`;
+      return `/outreach ${need(id, APP_ID, 'application id')}\n\nThe argument is a tracker application id; find it with node bin/gaj.js track list --json.\n\n${NON_INTERACTIVE}`;
+    }
     case 'cold-dm':
       return `/cold-dm ${need(key, FUNDED_ID, 'funded company id')}\n\n${NON_INTERACTIVE}`;
     default:
-      throw new ValidationError('task must be tailor, rank, cover or cold-dm');
+      throw new ValidationError('task must be tailor, rank, outreach, cover or cold-dm');
   }
 }
 

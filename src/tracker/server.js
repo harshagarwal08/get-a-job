@@ -127,6 +127,40 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
     });
   }
 
+  // outreach.json written by /outreach: re-validated here so the UI only ever gets plain text and http(s) links.
+  const OUT_KINDS = ['recruiter', 'hiring-manager', 'founder', 'employee'];
+  const MSG_KINDS = ['referral', 'cold', 'recruiter', 'followup'];
+  const MSG_CHANNELS = ['linkedin-note', 'linkedin-dm', 'email'];
+  const str = (v, max) => (typeof v === 'string' && v.trim() ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim().slice(0, max) : null);
+  const link = (v) => (typeof v === 'string' && /^https?:\/\/[^\s"'<>]+$/i.test(v) ? v.slice(0, 600) : null);
+  const mail = (v) => (typeof v === 'string' && /^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(v) ? v.slice(0, 200) : null);
+  function appOutreachFile(app) {
+    if (!app?.appDir) return null;
+    try {
+      const base = fs.realpathSync(applicationsDir);
+      const file = fs.realpathSync(path.join(path.resolve(store.root, app.appDir), 'outreach.json'));
+      return file.startsWith(base + path.sep) ? file : null;
+    } catch { return null; }
+  }
+  function appOutreach(app) {
+    const file = appOutreachFile(app);
+    if (!file) return null;
+    let o;
+    try { o = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return { error: 'outreach.json is not valid JSON' }; }
+    const contacts = (Array.isArray(o.contacts) ? o.contacts : []).slice(0, 10).map((c, i) => ({
+      id: str(c?.id, 20) ?? `c${i + 1}`, name: str(c?.name, 120), title: str(c?.title, 160),
+      kind: OUT_KINDS.includes(c?.kind) ? c.kind : 'employee', confidence: c?.confidence === 'confirmed' ? 'confirmed' : 'likely',
+      source: link(c?.source), linkedin: link(c?.linkedin), email: mail(c?.email),
+    })).filter((c) => c.name);
+    const searches = (Array.isArray(o.searches) ? o.searches : []).slice(0, 6).map((s) => ({ label: str(s?.label, 80), url: link(s?.url) })).filter((s) => s.label && s.url);
+    const messages = (Array.isArray(o.messages) ? o.messages : []).slice(0, 20).map((m, i) => ({
+      id: str(m?.id, 20) ?? `m${i + 1}`, kind: MSG_KINDS.includes(m?.kind) ? m.kind : 'cold',
+      channel: MSG_CHANNELS.includes(m?.channel) ? m.channel : 'linkedin-dm', to: str(m?.to, 120),
+      subject: str(m?.subject, 200), text: str(m?.text, 5000),
+    })).filter((m) => m.text);
+    return { generatedAt: str(o.generatedAt, 40), contacts, searches, messages };
+  }
+
   async function fetchDescription(key) {
     const job = store.getJob(key);
     const url = [job.applyUrl, job.url].find((u) => typeof u === 'string' && /^https?:\/\//i.test(u));
@@ -310,6 +344,8 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
           const { note, fields } = splitBody(body);
           return send(res, 201, await store.add(fields, { note: typeof note === 'string' && note.trim() ? note : undefined }));
         }
+      } else if (action === 'outreach' && method === 'GET') {
+        return send(res, 200, appOutreach(store.get(id)) ?? { contacts: [], searches: [], messages: [] , missing: true });
       } else if (action === 'files' && method === 'GET') {
         return send(res, 200, { files: appFiles(store.get(id)) });
       } else if (action === 'undo' && method === 'POST') {
@@ -335,7 +371,7 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
         const j = store.loadJobs();
         const jobs = Object.values(j.jobs).map(({ description, ...rest }) => {
           const app = appByKey.get(rest.key);
-          return { ...rest, applicationId: app?.id ?? null, tailored: !!app?.resumePath, descLen: typeof description === 'string' ? description.length : 0,
+          return { ...rest, applicationId: app?.id ?? null, tailored: !!app?.resumePath, outreach: !!appOutreachFile(app), descLen: typeof description === 'string' ? description.length : 0,
             funded: funded.get(String(rest.company ?? '').toLowerCase()) ?? null };
         });
         return send(res, 200, { updatedAt: j.updatedAt ?? null, jobs });
