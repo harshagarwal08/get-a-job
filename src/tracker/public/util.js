@@ -10,7 +10,9 @@ export const LABEL = {
   hired: 'Hired', rejected: 'Rejected', withdrawn: 'Withdrawn', no_response: 'No response', offer_declined: 'Offer declined',
   ats: 'ATS', referral: 'Referral', linkedin: 'LinkedIn', email: 'Email', recruiter: 'Recruiter', cold: 'Cold outreach', other: 'Other',
   remote: 'Remote', hybrid: 'Hybrid', onsite: 'Onsite', unknown: 'Unknown', none: 'No track',
-  green: 'Eligible', orange: 'Check', new: 'New', ranked: 'Ranked', tracked: 'Tracked', skipped: 'Skipped', expired: 'Expired',
+  green: 'Eligible', orange: 'Check', high: 'High', medium: 'Medium', low: 'Low',
+  'pre-seed': 'Pre-seed', seed: 'Seed', 'pre-series-a': 'Pre-Series A', 'series-a': 'Series A', 'series-b': 'Series B', 'series-c': 'Series C', 'series-d+': 'Series D+', growth: 'Growth',
+  jobspy: 'JobSpy', greenhouse: 'Greenhouse', lever: 'Lever', ashby: 'Ashby', workable: 'Workable', careers: 'Careers page', workday: 'Workday', hn: 'Hacker News', remotive: 'Remotive', remoteok: 'Remote OK', arbeitnow: 'Arbeitnow', yc: 'YC', naukri: 'Naukri', indeed: 'Indeed', glassdoor: 'Glassdoor', google: 'Google Jobs', 'google-jobs': 'Google Jobs', wellfound: 'Wellfound', 'email-alert': 'Email alert', 'linkedin-alert': 'LinkedIn alert', manual: 'Manual', new: 'New', ranked: 'Ranked', tracked: 'Tracked', skipped: 'Skipped', expired: 'Expired',
 };
 export const label = (k) => LABEL[k] ?? k ?? '';
 

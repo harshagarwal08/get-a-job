@@ -4,6 +4,7 @@ import { renderPipeline, renderTable } from './views.js';
 import { renderJobs, renderStats } from './views2.js';
 import { openDigestModal } from './digest.js';
 import { renderSettings, settingsDirty, loadSettings, runSearch, pollSearch, searchStatusBox } from './settings.js';
+import { runTask, pollTask, taskBusy, openJd, appActions } from './tasks.js';
 
 const VIEWS = ['pipeline', 'table', 'jobs', 'stats', 'settings'];
 const ui = storage.get('gaj.ui', {});
@@ -26,6 +27,18 @@ const ctx = {
     else document.getElementById('jobs-count').textContent = String(ctx.jobs.filter((j) => j.status === 'new' || j.status === 'ranked').length || '');
     if (s.exitCode === 0) toast(`Search finished: ${s.summary?.new ?? 0} new job${s.summary?.new === 1 ? '' : 's'}`, { sub: s.summary?.new ? 'Ask Claude to /rank them next.' : undefined, action: ctx.view !== 'jobs' ? { label: 'View', run: () => setView('jobs') } : undefined });
     else toast('Search failed', { error: true, sub: s.error ?? undefined });
+  },
+  task: null, claudeAvailable: true,
+  taskBusy: () => taskBusy(ctx),
+  runTask: (body, title) => runTask(ctx, body, title),
+  openJd: (j, opts) => openJd(ctx, j, opts),
+  async onTaskDone(s) {
+    ctx.lastRaw.apps = '';
+    ctx.lastRaw.jobs = '';
+    await refresh({ force: true }).catch(() => {});
+    const ok = s.exitCode === 0 && !s.error;
+    toast(ok ? `${ctx.task?.title ?? 'Claude task'}: done` : `${ctx.task?.title ?? 'Claude task'}: failed`, { error: !ok, sub: ok ? 'Files are in the application folder.' : s.error ?? undefined });
+    if (ctx.drawer.id && !ctx.drawer.dirty) openDrawer(ctx.drawer.id);
   },
   drawer: { id: null, mode: null, dirty: false },
   lastRaw: { apps: '', jobs: '' },
@@ -246,7 +259,7 @@ function openDrawer(id) {
           a.nextActionDate ? h('span', { class: `chip ${due === 'overdue' ? 'st-rejected' : 'plain'}` }, `Next: ${relDue(a.nextActionDate)}`) : null,
           a.jobKey ? h('span', { class: 'chip plain', title: a.jobKey }, 'From jobs inbox') : null) : null),
       h('button', { class: 'btn ghost icon-btn', type: 'button', 'aria-label': 'Close', onclick: closeDrawer }, icon('x', 16))),
-    h('div', { class: 'drawer-body' }, form, errEl, timeline),
+    h('div', { class: 'drawer-body' }, !isNew ? appActions(ctx, a) : null, form, errEl, timeline),
     h('div', { class: 'drawer-foot' },
       !isNew ? h('button', { class: 'btn danger', type: 'button', onclick: () => remove(a) }, icon('trash', 14), h('span', { class: 'hide-sm' }, 'Delete')) : null,
       h('span', { class: 'grow' }), dirtyEl,
@@ -452,6 +465,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
     await loadDigest();
     loadSettings(ctx).then(() => { if (ctx.view === 'jobs') render(); }).catch(() => {});
     pollSearch(ctx);
+    pollTask(ctx);
   } catch (e) {
     toast('Could not reach the tracker server', { error: true, sub: 'Is `gaj tracker` still running?' });
   }

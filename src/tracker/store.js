@@ -289,6 +289,24 @@ export function createStore({ trackerFile = paths.tracker, jobsFile = paths.jobs
     });
   }
 
+  // Full posting text pasted or fetched from the tracker, so /tailor and /rank have something to work with.
+  async function setJobDescription(key, text, { via = 'pasted' } = {}) {
+    if (typeof text !== 'string') throw new ValidationError('description must be text');
+    const clean = text.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim();
+    if (clean.length < 50) throw new ValidationError('description is too short (paste the full job description)');
+    if (clean.length > 50000) throw new ValidationError('description is too long (max 50,000 characters)');
+    return lockJ(() => {
+      const j = readJSON(jobsFile, null);
+      if (!j || !j.jobs || !j.jobs[key]) throw new NotFoundError(`job ${key} not found`);
+      j.jobs[key].description = clean;
+      j.jobs[key].descriptionVia = via;
+      j.jobs[key].descriptionAt = new Date().toISOString();
+      writeJSON(jobsFile, j);
+      const { description, ...rest } = j.jobs[key];
+      return { ...rest, descLen: clean.length };
+    });
+  }
+
   // Adds the application (tracker lock; jobKey conflict re-checked inside it), then marks the job tracked (jobs lock).
   async function trackJob(key, overrides = {}) {
     const job = getJob(key);
@@ -304,7 +322,7 @@ export function createStore({ trackerFile = paths.tracker, jobsFile = paths.jobs
     return app;
   }
 
-  return { trackerFile, jobsFile, root, load, list, get, add, addOrUpdate, update, undo, remove, loadJobs, listJobs, getJob, setJobStatus, trackJob };
+  return { trackerFile, jobsFile, root, load, list, get, add, addOrUpdate, update, undo, remove, loadJobs, listJobs, getJob, setJobStatus, setJobDescription, trackJob };
 }
 
 const safeUrl = (u) => (typeof u === 'string' && /^https?:\/\//i.test(u) ? u : null);

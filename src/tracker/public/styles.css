@@ -653,3 +653,50 @@ svg.chart .vlabel { fill: var(--text-2); font-weight: 600; }
 .kv b { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
 .cmd-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
 .cmd { flex: 1; min-width: 0; font: 12px var(--mono); background: var(--surface-2); border: 1px solid var(--border); padding: 7px 10px; border-radius: 8px; overflow-x: auto; white-space: nowrap; color: var(--text); }
+
+/* ---- job badges ---- */
+.chip.qf-high { --c: var(--ok); }
+.chip.qf-medium { --c: var(--warn); }
+.chip.qf-low { --c: var(--text-3); }
+.chip.kind-intern { --c: #0e7490; }
+.chip.funded { --c: #a21caf; }
+.chip.tailored { --c: var(--ok); }
+.chip.jd-thin { --c: var(--danger); }
+.chip.file { background: var(--surface-2); color: var(--text-2); font-weight: 550; text-decoration: none; }
+.chip.file:hover { color: var(--accent-text); background: var(--accent-soft); }
+.job-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; justify-content: flex-end; }
+.job-actions .btn { white-space: nowrap; }
+
+/* ---- Claude task panel ---- */
+.task-panel {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60; width: min(440px, calc(100vw - 32px));
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-3, var(--shadow-2));
+  padding: 10px 12px; display: grid; gap: 8px;
+}
+.task-panel.ok { border-color: color-mix(in srgb, var(--ok) 45%, var(--border)); }
+.task-panel.bad { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.task-head { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.task-head .grow { flex: 1; }
+.task-log { margin: 0; max-height: 180px; overflow: auto; font-size: 11.5px; line-height: 1.45; white-space: pre-wrap; word-break: break-word;
+  background: var(--surface-2); border-radius: var(--radius-sm); padding: 8px; color: var(--text-2); }
+.task-panel details summary { cursor: pointer; font-size: 12px; color: var(--text-2); }
+.task-panel .err { color: var(--danger); font-size: 12px; }
+.spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+/* ---- job description modal ---- */
+.jd-sheet { width: min(760px, calc(100vw - 32px)); display: grid; gap: 10px; }
+.jd-sheet h2 { margin: 0; }
+.jd-sheet p { margin: 0; }
+.jd-input { width: 100%; min-height: 320px; resize: vertical; font: inherit; font-size: 13px; line-height: 1.5; padding: 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+.jd-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.jd-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.jd-foot .grow { flex: 1; }
+.jd-foot .err { color: var(--danger); font-size: 12px; flex-basis: 100%; order: 5; }
+
+/* ---- drawer: Claude actions ---- */
+.ai-actions .btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.ai-actions .hint-line { margin: 6px 0 4px; font-size: 11.5px; color: var(--text-3); }
+.file-list { display: flex; flex-wrap: wrap; gap: 6px; }

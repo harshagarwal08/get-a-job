@@ -111,6 +111,8 @@ Check how an ATS reads any resume PDF with `/ats`: a 0-100 score (parseability, 
 
 **10. Track everything.** The tracker opens in your browser: a board of your applications by stage, a jobs inbox with **New** badges, stats, and a Settings tab where you can change preferences and run a search. You can export it to a spreadsheet or Google Sheets.
 
+The jobs inbox and the application drawer can also run Claude for you, on your machine, through Claude Code's headless mode (`claude -p`): **Tailor** (runs `/tailor`), **Rank**, and **Cover note / Referral DM / Recruiter email** (runs `/cover`). A panel shows progress, and the resulting files appear in the drawer. Runs are restricted to the `gaj` CLI plus file and web-read tools, never ask questions, and only draft: nothing is sent or submitted. Each job also shows badges for fit, internship, track, recently funded company, whether a tailored resume exists, and **No JD** when the posting text is missing. Use **Add JD** to paste the description, or **Fetch from posting** to pull the text from the posting's own URL, so tailoring has the real requirements.
+
 ```bash
 npm run tracker             # or /track inside Claude Code
 ```

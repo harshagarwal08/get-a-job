@@ -1,4 +1,5 @@
-// Local tracker server: 127.0.0.1 only, JSON API + static UI. No external requests.
+// Local tracker server: 127.0.0.1 only, JSON API + static UI. The only outbound requests are the
+// ones the user clicks for: fetching a posting's own URL, running a search or a Claude task.
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,6 +10,7 @@ import { FORMATS, exportApplications } from './export.js';
 import { readJSON, writeJSON } from '../lib/store.js';
 import { validatePreferences, REMOTE_SCOPES } from '../lib/preferences.js';
 import { TRACK_ID, createSearchRunner } from './search.js';
+import { createAgentRunner } from './agent.js';
 import { loadState as loadDigestState, latestDigest } from '../digest/digest.js';
 import * as schedule from '../digest/schedule.js';
 
@@ -73,11 +75,47 @@ function splitBody(body) {
   return { note, fields };
 }
 
-export function createTrackerServer({ store = createStore(), port = 4317, meta = {}, search, scheduleEnv } = {}) {
+export function createTrackerServer({ store = createStore(), port = 4317, meta = {}, search, agent, scheduleEnv } = {}) {
   const applicationsDir = path.join(store.root, 'data', 'applications');
   const prefsFile = path.join(store.root, 'profile', 'preferences.json');
   const backupsDir = path.join(store.root, 'data', 'backups');
   const runner = search ?? createSearchRunner({ root: store.root, demo: !!meta.demo, jobsFile: store.jobsFile });
+  const agentRunner = agent ?? createAgentRunner({ root: store.root, demo: !!meta.demo });
+  const fundedFile = path.join(store.root, 'data', 'funded.json');
+
+  // Funded-startup badges: company name (lowercase) -> {round, announcedAt, status}.
+  function fundedByName() {
+    let db;
+    try { db = readJSON(fundedFile, null); } catch { db = null; }
+    const map = new Map();
+    for (const c of db?.companies ?? []) map.set(String(c.name).toLowerCase(), { id: c.id, round: c.round, announcedAt: c.announcedAt, status: c.status });
+    return map;
+  }
+
+  // Files in an application's folder (only under data/applications/), for the drawer.
+  function appFiles(app) {
+    if (!app.appDir) return [];
+    let base;
+    let dir;
+    try { base = fs.realpathSync(applicationsDir); dir = fs.realpathSync(path.resolve(store.root, app.appDir)); } catch { return []; }
+    if (!dir.startsWith(base + path.sep)) return [];
+    return fs.readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isFile() && /\.(pdf|md|txt|html|json)$/i.test(e.name))
+      .map((e) => ({ name: e.name, path: path.relative(store.root, path.join(dir, e.name)).split(path.sep).join('/') }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async function fetchDescription(key) {
+    const job = store.getJob(key);
+    const url = [job.applyUrl, job.url].find((u) => typeof u === 'string' && /^https?:\/\//i.test(u));
+    if (!url) throw new HttpError(400, 'this job has no posting URL; paste the description instead');
+    const prefs = readJSON(prefsFile, null);
+    const { fetchPosting } = await import('../scrape/cli.js');
+    let res;
+    try { res = await fetchPosting(url, { allowLinkedIn: prefs?.sources?.linkedin === true }); } catch (err) { throw new HttpError(502, err.message); }
+    if (!res?.text || res.text.trim().length < 200) throw new HttpError(422, 'the page had little readable text (it may need JavaScript or a login); paste the description instead');
+    return store.setJobDescription(key, res.text, { via: 'fetched' });
+  }
 
   // Read-only view of this month's paid-provider usage (data/usage.json is written by scrape).
   function usageView(prefs) {
@@ -250,6 +288,8 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
           const { note, fields } = splitBody(body);
           return send(res, 201, await store.add(fields, { note: typeof note === 'string' && note.trim() ? note : undefined }));
         }
+      } else if (action === 'files' && method === 'GET') {
+        return send(res, 200, { files: appFiles(store.get(id)) });
       } else if (action === 'undo' && method === 'POST') {
         return send(res, 200, await store.undo(id));
       } else if (!action) {
@@ -267,19 +307,38 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
       if (!id && method === 'GET') {
         const key = url.searchParams.get('key');
         if (key) return send(res, 200, store.getJob(key));
-        const appByKey = new Map(store.list().filter((a) => a.jobKey).map((a) => [a.jobKey, a.id]));
+        const appByKey = new Map(store.list().filter((a) => a.jobKey).map((a) => [a.jobKey, a]));
+        const funded = fundedByName();
         const j = store.loadJobs();
-        const jobs = Object.values(j.jobs).map(({ description, ...rest }) => ({ ...rest, applicationId: appByKey.get(rest.key) ?? null }));
+        const jobs = Object.values(j.jobs).map(({ description, ...rest }) => {
+          const app = appByKey.get(rest.key);
+          return { ...rest, applicationId: app?.id ?? null, tailored: !!app?.resumePath, descLen: typeof description === 'string' ? description.length : 0,
+            funded: funded.get(String(rest.company ?? '').toLowerCase()) ?? null };
+        });
         return send(res, 200, { updatedAt: j.updatedAt ?? null, jobs });
       }
       if (id && !action && method === 'PATCH') {
         if (!body || typeof body.status !== 'string') throw new HttpError(400, 'body must be {status}');
         return send(res, 200, await store.setJobStatus(id, body.status));
       }
+      if (id && action === 'description' && method === 'POST') {
+        if (!body || typeof body.text !== 'string') throw new HttpError(400, 'body must be {text}');
+        return send(res, 200, await store.setJobDescription(id, body.text, { via: 'pasted' }));
+      }
+      if (id && action === 'fetch' && method === 'POST') return send(res, 200, await fetchDescription(id));
       if (id && action === 'track' && method === 'POST') {
         const { note, ...fields } = body ?? {};
         return send(res, 201, await store.trackJob(id, fields));
       }
+      throw new HttpError(405, 'method not allowed');
+    }
+
+    if (resource === 'agent') {
+      if (!id && method === 'POST') {
+        const b = body ?? {};
+        return send(res, 202, agentRunner.start({ task: b.task, key: b.key, id: b.id, kind: b.kind }));
+      }
+      if (id === 'status' && method === 'GET') return send(res, 200, agentRunner.status());
       throw new HttpError(405, 'method not allowed');
     }
 
