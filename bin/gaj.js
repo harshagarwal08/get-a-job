@@ -9,6 +9,7 @@ const MODULES = {
   resume: '../src/resume/cli.js',
   tracker: '../src/tracker/cli.js',
   digest: '../src/digest/cli.js',
+  funded: '../src/funded/cli.js',
 };
 
 const ROUTES = {
@@ -17,6 +18,7 @@ const ROUTES = {
   render: 'resume', verify: 'resume', ats: 'resume',
   tracker: 'tracker', track: 'tracker', export: 'tracker',
   digest: 'digest', schedule: 'digest',
+  funded: 'funded', 'funded:add': 'funded', 'funded:set': 'funded',
 };
 
 async function load(mod) {

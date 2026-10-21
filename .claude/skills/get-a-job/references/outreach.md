@@ -82,3 +82,26 @@ LinkedIn, to someone at the company (find via the people-search link from
   line connecting it to your fit, close. No re-pitching the whole resume.
 - After a rejection: optional 2-3 sentence note thanking them and asking to be
   considered for future roles.
+
+## 7. Cold outreach, no opening (`/cold-dm`)
+
+For startups with no matching role, usually within 2-8 weeks of a funding
+round. Saved in `data/applications/<company-slug>-open-application/`.
+
+- **Who**: one person, two at most per company (founder/CEO first; for
+  product, the CPO or head of product). Never several people with the same text.
+- **First line is about them**, not the candidate: a confirmed, specific fact
+  (the round and what it is for, a launch, a product detail). "Congrats on the
+  raise" alone is not specific.
+- **Proof over claims**: one result with a number and, if the profile has one,
+  a link to work they can open (prototype, teardown, case study).
+- **A concrete, small offer** the candidate can deliver this month, then one
+  ask: a 15-minute call, or "is there someone I should speak to".
+- Say plainly there is no posted role and you are asking anyway. Never imply a
+  referral, a mutual contact or prior conversation that did not happen.
+- **Lengths**: connection note ≤ 300 characters; DM 80-150 words; email
+  90-150 words with a subject ≤ 60 characters; follow-up 40-70 words.
+- **Follow-up**: at most one, 5-7 days after, in the same thread, no new
+  claims. No reply after that → stop; mark `no_response` via `/outcome`.
+- Track every cold draft with `--channel cold` so response rates show up per
+  channel in the tracker stats.
