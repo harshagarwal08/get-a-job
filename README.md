@@ -361,6 +361,10 @@ Query-based, not per company. Turn each on or off in `profile/preferences.json` 
 
 **Wellfound, Cutshort and Instahyre: email alerts only.** A scraper is only built when listings are public, allowed by `robots.txt`, need no login, aren't behind bot protection, and the platform's terms allow it. None of these three passes all five: each one's terms explicitly forbid scraping, and Wellfound sits behind Cloudflare bot management. So there's no scraper and no preference for them; their job-match emails, read by `/email-alerts`, are the way in. Naukri is the same: alerts only.
 
+**YC jobs board and Weekday: no scraper.** Checked 2026-10-21 against the same five tests. Both list jobs publicly without login and `robots.txt` allows the listing pages, but both sets of terms forbid automated access:
+- **YC** (`ycombinator.com/jobs`, `/companies/<slug>/jobs`): the [Terms of Use](https://www.ycombinator.com/legal) say "you will not engage in or use any data mining, robots, scraping or similar data gathering or extraction methods". YC startups are still covered: `/discover` and `gaj discover yc` use the public yc-oss dataset to find hiring YC companies, and `/scrape` then reads their own ATS boards.
+- **Weekday** (`weekday.works`): the [Terms of Service](https://www.weekday.works/terms-of-service) forbid using "any robot, spider, or other automatic device, process, or means to access Service for any purpose, including monitoring or copying any of the material", and say users "shall not scrape or programmatically take any data from Services". Use `/import-jobs` with results you browse yourself.
+
 ### Providers (optional)
 
 Query-based sources that search many sites at once. All are off by default; `/onboard` asks. Keys go in `.env` (copy `.env.example`), never in chat or in `preferences.json`. Results are cached 12 hours.

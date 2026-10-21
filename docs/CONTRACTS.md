@@ -184,6 +184,17 @@ Parsers live in `src/scrape/boards/{wellfound,cutshort,instahyre}.js`. They are 
 
 The platforms' alert emails are not published anywhere. The parsers therefore accept many layouts, and the fixtures in `tests/fixtures/platforms/` are synthetic. When a real alert fails to parse, add it (redacted) as a fixture.
 
+### YC jobs board and Weekday: no scraper
+Checked 2026-10-21 with the honest UA against the same five tests. There is **no scraper, no `BOARDS` entry and no `sources.yc|weekday` preference**.
+- **YC** (`www.ycombinator.com/jobs`, `/jobs/role/<role>`, `/jobs/location/<place>`, `/companies/<slug>/jobs`):
+  - Pages return 200 without login and robots allows them (only `/companies?*`, `/library?*` and `/verify/*` are disallowed). Listings are server-rendered as Inertia JSON in the `data-page` attribute (`props.jobPostings`).
+  - The Terms of Use (`/legal`) say "you will not engage in or use any data mining, robots, scraping or similar data gathering or extraction methods".
+  - Verdict: not built. YC companies come from the yc-oss dataset (`discover yc`) and are scraped through their own ATS.
+- **Weekday** (`www.weekday.works`):
+  - robots allows `/` except `/drops/` and `/searches/` (`Crawl-delay: 1`); `/jobs` is a public Next.js page.
+  - The Terms of Service (`/terms-of-service`, an embedded Google Doc) forbid "any robot, spider, or other automatic device, process, or means to access Service for any purpose, including monitoring or copying any of the material on Service" and say users "shall not scrape or programmatically take any data from Services".
+  - Verdict: not built. Use `/import-jobs`.
+
 ### Job boards (`preferences.sources.*`, query-based, not per company)
 Each board's feed is fetched (cached 6h, failures negatively cached 1h) and filtered locally against track titles, then the same filter/eligibility/merge pipeline runs. Attribution requirements (e.g. RemoteOK) are honored by keeping the source `url`.
 - `hn`: latest "Ask HN: Who is hiring?" thread via the HN Algolia API; each top-level comment is one posting (first line usually `Company | Role | Location | REMOTE | VISA`). Expire with the thread (new month = new thread).
