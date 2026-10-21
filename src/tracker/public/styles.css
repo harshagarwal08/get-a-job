@@ -718,3 +718,11 @@ svg.chart .vlabel { fill: var(--text-2); font-weight: 600; }
 .msg-subject { font-size: 12.5px; font-weight: 600; }
 .msg-text { margin: 0; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 12.5px; line-height: 1.5; color: var(--text); }
 .chip.as-btn { border: 0; cursor: pointer; font: inherit; font-size: 11.5px; font-weight: 600; }
+.file-view { margin-top: 8px; background: var(--surface-2); border-radius: var(--radius-sm); padding: 8px 10px; display: grid; gap: 4px; }
+button.chip.file { border: 0; cursor: pointer; font: inherit; font-size: 11.5px; }
+.chip.file.on { background: var(--accent-soft); color: var(--accent-text); }
+details.tpl > summary { cursor: pointer; list-style: none; }
+details.tpl > summary::-webkit-details-marker { display: none; }
+details.tpl > summary h3::after { content: " ▸"; color: var(--text-3); }
+details.tpl[open] > summary h3::after { content: " ▾"; }
+details.tpl[open] > summary { margin-bottom: 8px; }

@@ -161,6 +161,21 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
     return { generatedAt: str(o.generatedAt, 40), contacts, searches, messages };
   }
 
+  // Generic outreach templates: profile/outreach-templates.json (personal), else the example.
+  const TEMPLATES_FILE = path.join(store.root, 'profile', 'outreach-templates.json');
+  const TEMPLATES_EXAMPLE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'examples', 'outreach-templates.example.json');
+  function templates() {
+    let t = null;
+    let personal = true;
+    try { t = readJSON(TEMPLATES_FILE, null); } catch { t = null; }
+    if (!t) { personal = false; try { t = readJSON(TEMPLATES_EXAMPLE, null); } catch { t = null; } }
+    const list = (Array.isArray(t?.templates) ? t.templates : []).slice(0, 20).map((x, i) => ({
+      id: str(x?.id, 40) ?? `t${i + 1}`, label: str(x?.label, 80), kind: MSG_KINDS.includes(x?.kind) ? x.kind : 'cold',
+      channel: MSG_CHANNELS.includes(x?.channel) ? x.channel : 'linkedin-dm', subject: str(x?.subject, 200), text: str(x?.text, 5000),
+    })).filter((x) => x.label && x.text);
+    return { personal, templates: list };
+  }
+
   async function fetchDescription(key) {
     const job = store.getJob(key);
     const url = [job.applyUrl, job.url].find((u) => typeof u === 'string' && /^https?:\/\//i.test(u));
@@ -400,6 +415,8 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
       if (id === 'status' && method === 'GET') return send(res, 200, agentRunner.status());
       throw new HttpError(405, 'method not allowed');
     }
+
+    if (resource === 'templates' && !id && method === 'GET') return send(res, 200, templates());
 
     if (resource === 'stats' && method === 'GET') return send(res, 200, computeStats(store.list()));
 

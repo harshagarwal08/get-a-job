@@ -170,15 +170,61 @@ export function outreachSection(ctx, a) {
   return sec;
 }
 
+let templateCache;
+/** Generic templates with {{company}}, {{role}}, {{url}} filled from the application. */
+export function templatesSection(ctx, a) {
+  const body = h('div', { class: 'outreach' }, h('span', { class: 'muted' }, 'Loading…'));
+  const sec = h('details', { class: 'section tpl' }, h('summary', null, h('h3', null, 'Generic templates')), body);
+  const fill = (s) => String(s ?? '').replaceAll('{{company}}', a.company || '[Company]').replaceAll('{{role}}', a.role || '[Role]')
+    .replaceAll('{{url}}', a.url || '[job link]').replaceAll('{{name}}', '[Name]');
+  (templateCache ??= api('/api/templates')).then(({ templates, personal }) => {
+    if (!templates.length) { body.replaceChildren(h('span', { class: 'muted' }, 'No templates. Add profile/outreach-templates.json.')); return; }
+    body.replaceChildren(
+      !personal ? h('p', { class: 'hint-line' }, 'Example templates. Copy examples/outreach-templates.example.json to profile/outreach-templates.json and fill in your own facts.') : null,
+      ...templates.map((t) => {
+        const text = fill(t.text);
+        const subject = t.subject ? fill(t.subject) : null;
+        return h('div', { class: 'msg' },
+          h('div', { class: 'msg-head' }, h('b', null, t.label), h('span', { class: 'muted' }, ` · ${text.length} chars`), h('span', { class: 'grow' }), copyBtn(subject ? `Subject: ${subject}\n\n${text}` : text, t.label)),
+          subject ? h('div', { class: 'msg-subject' }, subject) : null,
+          h('pre', { class: 'msg-text' }, text));
+      }),
+      h('p', { class: 'hint-line' }, 'Replace [Name] and anything in [brackets] before sending.'));
+  }).catch(() => { templateCache = null; body.replaceChildren(h('span', { class: 'muted' }, 'Could not load templates.')); });
+  return sec;
+}
+
 /** Action buttons and files for an application (drawer). */
 export function appActions(ctx, a) {
   const run = (body, title) => ctx.runTask(body, title);
   const busy = taskBusy(ctx);
   const files = h('div', { class: 'file-list' }, h('span', { class: 'muted' }, a.appDir ? 'Loading files…' : 'No application folder yet. Tailor creates one.'));
   if (a.appDir) {
+    const viewer = h('div', { class: 'file-view', hidden: true });
+    let openName = null;
+    // Text drafts open inline (with Copy); PDFs and HTML open in a new tab.
+    const showText = async (f, chip) => {
+      files.querySelectorAll('.chip.file.on').forEach((c) => c.classList.remove('on'));
+      if (openName === f.name) { openName = null; viewer.hidden = true; return; }
+      openName = f.name;
+      chip.classList.add('on');
+      viewer.hidden = false;
+      viewer.replaceChildren(h('span', { class: 'muted' }, 'Loading…'));
+      try {
+        const res = await fetch(`/files?path=${encodeURIComponent(f.path)}`);
+        if (!res.ok) throw new Error(res.statusText);
+        const text = (await res.text()).trim();
+        viewer.replaceChildren(h('div', { class: 'msg-head' }, h('b', null, f.name), h('span', { class: 'muted' }, ` · ${text.length} chars`), h('span', { class: 'grow' }), copyBtn(text, f.name)),
+          h('pre', { class: 'msg-text' }, text));
+      } catch { viewer.replaceChildren(h('span', { class: 'muted' }, 'Could not open the file.')); }
+    };
     api(`/api/applications/${a.id}/files`).then(({ files: list }) => {
-      files.replaceChildren(...(list.length ? list.map((f) => h('a', { class: 'chip file', href: `/files?path=${encodeURIComponent(f.path)}`, target: '_blank', rel: 'noopener', title: f.path }, icon('file', 11), f.name))
+      const shown = list.filter((f) => f.name !== 'outreach.json' && f.name !== 'resume.html');
+      files.replaceChildren(...(shown.length ? shown.map((f) => (/\.(md|txt)$/i.test(f.name)
+        ? (() => { const chip = h('button', { class: 'chip file', type: 'button', title: `Show ${f.name}` }, icon('file', 11), f.name); chip.onclick = () => showText(f, chip); return chip; })()
+        : h('a', { class: 'chip file', href: `/files?path=${encodeURIComponent(f.path)}`, target: '_blank', rel: 'noopener', title: `Open ${f.path}` }, icon('file', 11), f.name, ' ↗')))
         : [h('span', { class: 'muted' }, 'Folder is empty.')]));
+      files.after(viewer);
     }).catch(() => { files.replaceChildren(h('span', { class: 'muted' }, 'Could not list files.')); });
   }
   const isCold = a.channel === 'cold';

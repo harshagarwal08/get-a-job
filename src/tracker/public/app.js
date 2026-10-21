@@ -4,7 +4,7 @@ import { renderPipeline, renderTable } from './views.js';
 import { renderJobs, renderStats } from './views2.js';
 import { openDigestModal } from './digest.js';
 import { renderSettings, settingsDirty, loadSettings, runSearch, pollSearch, searchStatusBox } from './settings.js';
-import { runTask, pollTask, taskBusy, openJd, appActions, outreachSection } from './tasks.js';
+import { runTask, pollTask, taskBusy, openJd, appActions, outreachSection, templatesSection } from './tasks.js';
 
 const VIEWS = ['jobs', 'applications', 'stats', 'settings'];
 // Old bookmarks: #pipeline / #table are the two layouts of Applications.
@@ -280,7 +280,7 @@ function openDrawer(id) {
           a.nextActionDate ? h('span', { class: `chip ${due === 'overdue' ? 'st-rejected' : 'plain'}` }, `Next: ${relDue(a.nextActionDate)}`) : null,
           a.jobKey ? h('span', { class: 'chip plain', title: a.jobKey }, 'From jobs inbox') : null) : null),
       h('button', { class: 'btn ghost icon-btn', type: 'button', 'aria-label': 'Close', onclick: closeDrawer }, icon('x', 16))),
-    h('div', { class: 'drawer-body' }, !isNew ? appActions(ctx, a) : null, !isNew ? outreachSection(ctx, a) : null, form, errEl, timeline),
+    h('div', { class: 'drawer-body' }, !isNew ? appActions(ctx, a) : null, !isNew ? outreachSection(ctx, a) : null, !isNew ? templatesSection(ctx, a) : null, form, errEl, timeline),
     h('div', { class: 'drawer-foot' },
       !isNew ? h('button', { class: 'btn danger', type: 'button', onclick: () => remove(a) }, icon('trash', 14), h('span', { class: 'hide-sm' }, 'Delete')) : null,
       h('span', { class: 'grow' }), dirtyEl,

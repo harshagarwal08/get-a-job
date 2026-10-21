@@ -127,3 +127,10 @@ test('outreach.json is re-validated before the UI sees it', async () => {
   assert.equal(r.data.messages[1].channel, 'linkedin-dm');
   assert.match(agent.taskPrompt({ task: 'outreach', key: KEY }), /^\/outreach mirelune/);
 });
+
+test('templates fall back to the example file', async () => {
+  const r = await j('/api/templates');
+  assert.equal(r.status, 200);
+  assert.equal(r.data.personal, false);
+  assert.ok(r.data.templates.some((t) => t.kind === 'referral' && t.text.includes('{{company}}')));
+});
