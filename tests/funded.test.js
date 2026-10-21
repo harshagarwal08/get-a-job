@@ -49,3 +49,18 @@ test('setFunded validates status and id', async () => {
   await assert.rejects(f.setFunded('beta', { status: 'hired' }), /status must be/);
   await assert.rejects(f.setFunded('nope', { status: 'skipped' }), /no funded company/);
 });
+
+test('fundedStatus: due when never searched or older than everyDays; funded:add stamps lastSearchAt', async () => {
+  fs.rmSync(f.FUNDED_FILE, { force: true });
+  let s = f.fundedStatus({}, NOW);
+  assert.equal(s.enabled, true);
+  assert.equal(s.everyDays, 7);
+  assert.equal(s.due, true);
+  assert.equal(s.lastSearchAt, null);
+  await f.addRounds([], { now: new Date('2026-10-18T00:00:00Z') });
+  s = f.fundedStatus({ sources: { funded: { enabled: true, everyDays: 7 } } }, NOW);
+  assert.equal(s.daysSince, 3);
+  assert.equal(s.due, false);
+  assert.equal(f.fundedStatus({ sources: { funded: { enabled: true, everyDays: 2 } } }, NOW).due, true);
+  assert.equal(f.fundedStatus({ sources: { funded: { enabled: false } } }, NOW).due, false);
+});

@@ -65,12 +65,23 @@ Write the array to `data/tmp/funded-<YYYY-MM-DD>.json`, then:
 node bin/gaj.js funded:add data/tmp/funded-<YYYY-MM-DD>.json --json
 ```
 
-Report added / updated / errors.
+Report added / updated / errors. This also records the search time that
+`/scrape` uses to decide when `/funded` is due, so run it even when nothing
+new was found (an empty array `[]` is fine).
 
 ## 5. Hiring signal (new and updated companies)
 
 For each, `node bin/gaj.js company:detect "<Name>" --json` (rules as
-`/discover` step 4: never `low` confidence; careers-page fallback allowed).
+`/discover` step 4: never `low` confidence). A name match is not enough:
+confirm the board's sample titles fit this company (common names like
+"Circle" or "Foundry" often hit another company's board).
+
+**No board → always check the careers page.** Many seed-stage startups list
+roles only on their own site. WebSearch `<Company> careers`, take the page on
+the company's own domain, and run the careers-page fallback from `/discover`
+step 4 (`careers:check`, then `company:check careers`). If the crawler finds
+nothing but the page clearly lists roles, read the titles from it and note
+them on the lead: `node bin/gaj.js funded:set <id> --note "careers page: <titles>"`.
 
 - **Board found with jobs** → ask (one AskUserQuestion, multiSelect) which to
   add; add with `companies:add ... --source discover --tags <sector>,funded`,
@@ -97,4 +108,5 @@ candidate (sector, stage, what the round is for, if the article says).
 ## 7. Next
 
 - `/cold-dm <id>` for any target (drafts only).
-- Re-run weekly; `node bin/gaj.js funded --days 30` lists the current window.
+- `/scrape` re-runs this automatically once `sources.funded.everyDays` (default
+  7) have passed; `node bin/gaj.js funded --days 30` lists the current window.

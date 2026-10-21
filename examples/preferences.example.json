@@ -145,6 +145,10 @@
       "hoursOld": 168,
       "maxQueries": 3
     },
+    "funded": {
+      "enabled": true,
+      "everyDays": 7
+    },
     "maxAgeDays": 14
   }
 }

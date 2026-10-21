@@ -44,10 +44,27 @@ export function normalizeRound(raw, now = new Date()) {
   };
 }
 
-const load = () => readJSON(FUNDED_FILE, () => ({ version: 1, companies: [] }));
+const load = () => readJSON(FUNDED_FILE, () => ({ version: 1, lastSearchAt: null, companies: [] }));
+export const DEFAULT_EVERY_DAYS = 7;
 
 /**
- * Merge rounds into data/funded.json. Same company → keep the newest round, keep status/notes.
+ * Is a /funded search due? /scrape runs one when the last search is older than
+ * `sources.funded.everyDays` (default 7). Off only when `sources.funded.enabled` is false.
+ * @returns {{enabled: boolean, everyDays: number, lastSearchAt: string|null, daysSince: number|null, due: boolean, newLeads: number}}
+ */
+export function fundedStatus(prefs, now = new Date()) {
+  const cfg = prefs?.sources?.funded ?? {};
+  const enabled = cfg.enabled !== false;
+  const everyDays = Number.isInteger(cfg.everyDays) && cfg.everyDays > 0 ? cfg.everyDays : DEFAULT_EVERY_DAYS;
+  const db = load();
+  const last = db.lastSearchAt ? Date.parse(db.lastSearchAt) : NaN;
+  const daysSince = Number.isNaN(last) ? null : Math.floor((now.getTime() - last) / 86400000);
+  return { enabled, everyDays, lastSearchAt: db.lastSearchAt ?? null, daysSince, due: enabled && (daysSince === null || daysSince >= everyDays),
+    newLeads: db.companies.filter((c) => c.status === 'new').length };
+}
+
+/**
+ * Merge rounds into data/funded.json and stamp lastSearchAt. Same company → keep the newest round, keep status/notes.
  * @returns {Promise<{added: string[], updated: string[], unchanged: string[], errors: string[]}>}
  */
 export async function addRounds(rounds, { now = new Date() } = {}) {
@@ -67,7 +84,8 @@ export async function addRounds(rounds, { now = new Date() } = {}) {
         res.updated.push(record.id);
       } else res.unchanged.push(record.id);
     }
-    writeJSON(FUNDED_FILE, { version: 1, companies: [...byId.values()] });
+    // Any funded:add (even an empty array) records that a search ran.
+    writeJSON(FUNDED_FILE, { version: 1, lastSearchAt: now.toISOString(), companies: [...byId.values()] });
   });
   return res;
 }

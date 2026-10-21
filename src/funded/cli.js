@@ -2,7 +2,9 @@
 import fs from 'node:fs';
 import { parse, out, fail } from '../lib/args.js';
 import { importPathAllowed } from '../scrape/importer.js';
-import { addRounds, listFunded, setFunded, FUNDED_STATUSES } from './funded.js';
+import { addRounds, listFunded, setFunded, fundedStatus, FUNDED_STATUSES } from './funded.js';
+import { readJSON } from '../lib/store.js';
+import { paths } from '../lib/paths.js';
 
 const LIST_USAGE = `gaj funded [--days N] [--status ${FUNDED_STATUSES.join('|')}] [--json]`;
 const ADD_USAGE = 'gaj funded:add <file.json> [--json]   (file under data/ or the OS temp dir: array of {name, round, amountUsd?, amountText?, announcedAt: YYYY-MM-DD, sector?, city?, investors?, website?, sourceUrl})';
@@ -17,11 +19,13 @@ async function list(argv) {
   if (days != null && !(Number.isInteger(days) && days > 0)) fail('--days must be a positive integer');
   if (a.status && !FUNDED_STATUSES.includes(a.status)) fail(`--status must be one of ${FUNDED_STATUSES.join(', ')}`);
   const rows = listFunded({ days, status: a.status });
-  out({ count: rows.length, companies: rows }, a.json, () => {
-    if (!rows.length) return 'No funded companies yet. Run /funded to find some.';
+  const search = fundedStatus(readJSON(paths.preferences, {}));
+  const when = search.lastSearchAt ? `Last search ${search.daysSince} day(s) ago${search.due ? ' (due: run /funded)' : ''}.` : 'Never searched: run /funded.';
+  out({ count: rows.length, search, companies: rows }, a.json, () => {
+    if (!rows.length) return `No funded companies yet. ${when}`;
     const lines = ['| date | company | round | amount | sector | city | status | id |', '|---|---|---|---|---|---|---|---|'];
     for (const c of rows) lines.push(`| ${c.announcedAt} | ${c.name} | ${c.round} | ${money(c)} | ${c.sector ?? ''} | ${c.city ?? ''} | ${c.status} | ${c.id} |`);
-    return lines.join('\n');
+    return [...lines, '', when].join('\n');
   });
 }
 
@@ -35,7 +39,7 @@ async function add(argv) {
   try { rounds = JSON.parse(fs.readFileSync(allowed.path, 'utf8')); } catch (e) { fail(`not valid JSON: ${e.message}`); }
   if (!Array.isArray(rounds)) fail('file must hold a JSON array of rounds');
   const res = await addRounds(rounds);
-  out(res, a.json, (r) => [`Added ${r.added.length}, updated ${r.updated.length}, unchanged ${r.unchanged.length}.`,
+  out(res, a.json, (r) => [`Added ${r.added.length}, updated ${r.updated.length}, unchanged ${r.unchanged.length}. Search recorded.`,
     ...r.errors.map((e) => `  ✗ ${e}`)].join('\n'));
   if (res.errors.length && !res.added.length && !res.updated.length) process.exitCode = 1;
 }
