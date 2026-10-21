@@ -7,7 +7,7 @@ import { readJSON } from '../lib/store.js';
 import { paths } from '../lib/paths.js';
 
 const LIST_USAGE = `gaj funded [--days N] [--status ${FUNDED_STATUSES.join('|')}] [--json]`;
-const ADD_USAGE = 'gaj funded:add <file.json> [--json]   (file under data/ or the OS temp dir: array of {name, round, amountUsd?, amountText?, announcedAt: YYYY-MM-DD, sector?, city?, investors?, website?, sourceUrl})';
+const ADD_USAGE = 'gaj funded:add <file.json> [--json]   (file under data/ or the OS temp dir: array of {name, round, amountUsd?, amountText?, announcedAt: YYYY-MM-DD, sector?, city?, country?, investors?, website?, sourceUrl})';
 const SET_USAGE = `gaj funded:set <id> [--status ${FUNDED_STATUSES.join('|')}] [--note "..."] [--json]`;
 
 const money = (c) => c.amountText ?? (c.amountUsd ? `$${(c.amountUsd / 1e6).toFixed(c.amountUsd < 1e7 ? 1 : 0)}M` : '?');
@@ -23,8 +23,8 @@ async function list(argv) {
   const when = search.lastSearchAt ? `Last search ${search.daysSince} day(s) ago${search.due ? ' (due: run /funded)' : ''}.` : 'Never searched: run /funded.';
   out({ count: rows.length, search, companies: rows }, a.json, () => {
     if (!rows.length) return `No funded companies yet. ${when}`;
-    const lines = ['| date | company | round | amount | sector | city | status | id |', '|---|---|---|---|---|---|---|---|'];
-    for (const c of rows) lines.push(`| ${c.announcedAt} | ${c.name} | ${c.round} | ${money(c)} | ${c.sector ?? ''} | ${c.city ?? ''} | ${c.status} | ${c.id} |`);
+    const lines = ['| date | company | round | amount | sector | where | status | id |', '|---|---|---|---|---|---|---|---|'];
+    for (const c of rows) lines.push(`| ${c.announcedAt} | ${c.name} | ${c.round} | ${money(c)} | ${c.sector ?? ''} | ${[c.city, c.country].filter(Boolean).join(', ')} | ${c.status} | ${c.id} |`);
     return [...lines, '', when].join('\n');
   });
 }

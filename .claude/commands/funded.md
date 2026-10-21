@@ -22,8 +22,11 @@ careers page you identified by name.
 
 From `$ARGUMENTS`, else from preferences:
 - **Window**: default last 45 days (`days`).
-- **Region / city**: `location.acceptableLocations`, `countryCode`, and remote
-  if `workModes` includes it.
+- **Region**: worldwide by default. Search every region in step 3, not only
+  the user's home country; narrow only if `$ARGUMENTS` names a region.
+- **Where the user can work** (used to filter, not to search):
+  `location.acceptableLocations`, `countryCode`, `workAuthorization`,
+  `needsSponsorship`, `openToRelocation`, and remote if `workModes` includes it.
 - **Stage**: default pre-seed to series-c (`companyStage`); growth rounds only
   if asked. Skip `debt` and `grant` unless asked.
 - **Sector**: `industries`, plus anything in `$ARGUMENTS`.
@@ -37,7 +40,10 @@ companies already in either unless they raised a newer round.
 
 ## 3. Search (4-8 WebSearch calls)
 
-Use roundup sources first, then targeted queries. Examples by region:
+Cover every region (at least one roundup each for India, US/global and
+Europe, plus YC), then targeted queries. A home-country-only search misses
+foreign startups that hire remote or have an office where the user lives.
+Examples by region:
 
 - **India**: `Entrackr weekly funding report`, `Inc42 funding galore this week`,
   `YourStory funding roundup <month year>`, `<sector> startup raises seed
@@ -45,6 +51,9 @@ Use roundup sources first, then targeted queries. Examples by region:
 - **US / global**: `Crunchbase News biggest funding rounds this week`,
   `TechCrunch raises series A <sector> <month year>`, `Axios Pro Rata deals`.
 - **Europe**: `Sifted funding roundup`, `EU-Startups funding <month year>`.
+- **Remote-first / India presence**: `<sector> startup raises seed remote-first
+  <month year>`, `US startup raises Series A India engineering team Bengaluru
+  <month year>`.
 - **YC**: early-stage criteria may also use `node bin/gaj.js discover yc ...`
   as in `/discover` step 3 (YC companies are recently funded by definition).
 
@@ -52,10 +61,22 @@ For each round collect: `name`, `round` (one of `pre-seed seed pre-series-a
 series-a series-b series-c series-d+ growth debt grant unknown`), `amountUsd`
 (convert INR at the article's figure if given, else leave null), `amountText`
 (as reported, e.g. "₹40 Cr", "$5M"), `announcedAt` (YYYY-MM-DD), `sector`,
-`city`, `investors` (lead first, ≤ 5), `website` (only from the company's own
+`city`, `country` (headquarters, as reported), `investors` (lead first, ≤ 5), `website` (only from the company's own
 domain, else omit), `sourceUrl` (the article). Facts come from the article
 text; a company named only in a headline list without a date or round →
 skip it. Keep only rounds inside the window that fit the criteria.
+
+**Can the user work there?** For each company outside the user's home
+country, decide from the article or the company's own site (careers page,
+"about", job posts), and keep only `likely`:
+- `likely`: remote-first or hires remotely worldwide / in the user's region, or
+  has an office in an acceptable location (e.g. a Bengaluru team), or the
+  user's `workAuthorization` covers its country.
+- `needs visa`: onsite only in a country the user can't work in; keep only if
+  `openToRelocation` and `needsSponsorship` allow it, and say so.
+- `unclear`: keep at most 5, marked unclear; `/cold-dm` must confirm first.
+Record the reason with `funded:set <id> --note "access: <likely|needs visa|unclear> - <why>"`
+after step 4.
 
 ## 4. Save
 
@@ -95,8 +116,11 @@ them on the lead: `node bin/gaj.js funded:set <id> --note "careers page: <titles
 
 Table, newest first:
 
-| Company | Round | Amount | Date | Sector | City | Hiring signal | Next |
-|---|---|---|---|---|---|---|---|
+| Company | Round | Amount | Date | Sector | City, country | Access | Hiring signal | Next |
+|---|---|---|---|---|---|---|---|---|
+
+- **Access**: `home` (user's country), `likely`, `needs visa`, `unclear`,
+  with the reason for anything not `home`.
 
 - **Hiring signal**: `N matching roles` / `N roles, none matching` / `no
   public board`.

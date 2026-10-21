@@ -94,7 +94,7 @@ Check how an ATS reads any resume PDF with `/ats`: a 0-100 score (parseability, 
 /ats inbox/cv.pdf https://jobs.lever.co/acme/1234
 ```
 
-**Recently funded startups.** Startups hire in the weeks after a round, often before posting roles. `/funded` searches funding roundups (Entrackr, Inc42, YourStory, Crunchbase News, TechCrunch, Sifted) for rounds that fit your location, stage and sector, saves them to `data/funded.json`, and checks each company's job board. Companies with a board go into your scrape list; the rest become cold-outreach targets. `/scrape` runs it for you once a week (`sources.funded.everyDays`, default 7; set `sources.funded.enabled` to false to turn it off). `/cold-dm <company>` drafts a short note to the founder (or head of product) with a specific reason, one proof point and a small offer, and tracks it under the **Cold outreach** channel.
+**Recently funded startups.** Startups hire in the weeks after a round, often before posting roles. `/funded` searches funding roundups worldwide (Entrackr, Inc42, YourStory, Crunchbase News, TechCrunch, Sifted, YC) for rounds that fit your stage and sector, keeps foreign startups only if you can work for them (remote, or an office where you live), saves them to `data/funded.json`, and checks each company's job board. Companies with a board go into your scrape list; the rest become cold-outreach targets. `/scrape` runs it for you once a week (`sources.funded.everyDays`, default 7; set `sources.funded.enabled` to false to turn it off). `/cold-dm <company>` drafts a short note to the founder (or head of product) with a specific reason, one proof point and a small offer, and tracks it under the **Cold outreach** channel.
 
 ```
 /funded Bengaluru AI seed to series B, last 30 days

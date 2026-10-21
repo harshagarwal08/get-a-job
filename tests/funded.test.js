@@ -13,9 +13,11 @@ const NOW = new Date('2026-10-21T00:00:00Z');
 const round = (o = {}) => ({ name: 'Acme AI', round: 'Series-A', amountUsd: 12e6, announcedAt: '2026-10-10', sourceUrl: 'https://news.example/acme', ...o });
 
 test('normalizeRound cleans untrusted text and rejects bad records', () => {
-  const { record } = f.normalizeRound(round({ name: 'Acme <b>AI</b>\n$(rm)', investors: ['Peak XV', '', 'x'.repeat(500)], website: 'javascript:alert(1)' }), NOW);
+  const { record } = f.normalizeRound(round({ name: 'Acme <b>AI</b>\n$(rm)', country: 'United States', investors: ['Peak XV', '', 'x'.repeat(500)], website: 'javascript:alert(1)' }), NOW);
   assert.equal(record.name, 'Acme bAI/b (rm)');
   assert.equal(record.round, 'series-a');
+  assert.equal(record.country, 'United States');
+  assert.equal(f.normalizeRound(round({ amountText: '$2.5M' }), NOW).record.amountText, '$2.5M');
   assert.equal(record.website, null);
   assert.equal(record.investors.length, 2);
   assert.equal(record.investors[1].length, 120);

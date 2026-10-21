@@ -33,10 +33,12 @@ export function normalizeRound(raw, now = new Date()) {
       name,
       round,
       amountUsd,
-      amountText: clean(raw.amountText, 40) || null,
+      // amounts are the one field where "$" is expected; everything else risky is still stripped
+      amountText: clean(String(raw.amountText ?? '').replace(/\$/g, 'USD '), 40).replace(/USD (?=\d)/g, '$') || null,
       announcedAt,
       sector: clean(raw.sector, MAX.text) || null,
       city: clean(raw.city, MAX.text) || null,
+      country: clean(raw.country, 60) || null,
       investors: (Array.isArray(raw.investors) ? raw.investors : []).map((i) => clean(i, MAX.name)).filter(Boolean).slice(0, MAX.investors),
       website: httpUrl(raw.website),
       sourceUrl,
