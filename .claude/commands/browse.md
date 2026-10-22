@@ -1,5 +1,5 @@
 ---
-description: Open your logged-in Chrome, search LinkedIn, Wellfound, Naukri, Instahyre, Cutshort and careers pages, collect matching jobs with full details, and add the ones you approve
+description: Open the logged-in browser (Playwright), search LinkedIn, Wellfound, Naukri, Instahyre, Cutshort and careers pages, collect matching jobs with full details, and add the ones you approve
 argument-hint: "[sites: linkedin,wellfound,naukri,instahyre,cutshort,careers] [track id] [extra criteria]"
 ---
 
@@ -25,8 +25,8 @@ it) and `references/research-security.md`. Read `profile/preferences.json` and
 ## 2. Check the browser
 
 Per `browser.md` section 1. Open one new tab. For each site, load its entry
-page first; if it shows a login wall, ask the user to log in in that tab and
-say "done" (or skip the site). Never type credentials.
+page first; if it shows a login wall, ask the user to log in in that window
+and say "done" (or skip the site). Never type credentials.
 
 ## 3. Sweep (per site, per search)
 

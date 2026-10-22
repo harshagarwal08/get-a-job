@@ -1,5 +1,5 @@
 ---
-description: Send one drafted DM (LinkedIn, in your logged-in Chrome) or email (Gmail) after you confirm the final text and recipient
+description: Send one drafted DM (LinkedIn, in the logged-in browser) or email (Gmail) after you confirm the final text and recipient
 argument-hint: "<application id | company> [message id m1|m2...] [linkedin|email]"
 ---
 

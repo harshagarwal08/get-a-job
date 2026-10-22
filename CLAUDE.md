@@ -34,7 +34,7 @@ CLI flags: `docs/CONTRACTS.md`. Design: `docs/PLAN.md`.
   scoring or drafting.
 - Generated text follows `.claude/skills/get-a-job/references/writing-style.md`.
 - Draft first. Send an email/DM or submit an application (Gmail, or the
-  user's own browser via Claude in Chrome) only when the user explicitly asks
+  logged-in browser via Playwright MCP) only when the user explicitly asks
   for that specific item; show final content + destination first. One item per
   instruction, never bulk. Never share files.
 - Use the CLI for `data/jobs.json` and `data/tracker.json`; never hand-edit them.

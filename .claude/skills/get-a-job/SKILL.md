@@ -88,7 +88,7 @@ re-derive the slug for an existing application.
 ## Workflow
 
 `/onboard` → (`/discover` to grow the company list) → `/scrape` (plus
-`/browse` in the user's logged-in Chrome, `/email-alerts`, `/import-jobs`; daily via `/digest` + schedule) → `/rank` →
+`/browse` in the logged-in browser, `/email-alerts`, `/import-jobs`; daily via `/digest` + schedule) → `/rank` →
 `/tailor` → (`/cover`) → apply (user does
 this, or `/apply`) → `/gmail-sync` (statuses from email), `/outcome`, `/followup`,
 `/interview` → `/upskill`. `/track` opens the
@@ -121,7 +121,7 @@ UI; `/export-sheets` pushes to Google Sheets; `/doctor` diagnoses.
    anything is shown as final.
 6. **Send only on explicit say-so.** Emails, DMs, follow-ups and form answers
    are drafted to files first. Send an email (Gmail), send a DM or fill and
-   submit an application (the user's own browser via Claude in Chrome) only
+   submit an application (the logged-in browser via Playwright MCP) only
    when the user explicitly asks for that specific item ("apply Bureau", "send
    the Spill email"). Before the final click/send, show the exact content and
    destination. One item per instruction; never bulk. Stop and hand over on
@@ -184,5 +184,5 @@ UI; `/export-sheets` pushes to Google Sheets; `/doctor` diagnoses.
 | `references/reviewer.md` | Dispatching or acting as the reviewer subagent |
 | `references/interview.md` | Interview prep packs and mock interviews |
 | `references/research-security.md` | Fetching postings, researching companies, host checks |
-| `references/browser.md` | `/browse`, `/apply`, `/send`: Claude in Chrome setup, untrusted pages, pacing caps, form filling, sending |
+| `references/browser.md` | `/browse`, `/apply`, `/send`: Playwright MCP setup, untrusted pages, pacing caps, form filling, sending |
 | `references/outreach.md` | Cover notes, referral DMs, recruiter emails, form answers, follow-ups, thank-yous |

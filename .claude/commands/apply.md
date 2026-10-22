@@ -1,5 +1,5 @@
 ---
-description: Apply to one job in your logged-in Chrome - tailor the resume, save it locally, fill the form, and submit after you confirm
+description: Apply to one job in the logged-in browser (Playwright) - tailor the resume, save it locally, fill the form, and submit after you confirm
 argument-hint: "<job key | application id | company>"
 ---
 
@@ -47,7 +47,7 @@ account, then says "done".
 
 Per `browser.md` section 5. Field by field from the profile; ask for anything
 missing (save confirmed facts to `profile/profile.md` the same turn). Upload
-the PDF from step 2. Don't submit yet.
+the PDF from step 2 with `browser_file_upload`. Don't submit yet.
 
 ## 6. Confirm and submit
 
