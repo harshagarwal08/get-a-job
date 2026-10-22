@@ -5,7 +5,7 @@ argument-hint: "<job key | application id | company>"
 
 # /outreach
 
-Drafts only; never send, connect, follow or message anyone. Load
+Drafts first; send/connect/message only per SKILL.md rule 6. Load
 `.claude/skills/get-a-job/SKILL.md`; read `references/outreach.md` (sections 2,
 3 and 7), `references/writing-style.md` and `references/research-security.md`.
 Read `profile/profile.md` and `profile/preferences.json` once.
@@ -101,5 +101,5 @@ Also write `outreach.md` with the same content for reading.
 ## 5. Track
 
 `node bin/gaj.js track update <id> --field contact="<Name> (<title>)" --note "outreach drafted: <n> contacts, <m> messages"`
-for the best contact. Tell the user: send them yourself, then record it with
-`/outcome`.
+for the best contact. Tell the user: send one with `/send <id> <message id>`, or send it
+yourself and record it with `/outcome`.

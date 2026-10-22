@@ -460,6 +460,33 @@ node bin/gaj.js jobs:import data/my-jobs.json --source manual
 # The file must be under data/ or the OS temp dir.
 ```
 
+## Browser mode (Claude in Chrome)
+
+`/browse`, `/apply` and `/send` drive your own Chrome, where you are already
+logged in to LinkedIn, Wellfound, Naukri and the rest. Nothing stores your
+passwords or cookies.
+
+1. Install the **Claude in Chrome** extension from the Chrome Web Store and
+   sign in with the same Claude account.
+2. Start Claude Code with `claude --chrome` (or run `/chrome` in a session and
+   enable it).
+3. Log in to the job sites in Chrome as you normally would.
+4. Run `/browse` (all sites) or `/browse linkedin,wellfound fe`.
+
+What to expect:
+- Claude opens its own tab, works one page at a time with pauses, and stops
+  at caps (5 searches and 40 postings per site per run). It pauses on any
+  login, CAPTCHA, OTP or "unusual activity" screen for you to handle.
+- Found jobs are shown as a table first; only the ones you pick are imported
+  (`source: browser`).
+- `/apply <job>` submits and `/send <app>` sends only after you confirm that
+  one item, with the full content shown first. Resume upload uses the
+  extension's file upload when available; otherwise Claude shows the PDF path
+  and you attach it.
+- LinkedIn's and Naukri's terms restrict automated use. Keeping it slow and
+  capped lowers the risk of an account restriction; it doesn't remove it. The
+  zero-risk alternative is `/email-alerts`.
+
 ## Gmail sync
 
 `/gmail-sync` keeps the tracker in step with your inbox. For each active application it searches recent mail from the company and the common ATS senders, classifies messages (screen invite, interview, rejection, offer, other), and shows a table of proposed status changes. Nothing changes until you approve; approved changes go through `gaj track update`.

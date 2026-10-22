@@ -1,7 +1,7 @@
 # Outreach drafts
 
-All drafts follow `writing-style.md` and the grounding rule. **Drafts only:
-never send, submit, post or schedule anything.** Save each draft in
+All drafts follow `writing-style.md` and the grounding rule. **Draft first;
+send or submit only per SKILL.md rule 6 (explicit per-item request).** Save each draft in
 `data/applications/<slug>/` and show the path.
 
 Every company-specific claim (product, funding, launch) must be confirmed

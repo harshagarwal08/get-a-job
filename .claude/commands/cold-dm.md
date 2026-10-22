@@ -5,7 +5,7 @@ argument-hint: "<funded id | company name> [track id]"
 
 # /cold-dm
 
-Drafts only; never send, connect, follow or message anyone. Load
+Drafts first; send/connect/message only per SKILL.md rule 6. Load
 `.claude/skills/get-a-job/SKILL.md`; read `references/outreach.md` (section 7),
 `references/writing-style.md` and `references/research-security.md`. Read
 `profile/profile.md` and `profile/preferences.json` once.

@@ -5,7 +5,7 @@ argument-hint: "<company or slug> [cover|referral|recruiter|form]"
 
 # /cover
 
-Drafts only; never send. Load `.claude/skills/get-a-job/SKILL.md`, read
+Drafts first; send only per SKILL.md rule 6. Load `.claude/skills/get-a-job/SKILL.md`, read
 `references/outreach.md` and `references/writing-style.md`.
 
 ## 1. Find the application
