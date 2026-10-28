@@ -460,6 +460,41 @@ node bin/gaj.js jobs:import data/my-jobs.json --source manual
 # The file must be under data/ or the OS temp dir.
 ```
 
+## Browser mode (Playwright MCP)
+
+`/browse`, `/apply` and `/send` drive a Chrome window through the
+[Playwright MCP](https://github.com/microsoft/playwright-mcp) server, set up in
+the repo's `.mcp.json`. It uses its own Chrome profile at `~/.gaj-chrome`
+(outside the repo), so your everyday Chrome is untouched. Nothing stores or
+reads your passwords.
+
+1. Have Google Chrome installed and Node 20+ (`npx` fetches
+   `@playwright/mcp`, pinned in `.mcp.json`).
+2. Start Claude Code in the repo and approve the `playwright` server when
+   asked (or `/mcp` → playwright → enable).
+3. First run: `/browse`. A Chrome window opens; log in to LinkedIn, Wellfound,
+   Naukri, Instahyre and Cutshort in it, then tell Claude "done". Logins stay
+   in `~/.gaj-chrome` for later runs.
+4. Next time: `/browse` or `/browse linkedin,wellfound fe`.
+
+Screenshots go to `data/tmp/browser/` (gitignored). File uploads are limited to
+files inside the repo, which covers `data/applications/*/resume.pdf`. To sign
+out of everything, quit the window and delete `~/.gaj-chrome`.
+
+What to expect:
+- Claude opens its own tab, works one page at a time with pauses, and stops
+  at caps (5 searches and 40 postings per site per run). It pauses on any
+  login, CAPTCHA, OTP or "unusual activity" screen for you to handle.
+- Found jobs are shown as a table first; only the ones you pick are imported
+  (`source: browser`).
+- `/apply <job>` submits and `/send <app>` sends only after you confirm that
+  one item, with the full content shown first. Claude attaches the tailored
+  PDF itself; if a site's uploader fights it, Claude shows the path and you
+  attach it.
+- LinkedIn's and Naukri's terms restrict automated use. Keeping it slow and
+  capped lowers the risk of an account restriction; it doesn't remove it. The
+  zero-risk alternative is `/email-alerts`.
+
 ## Gmail sync
 
 `/gmail-sync` keeps the tracker in step with your inbox. For each active application it searches recent mail from the company and the common ATS senders, classifies messages (screen invite, interview, rejection, offer, other), and shows a table of proposed status changes. Nothing changes until you approve; approved changes go through `gaj track update`.

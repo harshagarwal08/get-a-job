@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "note": "Generic outreach templates. Copy to profile/outreach-templates.json and replace the bracketed parts with your own facts. The tracker fills {{company}}, {{role}} and {{url}}; {{name}} stays for you to fill.",
+  "templates": [
+    {
+      "id": "referral-note",
+      "label": "Referral request (connection note)",
+      "kind": "referral",
+      "channel": "linkedin-note",
+      "text": "Hi {{name}}, I'm a [one-line who you are] applying for the {{role}} role at {{company}}. Would you be open to a quick chat or a referral? Happy to send a short blurb."
+    },
+    {
+      "id": "referral-dm",
+      "label": "Referral request (DM after they accept)",
+      "kind": "referral",
+      "channel": "linkedin-dm",
+      "text": "Hi {{name}}, thanks for connecting.\n\nI'm applying for the {{role}} role at {{company}}: {{url}}\n\nWhy I fit: [one result with a number]. [Second line of fit].\n\nIf you're comfortable referring me, here's a blurb you can forward:\n\"[Your name], [who you are], applying for {{role}}. [Best proof point]. Resume attached.\"\n\nNo worries if not, and thanks either way.\n\n[Your name]"
+    },
+    {
+      "id": "cold-dm",
+      "label": "Cold DM to hiring manager / founder",
+      "kind": "cold",
+      "channel": "linkedin-dm",
+      "text": "Hi {{name}}, I applied for the {{role}} role at {{company}} and wanted to reach out directly.\n\n[One specific thing about {{company}} you checked is true].\n\n[One result with a number, plus a link to your work].\n\nWould a 15-minute call work this week?\n\n[Your name]"
+    },
+    {
+      "id": "cold-email",
+      "label": "Cold email",
+      "kind": "cold",
+      "channel": "email",
+      "subject": "{{role}} at {{company}} - [Your name]",
+      "text": "Hi {{name}},\n\nI'm [one-line who you are], and I'd love to be considered for the {{role}} role at {{company}} ({{url}}).\n\n[One result with a number]. [Second line of fit].\n\nResume attached. Could we find 15 minutes to talk, or is there someone better to speak to?\n\nThanks,\n[Your name]\n[Phone] · [LinkedIn]"
+    },
+    {
+      "id": "followup",
+      "label": "Follow-up (5-7 days later)",
+      "kind": "followup",
+      "channel": "linkedin-dm",
+      "text": "Hi {{name}}, following up on my note about the {{role}} role at {{company}}. Still very interested. If someone else handles hiring for it, a name would help a lot. Thanks!"
+    }
+  ]
+}

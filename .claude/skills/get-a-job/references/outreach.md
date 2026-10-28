@@ -1,7 +1,7 @@
 # Outreach drafts
 
-All drafts follow `writing-style.md` and the grounding rule. **Drafts only:
-never send, submit, post or schedule anything.** Save each draft in
+All drafts follow `writing-style.md` and the grounding rule. **Draft first;
+send or submit only per SKILL.md rule 6 (explicit per-item request).** Save each draft in
 `data/applications/<slug>/` and show the path.
 
 Every company-specific claim (product, funding, launch) must be confirmed
@@ -99,8 +99,11 @@ round. Saved in `data/applications/<company-slug>-open-application/`.
   ask: a 15-minute call, or "is there someone I should speak to".
 - Say plainly there is no posted role and you are asking anyway. Never imply a
   referral, a mutual contact or prior conversation that did not happen.
-- **Lengths**: connection note ≤ 300 characters; DM 80-150 words; email
-  90-150 words with a subject ≤ 60 characters; follow-up 40-70 words.
+- **Short and unique**: each company gets its own hook (a number, a question or
+  a test you'll run for them), never a shared template. Lead with the offer, not
+  your background; one proof link is enough.
+- **Lengths**: connection note ≤ 220 characters; DM 40-70 words; email
+  60-90 words with a subject ≤ 40 characters; follow-up 15-30 words.
 - **Follow-up**: at most one, 5-7 days after, in the same thread, no new
   claims. No reply after that → stop; mark `no_response` via `/outcome`.
 - Track every cold draft with `--channel cold` so response rates show up per

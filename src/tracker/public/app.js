@@ -4,13 +4,16 @@ import { renderPipeline, renderTable } from './views.js';
 import { renderJobs, renderStats } from './views2.js';
 import { openDigestModal } from './digest.js';
 import { renderSettings, settingsDirty, loadSettings, runSearch, pollSearch, searchStatusBox } from './settings.js';
+import { runTask, pollTask, taskBusy, openJd, appActions, outreachSection, templatesSection } from './tasks.js';
 
-const VIEWS = ['pipeline', 'table', 'jobs', 'stats', 'settings'];
+const VIEWS = ['jobs', 'applications', 'stats', 'settings'];
+// Old bookmarks: #pipeline / #table are the two layouts of Applications.
+const LEGACY = { pipeline: ['applications', 'board'], table: ['applications', 'list'] };
 const ui = storage.get('gaj.ui', {});
 
 const ctx = {
   apps: [], jobs: [], meta: { tracks: [] }, stats: null,
-  view: 'pipeline', search: '',
+  view: 'jobs', search: '', appLayout: ui.appLayout === 'list' ? 'list' : 'board',
   filters: ui.filters ?? {}, sort: ui.sort ?? { key: 'updated', dir: 'desc' },
   jobFilters: ui.jobFilters ?? {}, closedOpen: ui.closedOpen ?? false,
   expandedJob: null, dragging: null,
@@ -27,10 +30,23 @@ const ctx = {
     if (s.exitCode === 0) toast(`Search finished: ${s.summary?.new ?? 0} new job${s.summary?.new === 1 ? '' : 's'}`, { sub: s.summary?.new ? 'Ask Claude to /rank them next.' : undefined, action: ctx.view !== 'jobs' ? { label: 'View', run: () => setView('jobs') } : undefined });
     else toast('Search failed', { error: true, sub: s.error ?? undefined });
   },
+  task: null, claudeAvailable: true,
+  taskBusy: () => taskBusy(ctx),
+  runTask: (body, title) => runTask(ctx, body, title),
+  openJd: (j, opts) => openJd(ctx, j, opts),
+  async onTaskDone(s) {
+    ctx.lastRaw.apps = '';
+    ctx.lastRaw.jobs = '';
+    await refresh({ force: true }).catch(() => {});
+    const ok = s.exitCode === 0 && !s.error;
+    toast(ok ? `${ctx.task?.title ?? 'Claude task'}: done` : `${ctx.task?.title ?? 'Claude task'}: failed`, { error: !ok, sub: ok ? 'Files are in the application folder.' : s.error ?? undefined });
+    if (ctx.drawer.id && !ctx.drawer.dirty) openDrawer(ctx.drawer.id);
+  },
   drawer: { id: null, mode: null, dirty: false },
   lastRaw: { apps: '', jobs: '' },
-  saveUi() { storage.set('gaj.ui', { filters: ctx.filters, sort: ctx.sort, jobFilters: ctx.jobFilters, closedOpen: ctx.closedOpen }); },
+  saveUi() { storage.set('gaj.ui', { filters: ctx.filters, sort: ctx.sort, jobFilters: ctx.jobFilters, closedOpen: ctx.closedOpen, appLayout: ctx.appLayout }); },
   render, openDrawer, openNew, moveStatus,
+  refreshAll: () => refresh({ force: true }),
 };
 
 const $ = (id) => document.getElementById(id);
@@ -81,13 +97,31 @@ function render() {
   $('jobs-count').textContent = openJobs ? String(openJobs) : '';
   $('search').placeholder = ctx.view === 'jobs' ? 'Search jobs' : 'Search applications';
   const scroll = main.querySelector('.board')?.scrollLeft;
-  const views = { pipeline: renderPipeline, table: renderTable, jobs: renderJobs, stats: renderStats, settings: renderSettings };
+  const views = { applications: renderApplications, jobs: renderJobs, stats: renderStats, settings: renderSettings };
   main.replaceChildren(views[ctx.view](ctx));
   if (scroll) { const b = main.querySelector('.board'); if (b) b.scrollLeft = scroll; }
 }
 
+// One Applications view, shown as a board (by stage) or a sortable list.
+function renderApplications(c) {
+  const list = c.appLayout === 'list';
+  const sec = list ? renderTable(c) : renderPipeline(c);
+  const active = c.apps.filter((a) => STATUSES.slice(0, 6).includes(a.status)).length;
+  const seg = (id, text) => h('button', { type: 'button', class: `seg-btn${c.appLayout === id ? ' on' : ''}`, 'aria-pressed': String(c.appLayout === id),
+    onclick: () => { c.appLayout = id; c.saveUi(); render(); } }, text);
+  const head = h('div', { class: 'view-head' },
+    h('div', null, h('h1', null, 'Applications'),
+      h('p', null, `${active} active. Jobs you track or tailor land here.${list ? ' Click a row for details.' : ' Drag cards between stages.'}`)),
+    h('span', { class: 'spacer' }),
+    h('div', { class: 'seg', role: 'group', 'aria-label': 'Layout' }, seg('board', 'Board'), seg('list', 'List')));
+  const old = sec.querySelector('.view-head');
+  if (old) old.replaceWith(head); else sec.prepend(head);
+  return sec;
+}
+
 function setView(v) {
-  if (!VIEWS.includes(v)) v = 'pipeline';
+  if (LEGACY[v]) { ctx.appLayout = LEGACY[v][1]; v = LEGACY[v][0]; }
+  if (!VIEWS.includes(v)) v = 'jobs';
   if (ctx.view === 'settings' && v !== 'settings' && settingsDirty(ctx) && !confirm('You have unsaved settings. Leave without saving?')) {
     history.replaceState(null, '', '#settings');
     return;
@@ -246,7 +280,7 @@ function openDrawer(id) {
           a.nextActionDate ? h('span', { class: `chip ${due === 'overdue' ? 'st-rejected' : 'plain'}` }, `Next: ${relDue(a.nextActionDate)}`) : null,
           a.jobKey ? h('span', { class: 'chip plain', title: a.jobKey }, 'From jobs inbox') : null) : null),
       h('button', { class: 'btn ghost icon-btn', type: 'button', 'aria-label': 'Close', onclick: closeDrawer }, icon('x', 16))),
-    h('div', { class: 'drawer-body' }, form, errEl, timeline),
+    h('div', { class: 'drawer-body' }, !isNew ? appActions(ctx, a) : null, !isNew ? outreachSection(ctx, a) : null, !isNew ? templatesSection(ctx, a) : null, form, errEl, timeline),
     h('div', { class: 'drawer-foot' },
       !isNew ? h('button', { class: 'btn danger', type: 'button', onclick: () => remove(a) }, icon('trash', 14), h('span', { class: 'hide-sm' }, 'Delete')) : null,
       h('span', { class: 'grow' }), dirtyEl,
@@ -398,7 +432,7 @@ function showHelp(show = helpEl.hidden) {
     h('dl', { class: 'shortcuts' },
       k('/'), h('dd', null, 'Search'),
       k('n'), h('dd', null, 'New application'),
-      k('1'), h('dd', null, 'Pipeline'), k('2'), h('dd', null, 'Table'), k('3'), h('dd', null, 'Jobs inbox'), k('4'), h('dd', null, 'Stats'), k('5'), h('dd', null, 'Settings and search'),
+      k('1'), h('dd', null, 'Jobs'), k('2'), h('dd', null, 'Applications'), k('3'), h('dd', null, 'Stats'), k('4'), h('dd', null, 'Settings and search'),
       k('Shift', '←', '→'), h('dd', null, 'Move focused card to previous / next stage'),
       k('Enter'), h('dd', null, 'Open focused card or row'),
       k('Esc'), h('dd', null, 'Close drawer or dialog'),
@@ -422,7 +456,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === '/') { e.preventDefault(); searchEl.focus(); searchEl.select(); }
   else if (e.key === 'n') { e.preventDefault(); openNew(); }
   else if (e.key === '?') { e.preventDefault(); showHelp(true); }
-  else if (['1', '2', '3', '4', '5'].includes(e.key)) setView(VIEWS[Number(e.key) - 1]);
+  else if (['1', '2', '3', '4'].includes(e.key)) setView(VIEWS[Number(e.key) - 1]);
 });
 
 window.addEventListener('hashchange', () => setView(location.hash.slice(1)));
@@ -452,8 +486,9 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
     await loadDigest();
     loadSettings(ctx).then(() => { if (ctx.view === 'jobs') render(); }).catch(() => {});
     pollSearch(ctx);
+    pollTask(ctx);
   } catch (e) {
     toast('Could not reach the tracker server', { error: true, sub: 'Is `gaj tracker` still running?' });
   }
-  setView(location.hash.slice(1) || 'pipeline');
+  setView(location.hash.slice(1) || 'jobs');
 })();

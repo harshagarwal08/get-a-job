@@ -5,7 +5,7 @@ argument-hint: "[company] (optional)"
 
 # /followup
 
-Drafts only; never send. Load `.claude/skills/get-a-job/SKILL.md`, read
+Drafts first; send only per SKILL.md rule 6. Load `.claude/skills/get-a-job/SKILL.md`, read
 `references/outreach.md` section 5 and `references/writing-style.md`.
 
 ## 1. Find candidates

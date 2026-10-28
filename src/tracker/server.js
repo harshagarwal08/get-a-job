@@ -1,4 +1,5 @@
-// Local tracker server: 127.0.0.1 only, JSON API + static UI. No external requests.
+// Local tracker server: 127.0.0.1 only, JSON API + static UI. The only outbound requests are the
+// ones the user clicks for: fetching a posting's own URL, running a search or a Claude task.
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,6 +10,9 @@ import { FORMATS, exportApplications } from './export.js';
 import { readJSON, writeJSON } from '../lib/store.js';
 import { validatePreferences, REMOTE_SCOPES } from '../lib/preferences.js';
 import { TRACK_ID, createSearchRunner } from './search.js';
+import { createAgentRunner } from './agent.js';
+import { spawn } from 'node:child_process';
+import { GAJ_BIN } from './search.js';
 import { loadState as loadDigestState, latestDigest } from '../digest/digest.js';
 import * as schedule from '../digest/schedule.js';
 
@@ -73,11 +77,116 @@ function splitBody(body) {
   return { note, fields };
 }
 
-export function createTrackerServer({ store = createStore(), port = 4317, meta = {}, search, scheduleEnv } = {}) {
+export function createTrackerServer({ store = createStore(), port = 4317, meta = {}, search, agent, scheduleEnv } = {}) {
   const applicationsDir = path.join(store.root, 'data', 'applications');
   const prefsFile = path.join(store.root, 'profile', 'preferences.json');
   const backupsDir = path.join(store.root, 'data', 'backups');
   const runner = search ?? createSearchRunner({ root: store.root, demo: !!meta.demo, jobsFile: store.jobsFile });
+  const agentRunner = agent ?? createAgentRunner({ root: store.root, demo: !!meta.demo });
+  const fundedFile = path.join(store.root, 'data', 'funded.json');
+
+  // Funded-startup badges: company name (lowercase) -> {round, announcedAt, status}.
+  function fundedByName() {
+    let db;
+    try { db = readJSON(fundedFile, null); } catch { db = null; }
+    const map = new Map();
+    for (const c of db?.companies ?? []) map.set(String(c.name).toLowerCase(), { id: c.id, round: c.round, announcedAt: c.announcedAt, status: c.status });
+    return map;
+  }
+
+  // Files in an application's folder (only under data/applications/), for the drawer.
+  function appFiles(app) {
+    if (!app.appDir) return [];
+    let base;
+    let dir;
+    try { base = fs.realpathSync(applicationsDir); dir = fs.realpathSync(path.resolve(store.root, app.appDir)); } catch { return []; }
+    if (!dir.startsWith(base + path.sep)) return [];
+    return fs.readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isFile() && /\.(pdf|md|txt|html|json)$/i.test(e.name))
+      .map((e) => ({ name: e.name, path: path.relative(store.root, path.join(dir, e.name)).split(path.sep).join('/') }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // Bulk backfill: `gaj jobs:enrich --json` as a child (it locks jobs.json and pauses between hosts).
+  let enriching = false;
+  function enrichAll() {
+    if (meta.demo) return Promise.resolve({ tried: 0, filled: 0, failed: [], skipped: { host: 0, noUrl: 0, linkedin: 0 } });
+    if (enriching) throw new HttpError(409, 'already filling job descriptions');
+    enriching = true;
+    return new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [GAJ_BIN, 'jobs:enrich', '--limit', '40', '--json'], { cwd: path.dirname(path.dirname(GAJ_BIN)), env: { ...process.env, GAJ_ROOT: store.root }, stdio: ['ignore', 'pipe', 'pipe'] });
+      let out = '';
+      let err = '';
+      child.stdout.on('data', (c) => { out += c; });
+      child.stderr.on('data', (c) => { err += c; });
+      child.on('error', (e) => { enriching = false; reject(new HttpError(500, e.message)); });
+      child.on('close', (code) => {
+        enriching = false;
+        try { resolve(JSON.parse(out)); } catch { reject(new HttpError(500, (err.trim().split('\n').pop() || `jobs:enrich exited ${code}`).replace(/^error:\s*/, ''))); }
+      });
+    });
+  }
+
+  // outreach.json written by /outreach: re-validated here so the UI only ever gets plain text and http(s) links.
+  const OUT_KINDS = ['recruiter', 'hiring-manager', 'founder', 'employee'];
+  const MSG_KINDS = ['referral', 'cold', 'recruiter', 'followup'];
+  const MSG_CHANNELS = ['linkedin-note', 'linkedin-dm', 'email'];
+  const str = (v, max) => (typeof v === 'string' && v.trim() ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim().slice(0, max) : null);
+  const link = (v) => (typeof v === 'string' && /^https?:\/\/[^\s"'<>]+$/i.test(v) ? v.slice(0, 600) : null);
+  const mail = (v) => (typeof v === 'string' && /^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(v) ? v.slice(0, 200) : null);
+  function appOutreachFile(app) {
+    if (!app?.appDir) return null;
+    try {
+      const base = fs.realpathSync(applicationsDir);
+      const file = fs.realpathSync(path.join(path.resolve(store.root, app.appDir), 'outreach.json'));
+      return file.startsWith(base + path.sep) ? file : null;
+    } catch { return null; }
+  }
+  function appOutreach(app) {
+    const file = appOutreachFile(app);
+    if (!file) return null;
+    let o;
+    try { o = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return { error: 'outreach.json is not valid JSON' }; }
+    const contacts = (Array.isArray(o.contacts) ? o.contacts : []).slice(0, 10).map((c, i) => ({
+      id: str(c?.id, 20) ?? `c${i + 1}`, name: str(c?.name, 120), title: str(c?.title, 160),
+      kind: OUT_KINDS.includes(c?.kind) ? c.kind : 'employee', confidence: c?.confidence === 'confirmed' ? 'confirmed' : 'likely',
+      source: link(c?.source), linkedin: link(c?.linkedin), email: mail(c?.email),
+    })).filter((c) => c.name);
+    const searches = (Array.isArray(o.searches) ? o.searches : []).slice(0, 6).map((s) => ({ label: str(s?.label, 80), url: link(s?.url) })).filter((s) => s.label && s.url);
+    const messages = (Array.isArray(o.messages) ? o.messages : []).slice(0, 20).map((m, i) => ({
+      id: str(m?.id, 20) ?? `m${i + 1}`, kind: MSG_KINDS.includes(m?.kind) ? m.kind : 'cold',
+      channel: MSG_CHANNELS.includes(m?.channel) ? m.channel : 'linkedin-dm', to: str(m?.to, 120),
+      subject: str(m?.subject, 200), text: str(m?.text, 5000),
+    })).filter((m) => m.text);
+    return { generatedAt: str(o.generatedAt, 40), contacts, searches, messages };
+  }
+
+  // Generic outreach templates: profile/outreach-templates.json (personal), else the example.
+  const TEMPLATES_FILE = path.join(store.root, 'profile', 'outreach-templates.json');
+  const TEMPLATES_EXAMPLE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'examples', 'outreach-templates.example.json');
+  function templates() {
+    let t = null;
+    let personal = true;
+    try { t = readJSON(TEMPLATES_FILE, null); } catch { t = null; }
+    if (!t) { personal = false; try { t = readJSON(TEMPLATES_EXAMPLE, null); } catch { t = null; } }
+    const list = (Array.isArray(t?.templates) ? t.templates : []).slice(0, 20).map((x, i) => ({
+      id: str(x?.id, 40) ?? `t${i + 1}`, label: str(x?.label, 80), kind: MSG_KINDS.includes(x?.kind) ? x.kind : 'cold',
+      channel: MSG_CHANNELS.includes(x?.channel) ? x.channel : 'linkedin-dm', subject: str(x?.subject, 200), text: str(x?.text, 5000),
+    })).filter((x) => x.label && x.text);
+    return { personal, templates: list };
+  }
+
+  async function fetchDescription(key) {
+    const job = store.getJob(key);
+    const url = [job.applyUrl, job.url].find((u) => typeof u === 'string' && /^https?:\/\//i.test(u));
+    if (!url) throw new HttpError(400, 'this job has no posting URL; paste the description instead');
+    const prefs = readJSON(prefsFile, null);
+    const { fetchPosting } = await import('../scrape/cli.js');
+    let res;
+    try { res = await fetchPosting(url, { allowLinkedIn: prefs?.sources?.linkedin === true }); } catch (err) { throw new HttpError(502, err.message); }
+    if (!res?.text || res.text.trim().length < 200) throw new HttpError(422, 'the page had little readable text (it may need JavaScript or a login); paste the description instead');
+    return store.setJobDescription(key, res.text, { via: 'fetched' });
+  }
 
   // Read-only view of this month's paid-provider usage (data/usage.json is written by scrape).
   function usageView(prefs) {
@@ -250,6 +359,10 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
           const { note, fields } = splitBody(body);
           return send(res, 201, await store.add(fields, { note: typeof note === 'string' && note.trim() ? note : undefined }));
         }
+      } else if (action === 'outreach' && method === 'GET') {
+        return send(res, 200, appOutreach(store.get(id)) ?? { contacts: [], searches: [], messages: [] , missing: true });
+      } else if (action === 'files' && method === 'GET') {
+        return send(res, 200, { files: appFiles(store.get(id)) });
       } else if (action === 'undo' && method === 'POST') {
         return send(res, 200, await store.undo(id));
       } else if (!action) {
@@ -264,24 +377,46 @@ export function createTrackerServer({ store = createStore(), port = 4317, meta =
     }
 
     if (resource === 'jobs') {
+      if (id === 'enrich' && !action && method === 'POST') return send(res, 200, await enrichAll());
       if (!id && method === 'GET') {
         const key = url.searchParams.get('key');
         if (key) return send(res, 200, store.getJob(key));
-        const appByKey = new Map(store.list().filter((a) => a.jobKey).map((a) => [a.jobKey, a.id]));
+        const appByKey = new Map(store.list().filter((a) => a.jobKey).map((a) => [a.jobKey, a]));
+        const funded = fundedByName();
         const j = store.loadJobs();
-        const jobs = Object.values(j.jobs).map(({ description, ...rest }) => ({ ...rest, applicationId: appByKey.get(rest.key) ?? null }));
+        const jobs = Object.values(j.jobs).map(({ description, ...rest }) => {
+          const app = appByKey.get(rest.key);
+          return { ...rest, applicationId: app?.id ?? null, tailored: !!app?.resumePath, outreach: !!appOutreachFile(app), descLen: typeof description === 'string' ? description.length : 0,
+            funded: funded.get(String(rest.company ?? '').toLowerCase()) ?? null };
+        });
         return send(res, 200, { updatedAt: j.updatedAt ?? null, jobs });
       }
       if (id && !action && method === 'PATCH') {
         if (!body || typeof body.status !== 'string') throw new HttpError(400, 'body must be {status}');
         return send(res, 200, await store.setJobStatus(id, body.status));
       }
+      if (id && action === 'description' && method === 'POST') {
+        if (!body || typeof body.text !== 'string') throw new HttpError(400, 'body must be {text}');
+        return send(res, 200, await store.setJobDescription(id, body.text, { via: 'pasted' }));
+      }
+      if (id && action === 'fetch' && method === 'POST') return send(res, 200, await fetchDescription(id));
       if (id && action === 'track' && method === 'POST') {
         const { note, ...fields } = body ?? {};
         return send(res, 201, await store.trackJob(id, fields));
       }
       throw new HttpError(405, 'method not allowed');
     }
+
+    if (resource === 'agent') {
+      if (!id && method === 'POST') {
+        const b = body ?? {};
+        return send(res, 202, agentRunner.start({ task: b.task, key: b.key, id: b.id, kind: b.kind }));
+      }
+      if (id === 'status' && method === 'GET') return send(res, 200, agentRunner.status());
+      throw new HttpError(405, 'method not allowed');
+    }
+
+    if (resource === 'templates' && !id && method === 'GET') return send(res, 200, templates());
 
     if (resource === 'stats' && method === 'GET') return send(res, 200, computeStats(store.list()));
 

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.83",
+        "--browser", "chrome",
+        "--user-data-dir", "${HOME}/.gaj-chrome",
+        "--output-dir", "data/tmp/browser"
+      ]
+    }
+  }
+}

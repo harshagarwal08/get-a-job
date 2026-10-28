@@ -141,7 +141,7 @@ get-a-job/
 Claude then adds a quick fit (high/medium/low) and shows the green jobs first. It also gives LinkedIn people-search links for referrals.
 
 Two more ways in, both through `gaj jobs:import` (same matching, eligibility and merge):
-- `/email-alerts` (alias `/linkedin-alerts`): reads job-alert emails from LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort and Glassdoor, read-only via the Gmail connector, and imports them with `--source email-alert --via <platform>`. No scraping. Wellfound, Cutshort and Instahyre have no scraper because their terms forbid it (and Wellfound is behind bot protection); alerts are the only route.
+- `/email-alerts` (alias `/linkedin-alerts`): reads job-alert emails from LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort and Glassdoor, read-only via the Gmail connector, and imports them with `--source email-alert --via <platform>`. No scraping. Wellfound, Cutshort and Instahyre have no scraper because their terms forbid it (and Wellfound is behind bot protection); alerts are the only route. The YC jobs board and Weekday have no scraper either: listings are public and robots-allowed, but their terms forbid automated access (see CONTRACTS).
 - `/import-jobs`: you paste results or links from any site you browsed; Claude extracts them without fetching the pages.
 
 Running it daily: `gaj schedule install --yes` adds a user-level LaunchAgent (macOS) or systemd timer (Linux) that runs a free-source `scrape` and `gaj digest --mark` each day; `/digest` and the tracker's New badges show what's new since the last digest. The tracker's Settings tab and `/preferences` edit preferences and can re-run the search.

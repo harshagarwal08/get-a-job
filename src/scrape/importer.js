@@ -11,7 +11,9 @@ import * as instahyre from './boards/instahyre.js';
 import * as cutshort from './boards/cutshort.js';
 import { htmlToText } from './text.js';
 
-export const IMPORT_SOURCES = ['linkedin-alert', 'email-alert', 'manual'];
+export const IMPORT_SOURCES = ['linkedin-alert', 'email-alert', 'browser', 'manual'];
+// Sources whose entries carry a platform (`via`) and platform-checked links.
+const VIA_SOURCES = new Set(['email-alert', 'browser']);
 export const ALERT_VIA = ['linkedin', 'naukri', 'indeed', 'wellfound', 'instahyre', 'cutshort', 'glassdoor', 'other'];
 // Platform helpers (built by the platforms module): URL normalisation for alert-email links.
 const PLATFORM_URLS = { wellfound, instahyre, cutshort };
@@ -72,7 +74,8 @@ function salaryOf(v) {
  * @param {unknown} data parsed JSON: an array, or `{jobs: [...]}`
  * Caps: title 200, company 120, description 50k chars; future `postedAt` → null;
  * `linkedin-alert` entries must point at linkedin.com.
- * `email-alert` imports need `via` (platform) and normalise links with the platform helpers.
+ * `email-alert` and `browser` (collected in the user's own browser by /browse) imports need `via`
+ * (platform) and normalise links with the platform helpers.
  * @param {{source?: string, via?: string|null, now?: number}} [opts]
  * @returns {{jobs: object[], errors: {index: number, error: string}[], duplicates: number}}
  */
@@ -92,8 +95,8 @@ export function normalizeAlertUrl(url, via) {
 
 export function importJobs(data, { source = 'manual', via = null, now = Date.now() } = {}) {
   if (!IMPORT_SOURCES.includes(source)) throw new Error(`--source must be one of ${IMPORT_SOURCES.join(', ')}`);
-  if (source === 'email-alert' && !ALERT_VIA.includes(via)) throw new Error(`--source email-alert needs --via ${ALERT_VIA.join('|')}`);
-  if (source !== 'email-alert' && via != null) throw new Error('--via is only used with --source email-alert');
+  if (VIA_SOURCES.has(source) && !ALERT_VIA.includes(via)) throw new Error(`--source ${source} needs --via ${ALERT_VIA.join('|')}`);
+  if (!VIA_SOURCES.has(source) && via != null) throw new Error('--via is only used with --source email-alert or browser');
   const list = Array.isArray(data) ? data : Array.isArray(data?.jobs) ? data.jobs : null;
   if (!list) throw new Error('import file must be a JSON array of jobs (or {"jobs": [...]})');
   const jobs = [];
@@ -108,9 +111,9 @@ export function importJobs(data, { source = 'manual', via = null, now = Date.now
     if (!company) return errors.push({ index, error: 'company is required' });
     const raw = httpUrl(e.url);
     if (!raw) return errors.push({ index, error: 'url must be an http(s) URL' });
-    const url = source === 'email-alert' ? normalizeAlertUrl(raw, via) : canonicalJobUrl(raw);
+    const url = VIA_SOURCES.has(source) ? normalizeAlertUrl(raw, via) : canonicalJobUrl(raw);
     if (!url) return errors.push({ index, error: 'url must be an http(s) URL' });
-    if (source === 'email-alert') {
+    if (VIA_SOURCES.has(source)) {
       const host = new URL(url).hostname;
       const platform = PLATFORM_URLS[via];
       if (platform && !platform.isPlatformJobUrl(url)) return errors.push({ index, error: `not a ${via} job URL` });
@@ -136,7 +139,7 @@ export function importJobs(data, { source = 'manual', via = null, now = Date.now
     if (seen.has(url) || seen.has(job.key)) { duplicates++; return undefined; }
     seen.add(url);
     seen.add(job.key);
-    jobs.push({ ...job, via: source === 'email-alert' ? via : li ? 'LinkedIn' : null });
+    jobs.push({ ...job, via: VIA_SOURCES.has(source) ? via : li ? 'LinkedIn' : null });
     return undefined;
   });
   return { jobs, errors, duplicates };

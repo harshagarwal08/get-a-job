@@ -278,6 +278,22 @@ test('jobs:import --source email-alert --via <platform>', () => {
   assert.ok(TIME_EXPIRY_SOURCES.has('email-alert') && SECONDARY_SOURCES.has('email-alert'));
 });
 
+test('jobs:import --source browser --via <platform> (jobs collected by /browse)', () => {
+  assert.throws(() => importJobs([], { source: 'browser' }), /--source browser needs --via/);
+  const r = importJobs([
+    { title: 'Frontend Engineer', company: 'Acme', url: 'https://www.linkedin.com/jobs/view/4300000012/?refId=x', description: '<p>Build UI</p>' },
+    { title: 'Bad host', company: 'X', url: 'https://example.com/job/1' },
+  ], { source: 'browser', via: 'linkedin' });
+  assert.equal(r.jobs.length, 1);
+  assert.equal(r.jobs[0].url, 'https://www.linkedin.com/jobs/view/4300000012/');
+  assert.equal(r.jobs[0].source, 'browser');
+  assert.equal(r.jobs[0].via, 'linkedin');
+  assert.equal(r.jobs[0].description, 'Build UI');
+  const ats = importJobs([{ title: 'Dev', company: 'Y', url: 'https://jobs.lever.co/y/abc' }, { title: 'Dev', company: 'Z', url: 'http://localhost/1' }], { source: 'browser', via: 'other' });
+  assert.equal(ats.jobs.length, 1);
+  assert.ok(TIME_EXPIRY_SOURCES.has('browser') && SECONDARY_SOURCES.has('browser'));
+});
+
 test('email-alert links for wellfound/instahyre/cutshort use the platform helpers', async () => {
   const wf = await import('../src/scrape/boards/wellfound.js');
   const ih = await import('../src/scrape/boards/instahyre.js');

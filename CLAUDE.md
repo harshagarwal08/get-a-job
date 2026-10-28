@@ -17,8 +17,8 @@ CLI flags: `docs/CONTRACTS.md`. Design: `docs/PLAN.md`.
 
 ## Commands
 
-`/onboard` · `/preferences` · `/discover <criteria>` · `/funded [criteria]` · `/cold-dm <company>` · `/scrape` · `/email-alerts` ·
-`/linkedin-alerts` · `/import-jobs` · `/digest` · `/gmail-sync` · `/rank` · `/tailor <url|key|JD>` · `/ats [pdf] [job]` · `/cover` ·
+`/onboard` · `/preferences` · `/discover <criteria>` · `/browse [sites]` · `/apply <job>` · `/send <app> [msg]` · `/funded [criteria]` · `/cold-dm <company>` · `/scrape` · `/email-alerts` ·
+`/linkedin-alerts` · `/import-jobs` · `/digest` · `/gmail-sync` · `/rank` · `/tailor <url|key|JD>` · `/outreach <job|app>` · `/ats [pdf] [job]` · `/cover` ·
 `/interview <company> [stage]` · `/outcome <company> <what happened>` ·
 `/followup` · `/track` · `/export-sheets` · `/upskill` · `/doctor`
 
@@ -33,7 +33,10 @@ CLI flags: `docs/CONTRACTS.md`. Design: `docs/PLAN.md`.
 - Check eligibility gates (location, work authorization, language) before
   scoring or drafting.
 - Generated text follows `.claude/skills/get-a-job/references/writing-style.md`.
-- Draft only: never send emails/messages, submit applications, or share files.
+- Draft first. Send an email/DM or submit an application (Gmail, or the
+  logged-in browser via Playwright MCP) only when the user explicitly asks
+  for that specific item; show final content + destination first. One item per
+  instruction, never bulk. Never share files.
 - Use the CLI for `data/jobs.json` and `data/tracker.json`; never hand-edit them.
 - Never copy personal data into tracked files (examples, docs, commands).
 - API keys live only in `.env`. Never ask for, echo, or write a key anywhere else.

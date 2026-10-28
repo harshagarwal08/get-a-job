@@ -4,7 +4,7 @@ import { h, s, icon, label, api, toast, ago, daysSince, scoreBig, emptyState, ST
 // ---------------- Jobs inbox ----------------
 function jobMatches(j, q) {
   if (!q) return true;
-  const hay = [j.title, j.company, j.location, j.track, j.source, j.department].join(' ').toLowerCase();
+  const hay = [j.title, j.company, j.location, j.track, j.source, j.via, j.department, isInternship(j) ? 'internship intern' : '', j.funded ? 'funded' : ''].join(' ').toLowerCase();
   return q.toLowerCase().split(/\s+/).filter(Boolean).every((t) => hay.includes(t));
 }
 
@@ -15,10 +15,20 @@ export function filteredJobs(ctx) {
     && (!f.track || j.track === f.track)
     && (f.status === 'all' || (!f.status ? ['new', 'ranked'].includes(j.status) : j.status === f.status))
     && (!f.minScore || (j.rank?.score ?? -1) >= f.minScore)
+    && (!f.quickFit || j.quickFit === f.quickFit)
+    && (!f.internOnly || isInternship(j))
+    && (!f.fundedOnly || !!j.funded)
     && (!f.sinceDigest || !ctx.digest?.lastDigestAt || (j.firstSeen && j.firstSeen > ctx.digest.lastDigestAt)))
     .sort((a, b) => (b.rank?.score ?? -1) - (a.rank?.score ?? -1)
+      || ({ high: 0, medium: 1, low: 2 }[a.quickFit] ?? 3) - ({ high: 0, medium: 1, low: 2 }[b.quickFit] ?? 3)
       || ({ green: 0, unknown: 1, orange: 2 }[a.eligibility] ?? 3) - ({ green: 0, unknown: 1, orange: 2 }[b.eligibility] ?? 3)
       || (b.postedAt ?? b.firstSeen ?? '').localeCompare(a.postedAt ?? a.firstSeen ?? ''));
+}
+
+function pill(ctx, key, text, n) {
+  const on = !!ctx.jobFilters[key];
+  return h('button', { type: 'button', class: `pill${on ? ' on' : ''}`, 'aria-pressed': String(on),
+    onclick: () => { ctx.jobFilters[key] = !on; ctx.saveUi(); ctx.render(); } }, `${text} · ${n}`);
 }
 
 function sel(ctx, key, title, opts) {
@@ -49,19 +59,30 @@ function jobRow(ctx, j) {
         j.salary ? [h('span', { class: 'sep' }, '·'), fmtSalary(j.salary)] : null),
       h('div', { class: 'job-chips' },
         h('span', { class: `chip dot el-${j.eligibility}`, title: j.eligibilityReason || label(j.eligibility) }, j.eligibility === 'green' ? 'Eligible' : j.eligibility === 'orange' ? 'Check eligibility' : 'Eligibility unknown'),
-        j.quickFit ? h('span', { class: 'chip plain', title: 'Quick fit from /scrape' }, `Quick fit: ${j.quickFit}`) : null,
-        j.track ? h('span', { class: 'chip outline' }, j.track.toUpperCase()) : null,
+        j.quickFit ? h('span', { class: `chip qf qf-${j.quickFit}`, title: 'Quick fit from /scrape' }, `${label(j.quickFit)} fit`) : null,
+        isInternship(j) ? h('span', { class: 'chip kind-intern', title: 'Internship, trainee or fellowship' }, 'Internship') : null,
+        j.track ? h('span', { class: 'chip outline', title: `Track: ${trackName(ctx, j.track)}` }, trackName(ctx, j.track)) : null,
+        j.funded ? h('span', { class: 'chip funded', title: `Raised ${label(j.funded.round)} on ${j.funded.announcedAt} (gaj funded)` }, `Funded · ${label(j.funded.round)}`) : null,
+        jdChip(j),
+        j.tailored ? h('span', { class: 'chip tailored', title: 'A tailored resume is linked to this job\'s application' }, icon('check', 11), 'Tailored') : null,
+        j.outreach ? h('button', { class: 'chip tailored as-btn', type: 'button', title: 'Contacts and referral/cold messages are ready: open the application', onclick: () => j.applicationId && ctx.openDrawer(j.applicationId) }, icon('check', 11), 'Outreach ready') : null,
         h('span', { class: `chip plain${old ? ' tag-flag' : ''}`, title: age ? `Posted ${age.slice(0, 10)}` : '' }, old ? `⚠ ${ago(age)} old` : `${ago(age)}${ago(age) === 'today' ? '' : ' ago'}`),
-        h('span', { class: 'chip plain' }, label(j.source)),
+        h('span', { class: 'chip plain', title: j.via ? `${label(j.source)} via ${label(j.via)}` : label(j.source) }, j.via ? `${label(j.via)}` : label(j.source)),
         h('button', { class: 'expand-btn', 'aria-expanded': String(expanded), onclick: () => toggleJob(ctx, j.key) }, expanded ? 'Less' : 'Details', icon('chev', 11)))),
     h('div', { class: 'job-actions' },
+      h('button', { class: 'btn sm primary', disabled: ctx.taskBusy(), title: thinJd(j) ? 'Add the full job description first for a good result' : 'Tailor your resume to this job with Claude',
+        onclick: () => (thinJd(j) ? ctx.openJd(j, { thenTailor: true }) : ctx.runTask({ task: 'tailor', key: j.key }, `Tailoring for ${j.company}`)) }, icon('file', 12), j.tailored ? 'Re-tailor' : 'Tailor'),
+      h('button', { class: 'btn sm', onclick: () => ctx.openJd(j) }, thinJd(j) ? 'Add JD' : 'Edit JD'),
+      !j.outreach ? h('button', { class: 'btn sm', disabled: ctx.taskBusy(), title: 'Find who to contact and draft a referral request and cold DM/email',
+        onclick: () => ctx.runTask({ task: 'outreach', key: j.key }, `Outreach for ${j.company}`) }, 'Outreach') : null,
+      !j.rank ? h('button', { class: 'btn sm ghost', disabled: ctx.taskBusy(), title: 'Score this job with Claude (/rank)', onclick: () => ctx.runTask({ task: 'rank', key: j.key }, `Ranking ${j.company}`) }, 'Rank') : null,
       tracked
-        ? h('button', { class: 'btn sm', onclick: () => { if (j.applicationId) ctx.openDrawer(j.applicationId); } }, 'Open application')
+        ? h('button', { class: 'btn sm ghost', onclick: () => { if (j.applicationId) ctx.openDrawer(j.applicationId); } }, 'Application')
         : [
           j.status === 'skipped'
             ? h('button', { class: 'btn sm ghost', onclick: () => setJob(ctx, j, j.rank ? 'ranked' : 'new') }, 'Restore')
             : h('button', { class: 'btn sm ghost', onclick: () => setJob(ctx, j, 'skipped') }, 'Skip'),
-          h('button', { class: 'btn sm primary', onclick: () => trackJob(ctx, j) }, 'Track'),
+          h('button', { class: 'btn sm ghost', onclick: () => trackJob(ctx, j) }, 'Track'),
         ]));
   if (expanded) {
     const more = h('div', { class: 'job-more' });
@@ -84,6 +105,16 @@ function jobRow(ctx, j) {
     row.append(more);
   }
   return row;
+}
+
+const INTERN_RE = /\b(intern(ship)?|trainee|fellow(ship)?|apprentice|graduate program)\b/i;
+export const isInternship = (j) => INTERN_RE.test(j.title ?? '');
+const trackName = (ctx, id) => ctx.meta.tracks?.find((t) => t.id === id)?.name ?? String(id).toUpperCase();
+// Under ~400 characters is a stub (title + location); tailoring needs the requirements.
+export const thinJd = (j) => (j.descLen ?? 0) < 400;
+function jdChip(j) {
+  if (thinJd(j)) return h('span', { class: 'chip jd-thin', title: 'Little or no job description stored. Add it so tailoring and ranking work.' }, icon('alert', 11), 'No JD');
+  return h('span', { class: 'chip plain', title: `${j.descLen.toLocaleString()} characters${j.descriptionVia ? `, ${j.descriptionVia}` : ''}` }, 'JD ✓');
 }
 
 const isNewSince = (ctx, j) => !!(ctx.inboxBaseline && j.firstSeen && j.firstSeen > ctx.inboxBaseline && (j.status === 'new' || j.status === 'ranked'));
@@ -111,10 +142,29 @@ async function trackJob(ctx, j) {
     j.applicationId = app.id;
     ctx.apps.push(app);
     ctx.render();
-    toast(`Tracking ${app.company}`, { sub: 'Added to Saved. Run /tailor in Claude Code to draft the resume.', action: { label: 'Open', run: () => ctx.openDrawer(app.id) } });
+    toast(`Tracking ${app.company}`, { sub: 'Added to Saved. Use Tailor to draft the resume.', action: { label: 'Open', run: () => ctx.openDrawer(app.id) } });
   } catch (e) {
     if (e.status === 409 && e.data?.existing) { toast('Already tracked'); ctx.openDrawer(e.data.existing.id); } else toast(e.message, { error: true });
   }
+}
+
+// "Fill missing JDs": fetch descriptions from each posting's own URL (sites whose terms forbid it stay paste-only).
+function missingJd(ctx) {
+  const n = ctx.jobs.filter((j) => ['new', 'ranked', 'tracked'].includes(j.status) && thinJd(j)).length;
+  if (!n) return null;
+  const btn = h('button', { class: 'btn ghost', type: 'button', title: 'Fetch descriptions for jobs that have none (LinkedIn and company sites; Naukri, Glassdoor and Indeed need pasting)',
+    onclick: async () => {
+      btn.disabled = true;
+      btn.lastChild.textContent = 'Fetching…';
+      try {
+        const r = await api('/api/jobs/enrich', { method: 'POST', body: {} });
+        ctx.lastRaw.jobs = '';
+        toast(`Filled ${r.filled} job description${r.filled === 1 ? '' : 's'}`, { sub: r.skipped.host ? `${r.skipped.host} need pasting (Naukri, Glassdoor, Indeed): use Add JD.` : undefined });
+        await ctx.refreshAll();
+      } catch (e) { toast(e.message, { error: true }); }
+      ctx.render();
+    } }, icon('file', 14), h('span', null, `Fill missing JDs · ${n}`));
+  return btn;
 }
 
 export function renderJobs(ctx) {
@@ -125,6 +175,7 @@ export function renderJobs(ctx) {
     h('span', { class: 'spacer' }),
     h('button', { class: 'btn ghost', type: 'button', title: 'Read the latest digest', onclick: () => ctx.openDigest() }, icon('file', 14), h('span', null, 'Digests')),
     h('a', { class: 'btn ghost', href: '#settings', title: 'Edit tracks, locations and sources' }, icon('gear', 14), h('span', { class: 'hide-sm' }, 'Search settings')),
+    missingJd(ctx),
     runBtn),
   ctx.searchStatusBox(ctx));
   if (!ctx.jobs.length) {
@@ -139,6 +190,9 @@ export function renderJobs(ctx) {
     sel(ctx, 'status', 'Open (new + ranked)', [['all', 'All statuses'], ...['new', 'ranked', 'tracked', 'skipped', 'expired'].map((x) => [x, label(x)])]),
     sel(ctx, 'eligibility', 'Any eligibility', [['green', 'Eligible'], ['orange', 'Check'], ['unknown', 'Unknown']]),
     sel(ctx, 'track', 'All tracks', tracks.map((t) => [t, ctx.meta.tracks?.find((x) => x.id === t)?.name ?? t])),
+    sel(ctx, 'quickFit', 'Any fit', [['high', 'High fit'], ['medium', 'Medium fit'], ['low', 'Low fit']]),
+    pill(ctx, 'internOnly', 'Internships', ctx.jobs.filter(isInternship).length),
+    pill(ctx, 'fundedOnly', 'Recently funded', ctx.jobs.filter((j) => j.funded).length),
     h('label', { class: 'range' }, 'Min score',
       h('input', { type: 'range', min: 0, max: 90, step: 5, value: f.minScore || 0,
         oninput: (e) => { rangeOut.value = e.target.value; },

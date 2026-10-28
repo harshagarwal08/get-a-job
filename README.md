@@ -111,6 +111,8 @@ Check how an ATS reads any resume PDF with `/ats`: a 0-100 score (parseability, 
 
 **10. Track everything.** The tracker opens in your browser: a board of your applications by stage, a jobs inbox with **New** badges, stats, and a Settings tab where you can change preferences and run a search. You can export it to a spreadsheet or Google Sheets.
 
+The jobs inbox and the application drawer can also run Claude for you, on your machine, through Claude Code's headless mode (`claude -p`): **Tailor** (runs `/tailor`), **Rank**, **Outreach** (runs `/outreach`: who to contact, a referral request, a hiring-manager or founder DM, a cold email when the company publishes an address, and a follow-up, shown in the application with Copy buttons) and **Cover note** (runs `/cover`). `/tailor` drafts the outreach automatically. Text drafts in the application folder open inline with a Copy button, and every application also shows **generic templates** (referral request, cold DM, cold email, follow-up) with the company, role and link filled in: edit yours in `profile/outreach-templates.json` (start from `examples/outreach-templates.example.json`). A panel shows progress, and the resulting files appear in the drawer. Runs are restricted to the `gaj` CLI plus file and web-read tools, never ask questions, and only draft: nothing is sent or submitted. Each job also shows badges for fit, internship, track, recently funded company, whether a tailored resume exists, and **No JD** when the posting text is missing. Use **Add JD** to paste the description, or **Fetch from posting** to pull the text from the posting's own URL, so tailoring has the real requirements.
+
 ```bash
 npm run tracker             # or /track inside Claude Code
 ```
@@ -227,6 +229,9 @@ npm run tracker -- --demo        # same UI with sample data; never touches data/
 | `/onboard [update \| fresh]` | Interview in short batches, read your CV from `inbox/`, write `profile/preferences.json`, `profile/profile.md` and `profile/resume.md`, render a first PDF, ask which job boards to enable, and build your company list from the seed list by region. |
 | `/discover <criteria>` | Find companies matching plain-words criteria (YC directory or web search), detect and verify each one's ATS, show a table, and add only the ones you pick. |
 | `/email-alerts [days] [platform]` | Read job-alert emails (LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort, Glassdoor) through the Gmail connector, read-only, and import the jobs. Explains how to set up alerts on each platform. `/linkedin-alerts` is an alias. |
+| `/browse [sites] [track] [criteria]` | Drives a Chrome window you've logged in to once (Playwright MCP, its own profile) to search LinkedIn, Wellfound, Naukri, Instahyre, Cutshort and JS-only careers pages, open matching postings, read full details, check eligibility, and import only the ones you approve. Human-paced with per-run caps; pauses on any login or CAPTCHA. |
+| `/apply <job key \| app id>` | One job: tailors the resume if needed (saved in `data/applications/<slug>/`), opens the apply page in that browser, attaches the PDF, fills the form from your profile, shows every field, submits only after you say yes, then marks it applied. |
+| `/send <app id> [message id]` | Sends one drafted message: email through Gmail, or a LinkedIn DM/connection note in that browser, after you confirm the text and recipient. |
 | `/import-jobs` | Paste search results or job links from any site you browsed; Claude extracts and imports them. |
 | `/preferences [change]` | Change roles, titles, locations, salary floor or sources by describing it; shows a diff, validates, then offers to re-run the search. The tracker's Settings tab does the same. |
 | `/scrape [--track id] [--days N] [--company name]` | Run `gaj scrape` over your companies and enabled boards, tag a quick fit on new jobs, show green-eligibility jobs first (orange collapsed with reasons), suggest LinkedIn people-search links for referrals. |
@@ -237,7 +242,7 @@ npm run tracker -- --demo        # same UI with sample data; never touches data/
 | `/interview <company> [stage]` | Stage-specific prep pack (recruiter, technical, machine-coding, system-design, hiring-manager, behavioral, customer, final) from the archived posting and the resume they read, cached research, optional mock interview. |
 | `/outcome <company> <what happened>` | Record applied, a screen, an interview, an offer or a rejection in `outcome.md` and the tracker history. |
 | `/gmail-sync [days]` | Read recruiter and ATS emails for your active applications (read-only Gmail) and propose status changes (screen, interview, rejection, offer). Nothing changes until you approve. |
-| `/followup [company]` | Draft follow-ups for applications quiet 10+ days (at most 2 each) and sweep stale ones to `no_response`. Drafts only, never sent. |
+| `/followup [company]` | Draft follow-ups for applications quiet 10+ days (at most 2 each) and sweep stale ones to `no_response`. Drafts only; send one with `/send`. |
 | `/track [--port N] [--demo]` | Start the tracker and summarise what needs attention: overdue next actions, things due this week, close deadlines, quiet applications, drafts not yet submitted. |
 | `/export-sheets` | Export the tracker to CSV and, if the Google Drive connector is available, upload it as a Google Sheet. |
 | `/upskill [track]` | Recurring skill gaps across ranked and tracked jobs, with a prioritised learning plan. |
@@ -359,6 +364,10 @@ Query-based, not per company. Turn each on or off in `profile/preferences.json` 
 
 **Wellfound, Cutshort and Instahyre: email alerts only.** A scraper is only built when listings are public, allowed by `robots.txt`, need no login, aren't behind bot protection, and the platform's terms allow it. None of these three passes all five: each one's terms explicitly forbid scraping, and Wellfound sits behind Cloudflare bot management. So there's no scraper and no preference for them; their job-match emails, read by `/email-alerts`, are the way in. Naukri is the same: alerts only.
 
+**YC jobs board and Weekday: no scraper.** Checked 2026-10-21 against the same five tests. Both list jobs publicly without login and `robots.txt` allows the listing pages, but both sets of terms forbid automated access:
+- **YC** (`ycombinator.com/jobs`, `/companies/<slug>/jobs`): the [Terms of Use](https://www.ycombinator.com/legal) say "you will not engage in or use any data mining, robots, scraping or similar data gathering or extraction methods". YC startups are still covered: `/discover` and `gaj discover yc` use the public yc-oss dataset to find hiring YC companies, and `/scrape` then reads their own ATS boards.
+- **Weekday** (`weekday.works`): the [Terms of Service](https://www.weekday.works/terms-of-service) forbid using "any robot, spider, or other automatic device, process, or means to access Service for any purpose, including monitoring or copying any of the material", and say users "shall not scrape or programmatically take any data from Services". Use `/import-jobs` with results you browse yourself.
+
 ### Providers (optional)
 
 Query-based sources that search many sites at once. All are off by default; `/onboard` asks. Keys go in `.env` (copy `.env.example`), never in chat or in `preferences.json`. Results are cached 12 hours.
@@ -373,7 +382,7 @@ Query-based sources that search many sites at once. All are off by default; `/on
 
 When a provider finds a job that another source already has, it isn't added twice; the existing job records `alsoSeenOn`. Aggregated jobs carry `via` (the original publisher, e.g. LinkedIn or Naukri), and the employer's own apply link is preferred when there is one.
 
-**How LinkedIn can be covered, safest first:** `/email-alerts` (zero risk) → `googleJobs` (API, LinkedIn jobs show up via Google) → `/import-jobs` (you browse) → `linkedin` guest search, Apify or JobSpy (scraping; ToS caveat).
+**How LinkedIn can be covered, safest first:** `/email-alerts` (zero risk) → `googleJobs` (API, LinkedIn jobs show up via Google) → `/import-jobs` (you browse) → `/browse` (Claude browses in a Chrome profile you logged in to, slow and capped; LinkedIn's terms restrict automation, so a small account risk) → `linkedin` guest search, Apify or JobSpy (scraping; ToS caveat).
 
 **Eligibility.** Most US and EU roles will come back **orange** if you don't live there or lack work authorization. That's expected: each job carries an `eligibilityReason` (for example "US only, no visa mentioned") so you can see why, and `/scrape` lists orange jobs collapsed below the green ones. HN `VISA` and Arbeitnow's sponsorship flag are the main way to find roles that can work for you.
 

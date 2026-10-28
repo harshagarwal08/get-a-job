@@ -146,8 +146,9 @@ In the application folder:
 - Keyword table.
 - 3-5 key tailoring decisions (what was emphasised, cut, and why).
 
-Ask (AskUserQuestion, multi-select): also draft cover note / referral DM /
-recruiter email / form answers? If any → run the `/cover` flow for this slug.
+Outreach is drafted by default in step 12. Ask (AskUserQuestion,
+multi-select) only about the extras: cover note / form answers? If any → run
+the `/cover` flow for this slug.
 
 ## 11. Track
 
@@ -175,6 +176,13 @@ recruiter email / form answers? If any → run the `/cover` flow for this slug.
 
 The row's `appDir` is how `/cover`, `/interview`, `/outcome` and `/followup`
 find this folder later.
+
+## 12. Outreach
+
+Run the `/outreach` flow for this application (steps 2-5): who to contact,
+referral request, hiring-manager/founder DM, cold email when a real address is
+published, and a follow-up. Skip only if the user said not to. The tracker
+shows these on the application.
 
 Tell the user: once they submit, run `/outcome <company> applied` (or move the
 card in `/track`).
