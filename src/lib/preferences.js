@@ -51,7 +51,7 @@ export function validatePreferences(prefs) {
   const caps = [
     ['googleJobs', 'maxQueries', 1, 20], ['googleJobs', 'maxRequestsPerMonth', 1, 10000],
     ['apify', 'maxItems', 1, 500], ['apify', 'maxChargeUsd', 0.01, 5], ['apify', 'maxUsdPerMonth', 0.01, 1000],
-    ['jobspy', 'resultsWanted', 1, 100], ['jobspy', 'maxQueries', 1, 5],
+    ['jobspy', 'resultsWanted', 1, 100], ['jobspy', 'maxQueries', 1, 5], ['funded', 'everyDays', 1, 30],
   ];
   for (const [k, f, lo, hi] of caps) {
     if (src[k] && src[k][f] !== undefined && !num(src[k][f], lo, hi)) errors.push(`sources.${k}.${f}: number between ${lo} and ${hi}`);

@@ -24,6 +24,7 @@ import * as googlejobs from './providers/googlejobs.js';
 import * as apify from './providers/apify.js';
 import * as jobspy from './providers/jobspy.js';
 import { isOn } from './providers/common.js';
+import { fundedStatus } from '../funded/funded.js';
 import { importJobs, importPathAllowed } from './importer.js';
 import { recordCareersCheck, recentCareersCheck } from './careersChecks.js';
 import { URL_ATS, URL_ATS_LIST, validateAtsUrl, classifyAtsUrl } from './urlAts.js';
@@ -253,6 +254,11 @@ function scrapeHuman(s) {
     lines.push('Top new green jobs:');
     for (const j of s.topNew) lines.push(`  🟢 ${cut(j.title, 50)} | ${j.company} | ${cut(j.location, 30)}  [${j.key}]`);
   } else if (s.new) lines.push('No new green jobs this run.');
+  const fd = s.funded;
+  if (fd?.enabled) {
+    const last = fd.lastSearchAt ? `last searched ${fd.daysSince} day(s) ago` : 'never searched';
+    lines.push(`Funded startups: ${last}${fd.due ? ' - due, run /funded' : ''}; ${fd.newLeads} lead(s) not contacted yet (gaj funded).`);
+  }
   lines.push(`Saved to ${rel(paths.jobs)}. Next: gaj jobs --eligibility green`);
   return lines.join('\n');
 }
@@ -304,6 +310,7 @@ async function scrape(argv) {
     limited: kept.length < total ? total : undefined,
     new: stats.new, updated: stats.updated, expired: stats.expired, skipped: stats.skipped, crossSource: stats.crossSource, filtered: acc.filtered,
     errors: acc.errors, usage: acc.usage, warnings: acc.warnings, topNew,
+    funded: a.company ? undefined : fundedStatus(prefs),
   };
   out(summary, a.json, scrapeHuman);
 }

@@ -62,6 +62,7 @@ cp .env.example .env
 /email-alerts               # jobs from your LinkedIn, Naukri, Indeed, Wellfound, Instahyre, Cutshort, Glassdoor alert emails (read-only Gmail)
 /import-jobs                # paste results from any job site you browsed yourself
 /discover AI startups in London   # find more companies to watch
+/funded                     # startups that just raised: add their boards, or line up cold DMs
 ```
 
 **5. Let it run daily (optional).** A scheduled job scrapes the free sources every morning and writes a digest of what's new. `/digest` shows it and offers to rank the new jobs. The schedule writes a file outside the repo (a macOS LaunchAgent or a Linux systemd timer), so it shows you exactly what it will write and needs `--yes`.
@@ -91,6 +92,13 @@ Check how an ATS reads any resume PDF with `/ats`: a 0-100 score (parseability, 
 ```
 /ats                                     # your master resume, format only
 /ats inbox/cv.pdf https://jobs.lever.co/acme/1234
+```
+
+**Recently funded startups.** Startups hire in the weeks after a round, often before posting roles. `/funded` searches funding roundups worldwide (Entrackr, Inc42, YourStory, Crunchbase News, TechCrunch, Sifted, YC) for rounds that fit your stage and sector, keeps foreign startups only if you can work for them (remote, or an office where you live), saves them to `data/funded.json`, and checks each company's job board. Companies with a board go into your scrape list; the rest become cold-outreach targets. `/scrape` runs it for you once a week (`sources.funded.everyDays`, default 7; set `sources.funded.enabled` to false to turn it off). `/cold-dm <company>` drafts a short note to the founder (or head of product) with a specific reason, one proof point and a small offer, and tracks it under the **Cold outreach** channel.
+
+```
+/funded Bengaluru AI seed to series B, last 30 days
+/cold-dm acme-ai
 ```
 
 **8. Write the message.** A referral DM, a short cover note, or answers to application-form questions.

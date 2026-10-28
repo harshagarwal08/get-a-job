@@ -40,6 +40,18 @@ stop. For a company error, name the
 company and suggest `node bin/gaj.js company:check <ats> <slug>`; for a board
 error, name the board and note it will be retried next run.
 
+## 1b. Recently funded startups
+
+The summary ends with a `Funded startups:` line (also `funded` in `--json`).
+If it says **due** (last `/funded` search older than
+`preferences.sources.funded.everyDays`, default 7; off only when
+`sources.funded.enabled` is false), run the `/funded` flow now, steps 1-5,
+with its default criteria and without asking. Companies it adds get scraped in
+its step 5. Not due → skip, and just quote the line.
+
+The scheduled daily scrape cannot do this (it has no web search); `/digest`
+and the next interactive `/scrape` pick it up.
+
 ## 2. Load new jobs (no descriptions)
 
 ```bash
@@ -98,10 +110,12 @@ linkedin-alert | manual`.
    fetch links from the comment.
 3. **Board attribution**: keep each board job's `url` visible (RemoteOK requires
    the link back).
-4. **Orange (collapsed)**: count, then one line each:
+4. **Funded startups** (only if `/funded` ran in step 1b): its step 6 table,
+   then the top 3 cold-outreach targets with `/cold-dm <id>`.
+5. **Orange (collapsed)**: count, then one line each:
    `title, company (source): <eligibilityReason>`.
-5. **Unknown eligibility**: short list; these need a posting read in /rank.
-6. **Referral links**: for each company with a high-fit job, a LinkedIn people
+6. **Unknown eligibility**: short list; these need a posting read in /rank.
+7. **Referral links**: for each company with a high-fit job, a LinkedIn people
    search link:
    `https://www.linkedin.com/search/results/people/?keywords=<Company>%20<track keyword>`
    (URL-encode; track keyword e.g. `frontend`, `engineering`, `solutions`).

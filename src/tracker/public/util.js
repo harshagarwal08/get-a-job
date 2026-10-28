@@ -2,13 +2,13 @@
 export const ACTIVE = ['saved', 'drafted', 'applied', 'screening', 'interview', 'offer'];
 export const CLOSED = ['hired', 'rejected', 'withdrawn', 'no_response', 'offer_declined'];
 export const STATUSES = [...ACTIVE, ...CLOSED];
-export const CHANNELS = ['ats', 'referral', 'linkedin', 'email', 'recruiter', 'other'];
+export const CHANNELS = ['ats', 'referral', 'linkedin', 'email', 'recruiter', 'cold', 'other'];
 export const WORK_MODES = ['remote', 'hybrid', 'onsite', 'unknown'];
 export const VERDICTS = ['Strong', 'Good', 'Moderate', 'Weak', 'Poor'];
 export const LABEL = {
   saved: 'Saved', drafted: 'Drafted', applied: 'Applied', screening: 'Screening', interview: 'Interview', offer: 'Offer',
   hired: 'Hired', rejected: 'Rejected', withdrawn: 'Withdrawn', no_response: 'No response', offer_declined: 'Offer declined',
-  ats: 'ATS', referral: 'Referral', linkedin: 'LinkedIn', email: 'Email', recruiter: 'Recruiter', other: 'Other',
+  ats: 'ATS', referral: 'Referral', linkedin: 'LinkedIn', email: 'Email', recruiter: 'Recruiter', cold: 'Cold outreach', other: 'Other',
   remote: 'Remote', hybrid: 'Hybrid', onsite: 'Onsite', unknown: 'Unknown', none: 'No track',
   green: 'Eligible', orange: 'Check', new: 'New', ranked: 'Ranked', tracked: 'Tracked', skipped: 'Skipped', expired: 'Expired',
 };
