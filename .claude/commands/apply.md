@@ -58,7 +58,7 @@ the final submit button once. Screenshot the confirmation page.
 ## 7. Record
 
 - Write `<appDir>/applied.md` (date, URL, channel, fields summary).
-- `node bin/gaj.js track update <id> --status applied --field channel=<easy-apply|ats|careers> --note "applied via browser <yyyy-mm-dd>" --next-action "follow up" --next-date <today+7>`
+- `node bin/gaj.js track update <id> --status applied --field channel=<linkedin|ats|other> --note "applied via browser <yyyy-mm-dd>" --next-action "follow up" --next-date <today+7>`
 - Job key → `node bin/gaj.js jobs:set <key> --status tracked`.
 - Close the tab. Suggest `/outreach <id>` (referral or hiring-manager DM)
   and `/send` for a drafted message.

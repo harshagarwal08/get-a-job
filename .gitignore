@@ -22,3 +22,7 @@ CLAUDE.local.md
 # --- Build artifacts ---
 examples/*.pdf
 examples/*.html
+
+# --- Scratch output (may contain personal data) ---
+output/
+tmp/
