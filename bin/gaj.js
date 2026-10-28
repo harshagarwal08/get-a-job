@@ -14,7 +14,7 @@ const MODULES = {
 const ROUTES = {
   scrape: 'scrape', jobs: 'scrape', job: 'scrape', 'jobs:set': 'scrape', 'company:check': 'scrape', fetch: 'scrape',
   'company:detect': 'scrape', companies: 'scrape', 'companies:add': 'scrape', discover: 'scrape', 'jobs:import': 'scrape', 'careers:check': 'scrape',
-  render: 'resume', verify: 'resume',
+  render: 'resume', verify: 'resume', ats: 'resume',
   tracker: 'tracker', track: 'tracker', export: 'tracker',
   digest: 'digest', schedule: 'digest',
 };
