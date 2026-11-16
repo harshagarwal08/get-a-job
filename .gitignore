@@ -26,3 +26,6 @@ examples/*.html
 # --- Scratch output (may contain personal data) ---
 output/
 tmp/
+
+# Playwright browser profile created when ${HOME} is not expanded (Windows); holds login cookies
+/${HOME}/

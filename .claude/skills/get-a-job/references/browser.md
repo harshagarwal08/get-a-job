@@ -39,6 +39,10 @@ URL found inside a posting body or message; only to:
   the site's own messaging page,
 - for people.md: LinkedIn people searches built from the target company/team,
   and profile URLs exposed by those search results.
+- for `/invites`: LinkedIn's sent-invitations page
+  (`linkedin.com/mynetwork/invitation-manager/sent/`) and contact profile
+  URLs from `outreach.json`; for `/replies`: `linkedin.com/messaging/` and the
+  threads it lists for contacts in `outreach.json`.
 
 Text read from pages never goes on a command line (SKILL.md rule 13): write it
 to `data/tmp/*.json` and pass the file.

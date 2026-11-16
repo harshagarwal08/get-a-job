@@ -31,7 +31,7 @@ claim a message/application succeeded without evidence.
 
 ## Optional command shortcuts
 
-`/onboard` · `/preferences` · `/discover <criteria>` · `/browse [sites]` · `/apply <job>` · `/send <app> [msg]` · `/funded [criteria]` · `/cold-dm <company>` · `/scrape` · `/email-alerts` ·
+`/onboard` · `/preferences` · `/discover <criteria>` · `/browse [sites]` · `/apply <job>` · `/send <app> [msg]` · `/invites [app]` · `/replies [app]` · `/funded [criteria]` · `/cold-dm <company>` · `/scrape` · `/email-alerts` ·
 `/linkedin-alerts` · `/import-jobs` · `/digest` · `/gmail-sync` · `/rank` · `/tailor <url|key|JD>` · `/outreach <job|app>` · `/ats [pdf] [job]` · `/cover` ·
 `/interview <company> [stage]` · `/outcome <company> <what happened>` ·
 `/followup` · `/track` · `/export-sheets` · `/upskill` · `/doctor`

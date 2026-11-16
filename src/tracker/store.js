@@ -51,7 +51,9 @@ export function lastActivityAt(app) {
 }
 
 const newId = () => 'app_' + randomBytes(4).toString('hex');
-const emptyTracker = () => ({ version: 1, updatedAt: nowISO(), applications: [] });
+// updatedAt stays null until the first save: a fresh timestamp per load made GET /api/applications
+// differ on every call, so the UI's 5s poll re-rendered (and reset scroll) forever.
+const emptyTracker = () => ({ version: 1, updatedAt: null, applications: [] });
 
 // Validate + normalise a partial patch of editable fields. Returns a clean object.
 export function normalizePatch(patch) {
